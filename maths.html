@@ -11,27 +11,22 @@
         
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; max-width: 1000px; margin: auto; transition: background-color 0.3s ease, color 0.3s ease; }
         
-        /* THEME BUTTON */
         .theme-toggle { position: absolute; top: 20px; right: 20px; background: none; border: none; cursor: pointer; color: var(--text); padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 100; }
         .theme-toggle svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
         .rotate { transform: rotate(360deg); }
 
-        /* NAVIGATION */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
         .back-btn { background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; text-decoration: none; cursor: pointer; border: none; font-weight: bold; }
         .back-btn:hover { opacity: 0.8; }
         
-        /* CHAPTER GRID */
         #chapter-screen { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
         .chapter-card { background: var(--card-bg); padding: 15px; text-align: center; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-weight: 600; color: var(--primary); cursor: pointer; border: 1px solid var(--border); transition: transform 0.2s ease, border-color 0.2s ease; }
         .chapter-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
 
-        /* QUESTIONS VIEW */
         #question-screen { display: none; }
         .add-btn { background: var(--primary); color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-bottom: 20px; transition: background-color 0.2s ease; }
         .add-btn:hover { background: var(--secondary); }
 
-        /* PREVIEW CARDS (GRID) */
         .question-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .q-card { background: var(--card-bg); padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); display: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
         .q-card.active { display: block; }
@@ -40,21 +35,17 @@
         .topic-tag { font-size: 0.8rem; background: var(--tag-bg); color: var(--secondary); padding: 4px 10px; border-radius: 12px; margin-bottom: 15px; display: inline-block; font-weight: bold; }
         .click-hint { font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-top: 15px; text-align: right; border-top: 1px dashed var(--border); padding-top: 10px; }
         
-        /* ATTACHMENTS PREVIEW */
         .preview-img { max-width: 100%; max-height: 100px; border-radius: 6px; margin-top: 5px; object-fit: cover; opacity: 0.8; }
         .attached-pdf { display: inline-block; margin-top: 10px; background: var(--tag-bg); color: var(--primary); padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.9rem; border: 1px solid var(--primary); }
         .attached-pdf:hover { background: var(--primary); color: white; }
 
-        /* MODALS (ADD & VIEW) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
         
-        /* ADD MODAL SPECIFIC */
         .modal { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
         .modal h3 { margin-top: 0; color: var(--text); margin-bottom: 15px; }
         .modal textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-family: inherit; box-sizing: border-box; resize: vertical; }
         .modal input[type="file"] { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px dashed var(--primary); border-radius: 6px; background: var(--bg); color: var(--text); cursor: pointer; }
         
-        /* FULL VIEW MODAL SPECIFIC */
         #view-modal-content { max-width: 700px; }
         #view-question { font-size: 1.4rem; color: var(--text); margin-bottom: 15px; line-height: 1.4; }
         .full-img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); margin: 15px 0; display: block; }
@@ -62,11 +53,13 @@
         .mistake-text { color: #ef4444; font-size: 1rem; line-height: 1.5; margin-top: 0; }
         .logic-text { color: #22c55e; font-size: 1rem; line-height: 1.5; margin-top: 0; }
 
-        /* BUTTONS */
         .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
         .btn-save { background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;}
         .btn-cancel { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-delete { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-delete:hover { background: #dc2626; }
+        .btn-edit { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-edit:hover { background: var(--secondary); }
         .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
     </style>
 </head>
@@ -119,7 +112,7 @@
 
 <div class="modal-overlay" id="add-modal">
     <div class="modal">
-        <h3>Add to <span id="add-modal-chapter-name"></span></h3>
+        <h3 id="add-modal-title">Add to <span id="add-modal-chapter-name"></span></h3>
         <textarea id="input-question" rows="2" placeholder="Question"></textarea>
         <label for="input-file" style="font-size: 0.85rem; font-weight: bold; color: var(--primary);">Attach Image or PDF (Optional):</label>
         <input type="file" id="input-file" accept=".jpg, .jpeg, .png, .pdf">
@@ -149,15 +142,17 @@
         <p class="logic-text" id="view-solution"></p>
         
         <div class="modal-buttons" style="border-top: 1px solid var(--border); padding-top: 15px;">
-            <button class="btn-delete" id="view-delete-btn">🗑 Delete Question</button>
+            <button class="btn-delete" id="view-delete-btn">🗑 Delete</button>
+            <button class="btn-edit" id="view-edit-btn">✏️ Edit</button>
         </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+    // YOUR EXACT FIREBASE CONFIGURATION
     const firebaseConfig = {
       apiKey: "AIzaSyBWOeiVXKoVaI0YKxgQ4YYA3JQ5p5P8ke4",
       authDomain: "my-questions-8e3f5.firebaseapp.com",
@@ -172,10 +167,11 @@
 
     let currentActiveChapterClass = "";
     let currentActiveChapterName = "";
+    let currentEditingDocId = null; 
     
-    // Global object to store data for the Full View Modal
     window.loadedQuestionsData = {}; 
 
+    // LOAD DATA
     window.onload = async function() {
         const grid = document.getElementById('all-questions');
         try {
@@ -184,10 +180,8 @@
                 const q = document.data();
                 const docId = document.id; 
                 
-                // Save to memory for the Full View Modal
                 window.loadedQuestionsData[docId] = q;
                 
-                // Create Preview for the Grid
                 let fileHint = "";
                 if(q.fileUrl) {
                     if(q.fileType === 'pdf') {
@@ -199,7 +193,6 @@
 
                 const card = document.createElement('div');
                 card.className = `q-card ${q.chapterClass}`;
-                // Clicking the card opens the Full View
                 card.setAttribute('onclick', `openViewModal('${docId}')`); 
                 
                 card.innerHTML = `
@@ -213,7 +206,7 @@
         } catch (e) { console.error("Error fetching documents: ", e); }
     };
 
-    // --- NAVIGATION ---
+    // NAVIGATION
     window.openChapter = function(cClass, cName) {
         currentActiveChapterClass = cClass;
         currentActiveChapterName = cName;
@@ -235,9 +228,10 @@
         document.getElementById('chapter-back-btn').style.display = 'none';
     };
 
-    // --- ADD MODAL CONTROLS ---
+    // MODAL TRIGGERS
     window.openAddModal = () => { 
-        document.getElementById('add-modal-chapter-name').innerText = currentActiveChapterName; 
+        currentEditingDocId = null; 
+        document.getElementById('add-modal-title').innerHTML = `Add to <span id="add-modal-chapter-name">${currentActiveChapterName}</span>`;
         document.getElementById('add-modal').style.display = 'flex'; 
     };
     
@@ -247,18 +241,16 @@
         document.getElementById('input-mistake').value = '';
         document.getElementById('input-solution').value = '';
         document.getElementById('input-file').value = '';
+        currentEditingDocId = null;
     };
 
-    // --- FULL VIEW MODAL CONTROLS ---
     window.openViewModal = function(docId) {
         const q = window.loadedQuestionsData[docId];
-        
         document.getElementById('view-tag').innerText = q.chapterName;
         document.getElementById('view-question').innerText = q.question || "";
         document.getElementById('view-mistake').innerText = q.mistake || "None provided.";
         document.getElementById('view-solution').innerText = q.solution || "None provided.";
         
-        // Handle Attachment Full View
         const attachContainer = document.getElementById('view-attachment');
         attachContainer.innerHTML = '';
         if(q.fileUrl) {
@@ -269,32 +261,42 @@
             }
         }
         
-        // Link the Delete Button to this specific question
         document.getElementById('view-delete-btn').onclick = function() { deleteQuestion(docId); };
-        
+        document.getElementById('view-edit-btn').onclick = function() { editQuestion(docId); };
         document.getElementById('view-modal').style.display = 'flex';
     };
 
-    window.closeViewModal = () => {
-        document.getElementById('view-modal').style.display = 'none';
+    window.closeViewModal = () => { document.getElementById('view-modal').style.display = 'none'; };
+
+    window.editQuestion = function(docId) {
+        closeViewModal(); 
+        const q = window.loadedQuestionsData[docId];
+        currentEditingDocId = docId; 
+
+        document.getElementById('add-modal-title').innerHTML = `Edit Doubt in <span id="add-modal-chapter-name">${q.chapterName}</span>`;
+        document.getElementById('input-question').value = q.question || '';
+        document.getElementById('input-mistake').value = q.mistake || '';
+        document.getElementById('input-solution').value = q.solution || '';
+        
+        document.getElementById('add-modal').style.display = 'flex';
     };
 
-    // --- CLOUDINARY & FIRESTORE SAVE ---
+    // SAVE & UPDATE LOGIC WITH ALERTS
     window.saveQuestion = async function() {
-        const q = document.getElementById('input-question').value;
-        const m = document.getElementById('input-mistake').value;
-        const s = document.getElementById('input-solution').value;
-        const fileInput = document.getElementById('input-file');
-        const file = fileInput.files[0];
-        const saveBtn = document.getElementById('save-btn');
-        
-        if(!q && !file) return alert("Please provide a text Question OR upload an image/PDF!");
-        if(!s) return alert("Please provide the Correct Logic!");
-        
-        saveBtn.innerText = "Uploading...";
-        saveBtn.disabled = true;
-
         try {
+            const q = document.getElementById('input-question').value;
+            const m = document.getElementById('input-mistake').value;
+            const s = document.getElementById('input-solution').value;
+            const fileInput = document.getElementById('input-file');
+            const file = fileInput.files[0];
+            const saveBtn = document.getElementById('save-btn');
+            
+            if(!q && !file && !currentEditingDocId) return alert("❌ Wait! Please type a Question or upload a file first.");
+            if(!s) return alert("❌ Wait! You must type something in the 'Correct Logic' box.");
+            
+            saveBtn.innerText = "Uploading to Cloud...";
+            saveBtn.disabled = true;
+
             let finalFileUrl = null;
             let finalFileType = null;
 
@@ -311,11 +313,15 @@
                     finalFileUrl = data.secure_url;
                     finalFileType = file.type.includes('pdf') ? 'pdf' : 'image';
                 } else {
+                    alert("☁️ Cloudinary Error: " + (data.error ? data.error.message : "Unknown file error."));
                     throw new Error("Cloudinary upload failed.");
                 }
+            } else if (currentEditingDocId) {
+                finalFileUrl = window.loadedQuestionsData[currentEditingDocId].fileUrl || null;
+                finalFileType = window.loadedQuestionsData[currentEditingDocId].fileType || null;
             }
 
-            await addDoc(collection(db, "maths_questions"), { 
+            const questionData = {
                 chapterClass: currentActiveChapterClass, 
                 chapterName: currentActiveChapterName, 
                 question: q, 
@@ -324,18 +330,25 @@
                 fileUrl: finalFileUrl,
                 fileType: finalFileType,
                 timestamp: new Date()
-            });
+            };
+
+            if (currentEditingDocId) {
+                await updateDoc(doc(db, "maths_questions", currentEditingDocId), questionData);
+            } else {
+                await addDoc(collection(db, "maths_questions"), questionData);
+            }
             
+            alert("✅ Saved successfully!");
             location.reload(); 
         } catch(e) {
-            console.error("Error: ", e);
-            alert("Save failed. Please check your console.");
-            saveBtn.innerText = "Save to Cloud";
-            saveBtn.disabled = false;
+            console.error("Error Details: ", e);
+            alert("🔥 Database Error: " + e.message + "\n\n(Did Firebase rules reset or is your Ad-blocker on?)");
+            document.getElementById('save-btn').innerText = "Save to Cloud";
+            document.getElementById('save-btn').disabled = false;
         }
     };
 
-    // --- DELETE FUNCTION ---
+    // DELETE LOGIC
     window.deleteQuestion = async function(docId) {
         if(confirm("Are you sure you want to permanently delete this doubt?")) {
             try {
@@ -348,7 +361,7 @@
         }
     };
 
-    // --- THEME LOGIC ---
+    // THEME LOGIC
     const themeBtn = document.getElementById('theme-btn');
     const body = document.body;
     const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
@@ -361,7 +374,6 @@
         const isDark = body.getAttribute('data-theme') === 'dark';
         body.toggleAttribute('data-theme', !isDark);
         localStorage.setItem('theme', isDark ? 'light' : 'dark');
-        
         document.getElementById('theme-icon').innerHTML = `<path d="${isDark ? sunPath : moonPath}" />`;
         document.getElementById('theme-icon').classList.add('rotate');
         setTimeout(() => document.getElementById('theme-icon').classList.remove('rotate'), 500);
