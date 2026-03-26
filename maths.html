@@ -1,83 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Maths Doubts - SSC Portal</title>
-<style>
-/* Exact same styling logic */
-:root { --primary: #2563eb; --secondary: #1e40af; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0; --tag-bg: #dbeafe; }
-[data-theme="dark"] { --primary: #60a5fa; --secondary: #93c5fd; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --border: #334155; --tag-bg: #1e40af; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maths Chapters - SSC Portal</title>
+    <style>
+        :root { --primary: #2563eb; --secondary: #1e40af; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0; --tag-bg: #dbeafe; }
+        [data-theme="dark"] { --primary: #60a5fa; --secondary: #93c5fd; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --border: #334155; --tag-bg: #1e40af; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; max-width: 1000px; margin: auto; transition: 0.3s; }
+        a { text-decoration: none; }
+        
+        .theme-toggle { position: absolute; top: 20px; right: 20px; background: none; border: none; cursor: pointer; color: var(--text); padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .theme-toggle:hover { background: var(--border); }
+        .theme-toggle svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
+        .rotate { transform: rotate(360deg); }
 
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; max-width: 1000px; margin: auto; transition: 0.3s; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+        .back-btn { background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; transition: 0.2s; cursor: pointer; border: none; }
+        .back-btn:hover { opacity: 0.8; }
+        
+        /* CHAPTER GRID */
+        #chapter-screen { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .chapter-card { background: var(--card-bg); padding: 15px; text-align: center; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 0.95rem; font-weight: 600; color: var(--primary); cursor: pointer; transition: 0.2s; border: 1px solid var(--border); }
+        .chapter-card:hover { transform: translateY(-3px); box-shadow: 0 6px 10px rgba(0,0,0,0.1); border-color: var(--primary); color: var(--secondary); }
 
-.theme-toggle { position: absolute; top: 20px; right: 20px; background: none; border: none; cursor: pointer; color: var(--text); padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-.theme-toggle:hover { background: var(--border); }
-.theme-toggle svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
-.rotate { transform: rotate(360deg); }
-
-.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
-.back-btn { background: var(--text); color: var(--bg); text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 1rem; transition: 0.2s; }
-.back-btn:hover { opacity: 0.8; }
-
-.question-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-.q-card { background: var(--card-bg); padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
-.q-card h3 { margin-top: 0; font-size: 1.1rem; }
-.topic-tag { font-size: 0.8rem; background: var(--tag-bg); color: var(--secondary); padding: 4px 10px; border-radius: 12px; display: inline-block; margin-bottom: 15px; font-weight: 600; }
-.mistake { color: #ef4444; font-size: 0.95rem; }
-.solution { color: #22c55e; font-size: 0.95rem; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
-</style>
+        /* QUESTIONS VIEW */
+        #question-screen { display: none; }
+        .question-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .q-card { background: var(--card-bg); padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); display: none; }
+        .q-card.active { display: block; }
+        .q-card h3 { margin-top: 0; font-size: 1.1rem; }
+        .topic-tag { font-size: 0.8rem; background: var(--tag-bg); color: var(--secondary); padding: 4px 10px; border-radius: 12px; display: inline-block; margin-bottom: 15px; font-weight: 600; }
+        .mistake { color: #ef4444; font-size: 0.95rem; }
+        .solution { color: #22c55e; font-size: 0.95rem; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+    </style>
 </head>
 <body>
 
 <button class="theme-toggle" id="theme-btn">
-<svg id="theme-icon" viewBox="0 0 24 24"></svg>
+    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
 </button>
 
 <div class="top-bar">
-<a href="index.html" class="back-btn">← Back to Subjects</a>
-<h2>Maths Doubts</h2>
+    <a href="index.html" class="back-btn" id="main-back-btn">← Back to Main Menu</a>
+    <button class="back-btn" id="chapter-back-btn" style="display: none;" onclick="goBackToChapters()">← Back to Chapters</button>
+    <h2 id="page-title">Maths Chapters</h2>
 </div>
 
-<div class="question-grid">
-<div class="q-card">
-<span class="topic-tag">Geometry</span>
-<h3>Find the area of a triangle with sides 5, 12, 13.</h3>
-<p class="mistake"><strong>My Mistake:</strong> Tried using Heron's formula and wasted 2 minutes.</p>
-<p class="solution"><strong>Smart Solution:</strong> Recognize 5,12,13 is a Pythagorean triplet. It's a right triangle! Area = 1/2 × base × height = 1/2 × 5 × 12 = 30.</p>
+<div id="chapter-screen">
+    <div class="chapter-card" onclick="openChapter('number-system', 'Number System')">Number System</div>
+    <div class="chapter-card" onclick="openChapter('hcf-lcm', 'HCF and LCM')">HCF and LCM</div>
+    <div class="chapter-card" onclick="openChapter('percentage', 'Percentage')">Percentage</div>
+    <div class="chapter-card" onclick="openChapter('si', 'Simple Interest')">Simple Interest</div>
+    <div class="chapter-card" onclick="openChapter('ci', 'Compound Interest')">Compound Interest</div>
+    <div class="chapter-card" onclick="openChapter('installment', 'Installment')">Installment</div>
+    <div class="chapter-card" onclick="openChapter('profit-loss', 'Profit and Loss')">Profit and Loss</div>
+    <div class="chapter-card" onclick="openChapter('discount', 'Discount')">Discount</div>
+    <div class="chapter-card" onclick="openChapter('ratio', 'Ratio and Proportion')">Ratio and Proportion</div>
+    <div class="chapter-card" onclick="openChapter('partnership', 'Partnership')">Partnership</div>
+    <div class="chapter-card" onclick="openChapter('average', 'Average')">Average</div>
+    <div class="chapter-card" onclick="openChapter('mixture', 'Mixture & Alligation')">Mixture & Alligation</div>
+    <div class="chapter-card" onclick="openChapter('time-work', 'Time & Work (Pipe & Cistern)')">Time & Work</div>
+    <div class="chapter-card" onclick="openChapter('time-distance', 'Time & Distance')">Time & Distance</div>
+    <div class="chapter-card" onclick="openChapter('di', 'Data Interpretation')">Data Interpretation</div>
+    <div class="chapter-card" onclick="openChapter('algebra', 'Algebra')">Algebra</div>
+    <div class="chapter-card" onclick="openChapter('equations', 'Equations')">Equations</div>
+    <div class="chapter-card" onclick="openChapter('progression', 'AP, GP, HP')">AP, GP, HP</div>
+    <div class="chapter-card" onclick="openChapter('surds', 'Surds and Indices')">Surds and Indices</div>
+    <div class="chapter-card" onclick="openChapter('simplification', 'Simplification')">Simplification</div>
+    <div class="chapter-card" onclick="openChapter('plane-geometry', 'Plane Geometry')">Plane Geometry</div>
+    <div class="chapter-card" onclick="openChapter('mensuration-2d', 'Mensuration 2D')">Mensuration 2D</div>
+    <div class="chapter-card" onclick="openChapter('mensuration-3d', 'Mensuration 3D')">Mensuration 3D</div>
+    <div class="chapter-card" onclick="openChapter('trigonometry', 'Trigonometry')">Trigonometry</div>
+    <div class="chapter-card" onclick="openChapter('height-distance', 'Height and Distance')">Height and Distance</div>
+    <div class="chapter-card" onclick="openChapter('coordinate', 'Coordinate Geometry')">Coordinate Geometry</div>
+    <div class="chapter-card" onclick="openChapter('statistics', 'Statistics')">Statistics</div>
+    <div class="chapter-card" onclick="openChapter('pnc', 'Permutation & Combination')">Permutation & Combination</div>
+    <div class="chapter-card" onclick="openChapter('probability', 'Probability')">Probability</div>
 </div>
+
+<div id="question-screen">
+    <div class="question-grid" id="all-questions">
+        
+        <div class="q-card trigonometry">
+            <span class="topic-tag">Trigonometry</span>
+            <h3>If $\sin \theta = \frac{3}{5}$, find $\tan \theta$.</h3>
+            <p class="mistake"><strong>My Mistake:</strong> Messed up the base calculation.</p>
+            <p class="solution"><strong>Smart Solution:</strong> Use triplet 3, 4, 5. Perpendicular = 3, Hypotenuse = 5, so Base = 4. $\tan \theta = \frac{P}{B} = \frac{3}{4}$.</p>
+        </div>
+
+        <div class="q-card percentage">
+            <span class="topic-tag">Percentage</span>
+            <h3>If A's income is 25% more than B, how much percent is B's income less than A?</h3>
+            <p class="mistake"><strong>My Mistake:</strong> Guessed 25% less.</p>
+            <p class="solution"><strong>Smart Solution:</strong> Formula: $\frac{R}{100+R} \times 100$. $\frac{25}{125} \times 100 = 20\%$.</p>
+        </div>
+
+    </div>
 </div>
 
 <script>
-// EXACT SAME SCRIPT AS INDEX.HTML TO KEEP THEME IN SYNC
-const themeBtn = document.getElementById('theme-btn');
-const themeIcon = document.getElementById('theme-icon');
-const body = document.body;
-const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
-const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
+    // --- NAVIGATION LOGIC ---
+    function openChapter(chapterClass, chapterName) {
+        document.getElementById('chapter-screen').style.display = 'none';
+        document.getElementById('question-screen').style.display = 'block';
+        
+        // Change Top Bar UI
+        document.getElementById('page-title').innerText = chapterName + " Doubts";
+        document.getElementById('main-back-btn').style.display = 'none';
+        document.getElementById('chapter-back-btn').style.display = 'block';
 
-if (localStorage.getItem('theme') === 'dark') {
-body.setAttribute('data-theme', 'dark');
-themeIcon.innerHTML = `<path d="${moonPath}" />`;
-} else {
-themeIcon.innerHTML = `<path d="${sunPath}" />`;
-}
+        // Filter Questions
+        let allCards = document.getElementsByClassName('q-card');
+        for (let i = 0; i < allCards.length; i++) { allCards[i].classList.remove('active'); }
 
-themeBtn.addEventListener('click', () => {
-themeIcon.classList.add('rotate');
-setTimeout(() => {
-if (body.getAttribute('data-theme') === 'dark') {
-body.removeAttribute('data-theme');
-localStorage.setItem('theme', 'light');
-themeIcon.innerHTML = `<path d="${sunPath}" />`;
-} else {
-body.setAttribute('data-theme', 'dark');
-localStorage.setItem('theme', 'dark');
-themeIcon.innerHTML = `<path d="${moonPath}" />`;
-}
-}, 250);
-setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
-});
+        let selectedCards = document.getElementsByClassName(chapterClass);
+        for (let i = 0; i < selectedCards.length; i++) { selectedCards[i].classList.add('active'); }
+    }
+
+    function goBackToChapters() {
+        document.getElementById('question-screen').style.display = 'none';
+        document.getElementById('chapter-screen').style.display = 'grid';
+        
+        // Reset Top Bar UI
+        document.getElementById('page-title').innerText = "Maths Chapters";
+        document.getElementById('main-back-btn').style.display = 'block';
+        document.getElementById('chapter-back-btn').style.display = 'none';
+    }
+
+    // --- THEME LOGIC (Saved across pages) ---
+    const themeBtn = document.getElementById('theme-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    const body = document.body;
+    const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
+    const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
+
+    if (localStorage.getItem('theme') === 'dark') { body.setAttribute('data-theme', 'dark'); themeIcon.innerHTML = `<path d="${moonPath}" />`; } 
+    else { themeIcon.innerHTML = `<path d="${sunPath}" />`; }
+
+    themeBtn.addEventListener('click', () => {
+        themeIcon.classList.add('rotate');
+        setTimeout(() => {
+            if (body.getAttribute('data-theme') === 'dark') { body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeIcon.innerHTML = `<path d="${sunPath}" />`; } 
+            else { body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeIcon.innerHTML = `<path d="${moonPath}" />`; }
+        }, 250);
+        setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
+    });
 </script>
 
 </body>
