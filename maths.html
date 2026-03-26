@@ -5,78 +5,203 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maths Doubts - SSC Portal</title>
 <style>
-/* Exact same styling logic */
-:root { --primary: #2563eb; --secondary: #1e40af; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0; --tag-bg: #dbeafe; }
-[data-theme="dark"] { --primary: #60a5fa; --secondary: #93c5fd; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --border: #334155; --tag-bg: #1e40af; }
+:root { 
+    --primary: #2563eb; 
+    --bg: #f8fafc; 
+    --card-bg: #ffffff; 
+    --text: #1e293b; 
+    --border: #e2e8f0; 
+}
+[data-theme="dark"] { 
+    --primary: #60a5fa; 
+    --bg: #0f172a; 
+    --card-bg: #1e293b; 
+    --text: #f8fafc; 
+    --border: #334155; 
+}
 
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; max-width: 1000px; margin: auto; transition: 0.3s; }
+body { 
+    font-family: 'Segoe UI', sans-serif; 
+    background: var(--bg); 
+    color: var(--text); 
+    margin: 0; 
+    padding: 20px;
+    transition: 0.3s; 
+}
 
-.theme-toggle { position: absolute; top: 20px; right: 20px; background: none; border: none; cursor: pointer; color: var(--text); padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-.theme-toggle:hover { background: var(--border); }
-.theme-toggle svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
-.rotate { transform: rotate(360deg); }
+/* Container for scannability */
+.container { max-width: 900px; margin: auto; padding-top: 40px; }
 
-.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
-.back-btn { background: var(--text); color: var(--bg); text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 1rem; transition: 0.2s; }
-.back-btn:hover { opacity: 0.8; }
+/* Views */
+#chapter-view { display: block; }
+#question-view { display: none; }
 
-.question-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-.q-card { background: var(--card-bg); padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid var(--primary); }
-.q-card h3 { margin-top: 0; font-size: 1.1rem; }
-.topic-tag { font-size: 0.8rem; background: var(--tag-bg); color: var(--secondary); padding: 4px 10px; border-radius: 12px; display: inline-block; margin-bottom: 15px; font-weight: 600; }
-.mistake { color: #ef4444; font-size: 0.95rem; }
-.solution { color: #22c55e; font-size: 0.95rem; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+/* Header Logic */
+.header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 30px; 
+}
+
+.back-btn { 
+    background: var(--text); 
+    color: var(--bg); 
+    border: none;
+    padding: 10px 20px; 
+    border-radius: 6px; 
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* Chapter Grid */
+.chapter-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+    gap: 15px; 
+}
+
+.chapter-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 5px solid var(--primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chapter-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.chapter-card h3 { margin: 0; font-size: 1.1rem; }
+
+/* Question Items */
+.q-list { margin-top: 20px; }
+.question-item {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+}
+
+.mistake { color: #ef4444; margin: 10px 0; }
+.solution { color: #22c55e; border-top: 1px dashed var(--border); padding-top: 10px; }
+
+/* Utilities */
+.hidden { display: none !important; }
+.theme-toggle { position: fixed; top: 20px; right: 20px; cursor: pointer; background: var(--card-bg); border: 1px solid var(--border); padding: 8px; border-radius: 8px; }
+
 </style>
 </head>
 <body>
 
-<button class="theme-toggle" id="theme-btn">
-<svg id="theme-icon" viewBox="0 0 24 24"></svg>
-</button>
+<button class="theme-toggle" id="theme-btn">🌓 Toggle Theme</button>
 
-<div class="top-bar">
-<a href="index.html" class="back-btn">← Back to Subjects</a>
-<h2>Maths Doubts</h2>
+<div id="chapter-view" class="container">
+    <div class="header">
+        <h2>Maths Chapters</h2>
+    </div>
+    <div class="chapter-grid" id="chapter-grid">
+        <div class="chapter-card" onclick="showQuestions('Number System')"><h3>Number System</h3></div>
+        <div class="chapter-card" onclick="showQuestions('HCF and LCM')"><h3>HCF and LCM</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Percentage')"><h3>Percentage</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Simple Interest')"><h3>Simple Interest</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Compound Interest')"><h3>Compound Interest</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Installment')"><h3>Installment</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Profit and Loss')"><h3>Profit and Loss</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Discount')"><h3>Discount</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Ratio and Proportion')"><h3>Ratio and Proportion</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Partnership')"><h3>Partnership</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Average')"><h3>Average</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Mixture & Alligation')"><h3>Mixture & Alligation</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Time & Work')"><h3>Time & Work</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Time & Distance')"><h3>Time & Distance</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Algebra')"><h3>Algebra</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Plane Geometry')"><h3>Plane Geometry</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Mensuration 2D')"><h3>Mensuration 2D</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Mensuration 3D')"><h3>Mensuration 3D</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Trigonometry')"><h3>Trigonometry</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Statistics')"><h3>Statistics</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Probability')"><h3>Probability</h3></div>
+    </div>
 </div>
 
-<div class="question-grid">
-<div class="q-card">
-<span class="topic-tag">Geometry</span>
-<h3>Find the area of a triangle with sides 5, 12, 13.</h3>
-<p class="mistake"><strong>My Mistake:</strong> Tried using Heron's formula and wasted 2 minutes.</p>
-<p class="solution"><strong>Smart Solution:</strong> Recognize 5,12,13 is a Pythagorean triplet. It's a right triangle! Area = 1/2 × base × height = 1/2 × 5 × 12 = 30.</p>
-</div>
+<div id="question-view" class="container">
+    <div class="header">
+        <button class="back-btn" onclick="showChapters()">← Back to Chapters</button>
+        <h2 id="current-chapter-title">Chapter Name</h2>
+    </div>
+    
+    <div id="questions-container" class="q-list">
+        </div>
 </div>
 
 <script>
-// EXACT SAME SCRIPT AS INDEX.HTML TO KEEP THEME IN SYNC
+/* DATA STORAGE 
+   Add your questions here for each chapter.
+*/
+const mathDoubts = {
+    "Number System": [
+        { q: "Find unit digit of 7^105", m: "Used wrong cyclicity", s: "7^1 = 7" },
+        { q: "Sum of first 50 natural numbers", m: "Used n(n+1) but forgot to divide by 2", s: "n(n+1)/2 = 50*51/2 = 1275" }
+    ],
+    "Plane Geometry": [
+        { q: "Sides 5, 12, 13 area?", m: "Used Heron's formula", s: "Right triangle: 1/2 * 5 * 12 = 30" }
+    ],
+    "Percentage": [
+        { q: "20% increase then 20% decrease", m: "Thought it stays the same", s: "Successive: - (x²/100) = 4% decrease" }
+    ]
+};
+
+// Navigation Logic
+function showQuestions(chapterName) {
+    // 1. Hide Chapter List, Show Question View
+    document.getElementById('chapter-view').style.display = 'none';
+    document.getElementById('question-view').style.display = 'block';
+    
+    // 2. Update Title
+    document.getElementById('current-chapter-title').innerText = chapterName;
+    
+    // 3. Clear and Load Questions
+    const container = document.getElementById('questions-container');
+    container.innerHTML = '';
+    
+    const questions = mathDoubts[chapterName] || [];
+    
+    if (questions.length === 0) {
+        container.innerHTML = '<p style="text-align:center; opacity:0.6;">No doubts added for this chapter yet.</p>';
+    } else {
+        questions.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.innerHTML = `
+                <h4>${item.q}</h4>
+                <p class="mistake"><strong>Mistake:</strong> ${item.m}</p>
+                <p class="solution"><strong>Solution:</strong> ${item.s}</p>
+            `;
+            container.appendChild(div);
+        });
+    }
+    window.scrollTo(0,0);
+}
+
+function showChapters() {
+    document.getElementById('chapter-view').style.display = 'block';
+    document.getElementById('question-view').style.display = 'none';
+}
+
+// Theme Logic
 const themeBtn = document.getElementById('theme-btn');
-const themeIcon = document.getElementById('theme-icon');
-const body = document.body;
-const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
-const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
-
-if (localStorage.getItem('theme') === 'dark') {
-body.setAttribute('data-theme', 'dark');
-themeIcon.innerHTML = `<path d="${moonPath}" />`;
-} else {
-themeIcon.innerHTML = `<path d="${sunPath}" />`;
-}
-
 themeBtn.addEventListener('click', () => {
-themeIcon.classList.add('rotate');
-setTimeout(() => {
-if (body.getAttribute('data-theme') === 'dark') {
-body.removeAttribute('data-theme');
-localStorage.setItem('theme', 'light');
-themeIcon.innerHTML = `<path d="${sunPath}" />`;
-} else {
-body.setAttribute('data-theme', 'dark');
-localStorage.setItem('theme', 'dark');
-themeIcon.innerHTML = `<path d="${moonPath}" />`;
-}
-}, 250);
-setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
+    if (document.body.hasAttribute('data-theme')) {
+        document.body.removeAttribute('data-theme');
+    } else {
+        document.body.setAttribute('data-theme', 'dark');
+    }
 });
 </script>
 
