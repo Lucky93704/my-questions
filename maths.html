@@ -152,7 +152,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // YOUR EXACT FIREBASE CONFIGURATION
     const firebaseConfig = {
       apiKey: "AIzaSyBWOeiVXKoVaI0YKxgQ4YYA3JQ5p5P8ke4",
       authDomain: "my-questions-8e3f5.firebaseapp.com",
@@ -171,9 +170,12 @@
     
     window.loadedQuestionsData = {}; 
 
-    // LOAD DATA
-    window.onload = async function() {
+    // --- NEW: A dedicated function to load/reload questions without refreshing the page ---
+    window.loadAllQuestions = async function() {
         const grid = document.getElementById('all-questions');
+        grid.innerHTML = ''; // Clear the board before loading
+        window.loadedQuestionsData = {}; 
+
         try {
             const querySnapshot = await getDocs(collection(db, "maths_questions"));
             querySnapshot.forEach((document) => {
@@ -192,7 +194,11 @@
                 }
 
                 const card = document.createElement('div');
-                card.className = `q-card ${q.chapterClass}`;
+                
+                // If the user is currently looking at this chapter, make sure the card is visible!
+                const isActive = (q.chapterClass === currentActiveChapterClass) ? "active" : "";
+                card.className = `q-card ${q.chapterClass} ${isActive}`;
+                
                 card.setAttribute('onclick', `openViewModal('${docId}')`); 
                 
                 card.innerHTML = `
@@ -206,7 +212,9 @@
         } catch (e) { console.error("Error fetching documents: ", e); }
     };
 
-    // NAVIGATION
+    // Load questions when the page first opens
+    window.onload = window.loadAllQuestions;
+
     window.openChapter = function(cClass, cName) {
         currentActiveChapterClass = cClass;
         currentActiveChapterName = cName;
@@ -228,7 +236,6 @@
         document.getElementById('chapter-back-btn').style.display = 'none';
     };
 
-    // MODAL TRIGGERS
     window.openAddModal = () => { 
         currentEditingDocId = null; 
         document.getElementById('add-modal-title').innerHTML = `Add to <span id="add-modal-chapter-name">${currentActiveChapterName}</span>`;
@@ -281,7 +288,6 @@
         document.getElementById('add-modal').style.display = 'flex';
     };
 
-    // SAVE & UPDATE LOGIC WITH ALERTS
     window.saveQuestion = async function() {
         try {
             const q = document.getElementById('input-question').value;
@@ -294,7 +300,7 @@
             if(!q && !file && !currentEditingDocId) return alert("❌ Wait! Please type a Question or upload a file first.");
             if(!s) return alert("❌ Wait! You must type something in the 'Correct Logic' box.");
             
-            saveBtn.innerText = "Uploading to Cloud...";
+            saveBtn.innerText = "Saving to Cloud...";
             saveBtn.disabled = true;
 
             let finalFileUrl = null;
@@ -338,22 +344,29 @@
                 await addDoc(collection(db, "maths_questions"), questionData);
             }
             
-            alert("✅ Saved successfully!");
-            location.reload(); 
+            // --- NEW: Refresh data dynamically instead of reloading the page ---
+            await window.loadAllQuestions();
+            closeAddModal();
+            
+            // Reset button
+            saveBtn.innerText = "Save to Cloud";
+            saveBtn.disabled = false;
+            
         } catch(e) {
             console.error("Error Details: ", e);
-            alert("🔥 Database Error: " + e.message + "\n\n(Did Firebase rules reset or is your Ad-blocker on?)");
+            alert("🔥 Error: " + e.message);
             document.getElementById('save-btn').innerText = "Save to Cloud";
             document.getElementById('save-btn').disabled = false;
         }
     };
 
-    // DELETE LOGIC
     window.deleteQuestion = async function(docId) {
         if(confirm("Are you sure you want to permanently delete this doubt?")) {
             try {
+                closeViewModal();
                 await deleteDoc(doc(db, "maths_questions", docId));
-                location.reload(); 
+                // Reload dynamically
+                await window.loadAllQuestions();
             } catch(e) {
                 console.error("Error deleting document: ", e);
                 alert("Failed to delete question.");
@@ -361,7 +374,6 @@
         }
     };
 
-    // THEME LOGIC
     const themeBtn = document.getElementById('theme-btn');
     const body = document.body;
     const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
