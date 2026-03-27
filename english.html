@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+    // Redirect to index if not unlocked
+    if (sessionStorage.getItem('isUnlocked') !== 'true' && localStorage.getItem('isUnlocked') !== 'true') {
+        window.location.href = 'index.html';
+    }
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>English Doubts - SSC Portal</title>
