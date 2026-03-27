@@ -351,7 +351,7 @@ svg { fill: currentColor; }
         <div class="form-group">
             <label>Question / Context</label>
             <textarea id="q-text" placeholder="Type the question or sentence here..."></textarea>
-            <span class="text-hint">📝 Tip: Highlight specific words or rules.</span>
+            <span class="text-hint">📝 Tip: Format text using <strong>**bold**</strong>, <em>*italic*</em>, <u>__underline__</u>, or <mark>==highlight==</mark>.</span>
         </div>
         
         <div class="form-group">
@@ -435,6 +435,17 @@ let fcIndex = 0;
 const editIcon = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
 const deleteIcon = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 const chevronIcon = `<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>`;
+
+// --- MARKDOWN PARSER ---
+function parseMarkdown(text) {
+    if (!text) return '';
+    let html = text.replace(/\n/g, '<br>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic
+    html = html.replace(/__(.*?)__/g, '<u>$1</u>'); // Underline
+    html = html.replace(/==(.*?)==/g, '<mark>$1</mark>'); // Highlight
+    return html;
+}
 
 function initPortal() {
     renderChapterGrid({});
@@ -570,7 +581,7 @@ function handleGlobalSearch() {
             }
         }
 
-        let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text (View attached file)</i>";
+        let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
         let contextBadge = `<span class="tag-badge" style="background:var(--border); color:var(--text); margin-left: 10px;">${item.chapter} (${item.mode === 'mock' ? 'Mock Test' : 'Practice'})</span>`;
 
@@ -585,8 +596,8 @@ function handleGlobalSearch() {
             
             <div class="question-details">
                 ${fileHTML}
-                <p class="mistake"><strong>Mistake:</strong> ${item.m ? item.m.replace(/\n/g, '<br>') : ''}</p>
-                <p class="solution"><strong>Rule/Solution:</strong> ${item.s ? item.s.replace(/\n/g, '<br>') : ''}</p>
+                <p class="mistake"><strong>Mistake:</strong> ${item.m ? parseMarkdown(item.m) : ''}</p>
+                <p class="solution"><strong>Rule/Solution:</strong> ${item.s ? parseMarkdown(item.s) : ''}</p>
             </div>
         `;
         resultsContainer.appendChild(div);
@@ -710,7 +721,7 @@ function renderQuestions() {
             }
         }
 
-        let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text (View attached file)</i>";
+        let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
 
         div.innerHTML = `
@@ -728,8 +739,8 @@ function renderQuestions() {
             
             <div class="question-details">
                 ${fileHTML}
-                <p class="mistake"><strong>Mistake:</strong> ${item.m ? item.m.replace(/\n/g, '<br>') : ''}</p>
-                <p class="solution"><strong>Rule/Solution:</strong> ${item.s ? item.s.replace(/\n/g, '<br>') : ''}</p>
+                <p class="mistake"><strong>Mistake:</strong> ${item.m ? parseMarkdown(item.m) : ''}</p>
+                <p class="solution"><strong>Rule/Solution:</strong> ${item.s ? parseMarkdown(item.s) : ''}</p>
             </div>
         `;
         container.appendChild(div);
@@ -791,7 +802,7 @@ function renderFlashcard() {
         }
     }
 
-    let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text (Reveal to view attachment)</i>";
+    let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (Reveal to view attachment)</i>";
 
     card.innerHTML = `
         ${getTagHTML(item.tag)}
@@ -804,8 +815,8 @@ function renderFlashcard() {
         
         <div class="fc-details" id="fc-details-block">
             ${fileHTML}
-            <p class="mistake"><strong>Your Mistake:</strong><br> ${item.m ? item.m.replace(/\n/g, '<br>') : 'N/A'}</p>
-            <p class="solution"><strong>Rule/Solution:</strong><br> ${item.s ? item.s.replace(/\n/g, '<br>') : 'N/A'}</p>
+            <p class="mistake"><strong>Your Mistake:</strong><br> ${item.m ? parseMarkdown(item.m) : 'N/A'}</p>
+            <p class="solution"><strong>Rule/Solution:</strong><br> ${item.s ? parseMarkdown(item.s) : 'N/A'}</p>
         </div>
     `;
 
