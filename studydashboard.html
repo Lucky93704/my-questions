@@ -50,12 +50,15 @@ body {
 
 .container { max-width: 800px; margin: auto; padding-top: 40px; padding-bottom: 50px; }
 
-/* Header */
+/* Header & Streak */
 .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
-.header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; color: var(--target); }
+.header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; color: var(--target); display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .header-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
 svg { fill: currentColor; }
+
+.streak-badge { background: #ffedd5; color: #ea580c; padding: 4px 12px; border-radius: 20px; font-size: 1rem; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+[data-theme="dark"] .streak-badge { background: #431407; color: #fdba74; }
 
 /* Date & Progress Card */
 .progress-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s, transform 0.3s;}
@@ -80,10 +83,12 @@ svg { fill: currentColor; }
 .guilty-card { animation: guiltyShake 0.5s ease; border-color: var(--error) !important; }
 
 /* Add Task Form */
-.add-task-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.add-task-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;}
 .add-task-form input[type="text"] { flex: 2; min-width: 250px; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s;}
 .add-task-form input[type="text"]:focus { border-color: var(--target); }
 .add-task-form select { flex: 1; min-width: 120px; padding: 12px; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 1rem; outline: none; cursor: pointer; }
+.recurring-label { display: flex; align-items: center; gap: 6px; color: var(--text); font-weight: 600; cursor: pointer; font-size: 0.9rem; background: var(--card-bg); border: 2px solid var(--border); padding: 10px 15px; border-radius: 8px; transition: 0.2s; white-space: nowrap;}
+.recurring-label:hover { border-color: var(--target); }
 .add-btn { background: var(--target); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; white-space: nowrap;}
 .add-btn:hover { background: var(--target-hover); transform: translateY(-2px); }
 .add-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
@@ -107,7 +112,7 @@ svg { fill: currentColor; }
 .task-left { display: flex; align-items: center; gap: 15px; flex: 1; overflow: hidden; }
 .custom-checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; background: var(--bg);}
 .task-item.completed .custom-checkbox { background: var(--success); border-color: var(--success); color: white; }
-.task-text { font-size: 1.05rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s; cursor: pointer;}
+.task-text { font-size: 1.05rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s; cursor: pointer; display: flex; align-items: center; gap: 8px;}
 
 .task-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .subj-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: bold; margin-right: 5px; }
@@ -148,7 +153,7 @@ svg { fill: currentColor; }
 .modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--primary); font-size: 1.6rem; }
 
 /* New Date Range UI inside Analytics */
-.date-range-container { background: var(--bg); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); }
+.date-range-container { background: var(--bg); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); }
 .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; justify-content: center; }
 .preset-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
 .preset-btn:hover { border-color: var(--primary); color: var(--primary); }
@@ -158,7 +163,13 @@ svg { fill: currentColor; }
 .custom-dates input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg); color: var(--text); outline: none; font-family: inherit; }
 .custom-dates input:focus { border-color: var(--target); }
 
-#analytics-subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 20px; font-weight: 500; }
+/* Dual Analytics Tabs */
+.analytics-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+.tab-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: 0.2s; }
+.tab-btn:hover { border-color: var(--target); color: var(--target); }
+.tab-btn.active { background: var(--target); color: white; border-color: var(--target); }
+
+#analytics-subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 15px; font-weight: 500; }
 .close-modal { margin-top: 25px; background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s;}
 .close-modal:hover { border-color: var(--error); color: var(--error); }
 .chart-container { position: relative; height: 250px; width: 100%; display: flex; justify-content: center;}
@@ -168,6 +179,8 @@ svg { fill: currentColor; }
     .header h2 { font-size: 1.5rem; order: -1; margin-bottom: 5px; }
     .header-actions { justify-content: center; width: 100%; }
     .add-task-form input[type="text"] { width: 100%; flex: none; }
+    .add-task-form select { flex: 1; }
+    .recurring-label { flex: 1; justify-content: center; }
     .add-btn { width: 100%; }
     .theme-toggle { top: 15px; right: 15px; padding: 8px; }
     .theme-toggle svg { width: 20px; height: 20px; }
@@ -205,7 +218,12 @@ svg { fill: currentColor; }
             </div>
         </div>
 
-        <p id="analytics-subtitle">Task completion percentage</p>
+        <p id="analytics-subtitle">Select date range</p>
+
+        <div class="analytics-tabs">
+            <button class="tab-btn active" id="tab-completion" onclick="switchChartTab('completion')">Completion %</button>
+            <button class="tab-btn" id="tab-subjects" onclick="switchChartTab('subjects')">Subject Breakdown</button>
+        </div>
         
         <div class="chart-container">
             <canvas id="weeklyChart"></canvas>
@@ -227,14 +245,14 @@ svg { fill: currentColor; }
                 <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Analytics
             </button>
         </div>
-        <h2>Study Dashboard</h2>
+        <h2>Study Dashboard <span id="streak-counter" class="streak-badge" title="Consecutive days with 100% completion">🔥 0 Days</span></h2>
     </div>
 
     <div class="progress-card" id="progress-card">
         <div class="date-selector">
             <h3 id="display-date-text">Today's Plan</h3>
             <div class="date-controls">
-                <button class="carry-over-btn" id="carry-over-btn" onclick="carryOverTasks()" title="Bring unfinished tasks from yesterday to this date">
+                <button class="carry-over-btn" id="carry-over-btn" onclick="carryOverTasks()" title="Bring unfinished tasks & recurring tasks from yesterday to this date">
                     <svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/></svg>
                 </button>
                 <input type="date" id="target-date" class="date-input" onchange="fetchTargets()">
@@ -257,6 +275,9 @@ svg { fill: currentColor; }
             <option value="Reasoning">Reasoning</option>
             <option value="Mock">Mock Test</option>
         </select>
+        <label class="recurring-label" title="Repeat this task every day">
+            <input type="checkbox" id="new-task-recurring"> 🔁 Daily
+        </label>
         <button class="add-btn" id="add-task-btn" onclick="addTask()">Add Target</button>
     </div>
 
@@ -297,6 +318,8 @@ let editingTargetId = null;
 let currentFilter = 'All';
 let previousPercentage = -1; 
 let weeklyChartInstance = null;
+let currentChartTab = 'completion'; // For dual analytics
+let lastAnalyticsData = null; // Store fetched analytics data
 
 // Helper to get local date string YYYY-MM-DD
 function getLocalISOString(date) {
@@ -343,6 +366,7 @@ function fetchTargets() {
     editingTargetId = null;
     document.getElementById('add-task-btn').innerText = "Add Target";
     document.getElementById('new-task-text').value = '';
+    document.getElementById('new-task-recurring').checked = false;
     previousPercentage = -1; 
     
     const listContainer = document.getElementById('task-list');
@@ -386,15 +410,16 @@ function renderTask(id, data, container) {
     
     const checkIcon = data.completed ? `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` : ``;
     const safeTaskText = data.task ? data.task.replace(/'/g, "\\'") : "";
+    const recurringIcon = data.isRecurring ? `<span title="Recurring Task" style="font-size: 0.8rem; margin-top:2px;">🔁</span>` : ``;
 
     div.innerHTML = `
         <div class="task-left" onclick="toggleTask('${id}', ${data.completed})">
             <div class="custom-checkbox">${checkIcon}</div>
-            <span class="task-text" title="${data.task}">${data.task}</span>
+            <span class="task-text" title="${data.task}">${data.task} ${recurringIcon}</span>
         </div>
         <div class="task-right">
             <span class="subj-badge subj-${data.subject}">${data.subject}</span>
-            <button class="icon-btn edit-btn" onclick="editTarget('${id}', '${safeTaskText}', '${data.subject}')" title="Edit">
+            <button class="icon-btn edit-btn" onclick="editTarget('${id}', '${safeTaskText}', '${data.subject}', ${data.isRecurring || false})" title="Edit">
                 <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
             </button>
             <button class="icon-btn delete-btn" onclick="deleteTask('${id}')" title="Delete">
@@ -405,10 +430,11 @@ function renderTask(id, data, container) {
     container.appendChild(div);
 }
 
-function editTarget(id, taskText, subject) {
+function editTarget(id, taskText, subject, isRecurring) {
     editingTargetId = id;
     document.getElementById('new-task-text').value = taskText;
     document.getElementById('new-task-subject').value = subject;
+    document.getElementById('new-task-recurring').checked = isRecurring;
     document.getElementById('add-task-btn').innerText = "Update Target";
     window.scrollTo({ top: 0, behavior: 'smooth' });
     document.getElementById('new-task-text').focus();
@@ -417,6 +443,7 @@ function editTarget(id, taskText, subject) {
 function addTask() {
     const input = document.getElementById('new-task-text');
     const subject = document.getElementById('new-task-subject').value;
+    const isRecurring = document.getElementById('new-task-recurring').checked;
     const date = document.getElementById('target-date').value;
     const btn = document.getElementById('add-task-btn');
     
@@ -433,15 +460,17 @@ function addTask() {
     
     if (editingTargetId) {
         btn.innerText = "Updating...";
-        db.collection("dailyTargets").doc(editingTargetId).update({ task: taskText, subject: subject }).then(() => {
-            input.value = ''; editingTargetId = null; btn.disabled = false; btn.innerText = "Add Target"; 
+        db.collection("dailyTargets").doc(editingTargetId).update({ 
+            task: taskText, subject: subject, isRecurring: isRecurring 
+        }).then(() => {
+            input.value = ''; document.getElementById('new-task-recurring').checked = false; editingTargetId = null; btn.disabled = false; btn.innerText = "Add Target"; 
         });
     } else {
         btn.innerText = "Adding...";
         db.collection("dailyTargets").add({
-            task: taskText, subject: subject, date: date, completed: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            task: taskText, subject: subject, date: date, completed: false, isRecurring: isRecurring, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
-            input.value = ''; btn.disabled = false; btn.innerText = "Add Target";
+            input.value = ''; document.getElementById('new-task-recurring').checked = false; btn.disabled = false; btn.innerText = "Add Target";
         });
     }
 }
@@ -463,32 +492,90 @@ function updateProgress(completed, total) {
     
     if (total === 0) {
         fill.style.width = '0%'; text.innerText = `0/0 Completed (0%)`;
-        fill.style.background = 'var(--target)'; card.classList.remove('guilty-card'); return;
-    }
-
-    const percentage = Math.round((completed / total) * 100);
-    fill.style.width = `${percentage}%`;
-
-    if (percentage === 100) {
-        fill.style.background = 'var(--success)'; text.style.color = 'var(--success)';
-        text.innerText = `${completed}/${total} Completed (${percentage}%) 🎉 All done!`;
-        card.classList.remove('guilty-card');
-        
-        if (previousPercentage !== 100 && previousPercentage !== -1) {
-            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#22c55e', '#3b82f6', '#8b5cf6', '#eab308'] });
-        }
+        fill.style.background = 'var(--target)'; card.classList.remove('guilty-card'); 
     } else {
-        fill.style.background = 'var(--target)'; text.style.color = 'var(--error)';
-        text.innerText = `${completed}/${total} Completed (${percentage}%) 🥺 Missing Targets!`;
-        card.classList.remove('guilty-card');
-        void card.offsetWidth; 
-        card.classList.add('guilty-card');
+        const percentage = Math.round((completed / total) * 100);
+        fill.style.width = `${percentage}%`;
+
+        if (percentage === 100) {
+            fill.style.background = 'var(--success)'; text.style.color = 'var(--success)';
+            text.innerText = `${completed}/${total} Completed (${percentage}%) 🎉 All done!`;
+            card.classList.remove('guilty-card');
+            
+            if (previousPercentage !== 100 && previousPercentage !== -1) {
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#22c55e', '#3b82f6', '#8b5cf6', '#eab308'] });
+            }
+        } else {
+            fill.style.background = 'var(--target)'; text.style.color = 'var(--error)';
+            text.innerText = `${completed}/${total} Completed (${percentage}%) 🥺 Missing Targets!`;
+            card.classList.remove('guilty-card');
+            void card.offsetWidth; 
+            card.classList.add('guilty-card');
+        }
+        previousPercentage = percentage;
     }
-    previousPercentage = percentage;
+    
+    // Always calculate streak when progress is updated
+    calculateStreak();
 }
 
 // ==========================================
-// CARRY OVER LOGIC
+// STUDY STREAK LOGIC
+// ==========================================
+async function calculateStreak() {
+    try {
+        const todayStr = getLocalISOString(new Date());
+        
+        // Fetch up to 30 days of past tasks
+        const startLimit = new Date();
+        startLimit.setDate(startLimit.getDate() - 30);
+        const startLimitStr = getLocalISOString(startLimit);
+
+        const snapshot = await db.collection("dailyTargets")
+            .where("date", ">=", startLimitStr)
+            .where("date", "<=", todayStr)
+            .get();
+
+        const daysData = {};
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (!daysData[data.date]) daysData[data.date] = { total: 0, completed: 0 };
+            daysData[data.date].total++;
+            if (data.completed) daysData[data.date].completed++;
+        });
+
+        let streak = 0;
+        let checkDate = new Date();
+
+        // If today is 100% complete, it counts toward the streak.
+        // If today is incomplete, we check yesterday to see if the past streak is intact.
+        if (daysData[todayStr] && daysData[todayStr].total > 0 && daysData[todayStr].completed === daysData[todayStr].total) {
+            // Start checking from today
+        } else {
+            // Start checking from yesterday
+            checkDate.setDate(checkDate.getDate() - 1);
+        }
+
+        for (let i = 0; i < 30; i++) {
+            const dateStr = getLocalISOString(checkDate);
+            if (daysData[dateStr] && daysData[dateStr].total > 0 && daysData[dateStr].completed === daysData[dateStr].total) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+                break; // Streak broken
+            }
+        }
+
+        const streakBadge = document.getElementById('streak-counter');
+        streakBadge.innerText = `🔥 ${streak} Day${streak !== 1 ? 's' : ''}`;
+        
+    } catch (e) {
+        console.error("Error calculating streak:", e);
+    }
+}
+
+// ==========================================
+// CARRY OVER LOGIC (Updated for Recurring)
 // ==========================================
 async function carryOverTasks() {
     const btn = document.getElementById('carry-over-btn');
@@ -501,28 +588,43 @@ async function carryOverTasks() {
     const yesterdayStr = getLocalISOString(targetDate);
 
     try {
-        const snapshot = await db.collection("dailyTargets")
-            .where("date", "==", yesterdayStr)
-            .where("completed", "==", false)
-            .get();
+        // First, fetch TODAY's tasks to avoid copying duplicates
+        const todaySnap = await db.collection("dailyTargets").where("date", "==", targetDateStr).get();
+        const todayTaskNames = new Set();
+        todaySnap.forEach(doc => todayTaskNames.add(doc.data().task.trim().toLowerCase()));
 
-        if (snapshot.empty) {
-            alert("Great job! No unfinished tasks to carry over from yesterday.");
-        } else {
-            const batch = db.batch();
-            snapshot.forEach(doc => {
-                const data = doc.data();
+        // Next, fetch YESTERDAY's tasks
+        const yesterdaySnap = await db.collection("dailyTargets").where("date", "==", yesterdayStr).get();
+
+        const batch = db.batch();
+        let addedCount = 0;
+
+        yesterdaySnap.forEach(doc => {
+            const data = doc.data();
+            
+            // Carry over if (task is unfinished OR marked as recurring) AND it doesn't already exist today
+            const shouldCarryOver = !data.completed || data.isRecurring;
+            const notAlreadyAdded = !todayTaskNames.has(data.task.trim().toLowerCase());
+            
+            if (shouldCarryOver && notAlreadyAdded) {
                 const newRef = db.collection("dailyTargets").doc();
                 batch.set(newRef, {
                     task: data.task,
                     subject: data.subject,
-                    date: targetDateStr, // Copied to the currently selected date
+                    date: targetDateStr,
                     completed: false,
+                    isRecurring: data.isRecurring || false,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-            });
+                addedCount++;
+            }
+        });
+        
+        if (addedCount > 0) {
             await batch.commit();
-            alert(`Carried over ${snapshot.size} task(s) from ${yesterdayStr} to today!`);
+            alert(`Carried over ${addedCount} task(s) to today!`);
+        } else {
+            alert("Everything is up to date! No tasks needed carrying over.");
         }
     } catch (error) {
         console.error("Error carrying over tasks:", error);
@@ -532,17 +634,15 @@ async function carryOverTasks() {
 }
 
 // ==========================================
-// NEW DATE RANGE ANALYTICS LOGIC
+// DUAL ANALYTICS LOGIC
 // ==========================================
 function openAnalyticsModal() {
     document.getElementById('analytics-modal').style.display = 'flex';
-    // Trigger the '1 Week' preset by default
     const weekBtn = document.querySelector('.presets button:first-child');
     setPreset('week', weekBtn);
 }
 
 function setPreset(type, btnElement) {
-    // Manage active states
     document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
     if (btnElement) btnElement.classList.add('active');
 
@@ -550,28 +650,30 @@ function setPreset(type, btnElement) {
     let start = new Date();
     let end = new Date();
 
-    if (type === 'week') {
-        start.setDate(today.getDate() - 6);
-    } else if (type === '15days') {
-        start.setDate(today.getDate() - 14);
-    } else if (type === 'currentMonth') {
-        start = new Date(today.getFullYear(), today.getMonth(), 1);
-        // end remains today
-    } else if (type === 'lastMonth') {
+    if (type === 'week') { start.setDate(today.getDate() - 6); } 
+    else if (type === '15days') { start.setDate(today.getDate() - 14); } 
+    else if (type === 'currentMonth') { start = new Date(today.getFullYear(), today.getMonth(), 1); } 
+    else if (type === 'lastMonth') {
         start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        end = new Date(today.getFullYear(), today.getMonth(), 0); // Last day of previous month
+        end = new Date(today.getFullYear(), today.getMonth(), 0); 
     }
 
     document.getElementById('analytics-start').value = getLocalISOString(start);
     document.getElementById('analytics-end').value = getLocalISOString(end);
-
     fetchAnalyticsData();
 }
 
 function clearPresetsAndFetch() {
-    // If user picks a custom date, deselect the preset buttons
     document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
     fetchAnalyticsData();
+}
+
+function switchChartTab(tab) {
+    currentChartTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    
+    if(lastAnalyticsData) { renderChart(); }
 }
 
 async function fetchAnalyticsData() {
@@ -580,10 +682,9 @@ async function fetchAnalyticsData() {
 
     if (!startDateStr || !endDateStr) return;
 
-    // Format dates for the subtitle
     const sDate = new Date(startDateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
     const eDate = new Date(endDateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    document.getElementById('analytics-subtitle').innerText = `Task completion from ${sDate} to ${eDate}`;
+    document.getElementById('analytics-subtitle').innerText = `Data from ${sDate} to ${eDate}`;
 
     try {
         const snapshot = await db.collection("dailyTargets")
@@ -591,72 +692,95 @@ async function fetchAnalyticsData() {
             .where("date", "<=", endDateStr)
             .get();
 
-        let completed = 0;
-        let incomplete = 0;
-        let total = 0;
+        let completed = 0; let incomplete = 0; let total = 0;
+        const subjects = { Maths: 0, English: 0, GK: 0, Reasoning: 0, Mock: 0 };
         
         snapshot.forEach(doc => {
             const data = doc.data();
             total++;
             if (data.completed) {
                 completed++;
+                if (subjects[data.subject] !== undefined) subjects[data.subject]++;
             } else {
                 incomplete++;
             }
         });
 
-        const chartContainer = document.querySelector('.chart-container');
-        
-        if (total === 0) {
-            chartContainer.innerHTML = '<div style="margin-top: 80px; color: #64748b; font-style: italic;">No tasks found in this date range.</div>';
-            return;
-        } else {
-            chartContainer.innerHTML = '<canvas id="weeklyChart"></canvas>';
-        }
+        lastAnalyticsData = { completed, incomplete, total, subjects };
+        renderChart();
 
-        const ctx = document.getElementById('weeklyChart').getContext('2d');
-        const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
-        const cardBg = getComputedStyle(document.body).getPropertyValue('--card-bg').trim();
+    } catch(error) {
+        console.error("Error fetching analytics:", error);
+    }
+}
 
-        const completedPct = Math.round((completed / total) * 100);
+function renderChart() {
+    const chartContainer = document.querySelector('.chart-container');
+    const data = lastAnalyticsData;
+
+    if (!data || data.total === 0) {
+        chartContainer.innerHTML = '<div style="margin-top: 80px; color: #64748b; font-style: italic;">No tasks found in this date range.</div>';
+        return;
+    } else {
+        chartContainer.innerHTML = '<canvas id="weeklyChart"></canvas>';
+    }
+
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
+    const cardBg = getComputedStyle(document.body).getPropertyValue('--card-bg').trim();
+
+    if (weeklyChartInstance) { weeklyChartInstance.destroy(); }
+
+    if (currentChartTab === 'completion') {
+        const completedPct = Math.round((data.completed / data.total) * 100);
         const incompletePct = 100 - completedPct;
         
-        if (weeklyChartInstance) { weeklyChartInstance.destroy(); }
-
         weeklyChartInstance = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['Completed', 'Incomplete'],
                 datasets: [{
                     data: [completedPct, incompletePct],
-                    backgroundColor: ['#22c55e', '#ef4444'], // Green & Red
-                    borderWidth: 2,
-                    borderColor: cardBg
+                    backgroundColor: ['#22c55e', '#ef4444'],
+                    borderWidth: 2, borderColor: cardBg
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
-                    legend: { 
-                        position: 'bottom', 
-                        labels: { 
-                            color: textColor, 
-                            font: { family: "'Segoe UI', sans-serif", size: 14 } 
-                        } 
-                    },
-                    tooltip: { 
-                        callbacks: { 
-                            label: function(context) { 
-                                return ' ' + context.label + ': ' + context.raw + '%'; 
-                            } 
-                        } 
-                    }
+                    legend: { position: 'bottom', labels: { color: textColor, font: { family: "'Segoe UI', sans-serif", size: 14 } } },
+                    tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.raw + '%'; } } }
                 }
             }
         });
-    } catch(error) {
-        console.error("Error fetching analytics:", error);
+    } else if (currentChartTab === 'subjects') {
+        // Tab 2: Subject Breakdown (Bar Chart)
+        const subjLabels = Object.keys(data.subjects);
+        const subjData = Object.values(data.subjects);
+
+        weeklyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: subjLabels,
+                datasets: [{
+                    label: 'Tasks Completed',
+                    data: subjData,
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#a855f7', '#ef4444'],
+                    borderWidth: 1, borderColor: cardBg, borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1, precision: 0 }, grid: { color: 'rgba(100, 116, 139, 0.1)' } },
+                    x: { ticks: { color: textColor }, grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: function(c) { return ' ' + c.raw + ' tasks'; } } }
+                }
+            }
+        });
     }
 }
 
@@ -678,7 +802,7 @@ themeBtn.addEventListener('click', () => {
         } else {
             body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeIcon.innerHTML = `<path d="${moonPath}" />`;
         }
-        if(weeklyChartInstance && document.getElementById('analytics-modal').style.display === 'flex') { fetchAnalyticsData(); }
+        if(weeklyChartInstance && document.getElementById('analytics-modal').style.display === 'flex') { renderChart(); }
     }, 250);
     setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
 });
