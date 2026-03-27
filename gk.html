@@ -346,7 +346,7 @@ svg { fill: currentColor; }
         <div class="form-group" style="display:flex; gap:15px; flex-wrap:wrap;">
             <div style="flex:1; min-width: 200px;">
                 <label>Chapter Name</label>
-                <select id="q-chapter"></select>
+                <input type="text" id="q-chapter" placeholder="e.g., Ancient History">
             </div>
             <div style="flex:1; min-width: 200px;">
                 <label>Topic Name (Optional)</label>
@@ -466,15 +466,6 @@ function parseMarkdown(text) {
 }
 
 function initPortal() {
-    // Populate the chapter dropdown in the modal
-    const chapterSelect = document.getElementById('q-chapter');
-    chaptersList.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c;
-        opt.innerText = c;
-        chapterSelect.appendChild(opt);
-    });
-
     renderChapterGrid({});
     heatmapUnsubscribe = db.collection("gkDoubts").onSnapshot((snapshot) => {
         const counts = {};
@@ -910,7 +901,7 @@ function editQuestion(id) {
         opt.selected = tagsToSelect.includes(opt.value);
     });
 
-    document.getElementById('q-chapter').value = item.chapter || currentActiveChapter;
+    document.getElementById('q-chapter').value = item.chapter || '';
     document.getElementById('q-topic').value = item.topic || '';
     document.getElementById('q-text').value = item.q || '';
     document.getElementById('m-text').value = item.m || '';
@@ -936,7 +927,7 @@ function openModal() {
     editingId = null; 
     document.getElementById('modal-title').innerText = "Add New Doubt";
     
-    document.getElementById('q-chapter').value = currentActiveChapter;
+    document.getElementById('q-chapter').value = '';
     document.getElementById('q-topic').value = '';
 
     removeExistingFile = false;
@@ -955,7 +946,7 @@ function closeModal() {
 
 function clearForm() {
     document.getElementById('q-tag').selectedIndex = -1;
-    document.getElementById('q-chapter').value = currentActiveChapter;
+    document.getElementById('q-chapter').value = '';
     document.getElementById('q-topic').value = '';
     document.getElementById('q-text').value = '';
     document.getElementById('m-text').value = '';
@@ -975,7 +966,7 @@ function saveQuestion() {
     const selectElement = document.getElementById('q-tag');
     const tag = Array.from(selectElement.selectedOptions).map(opt => opt.value).filter(val => val !== "");
     
-    const chapter = document.getElementById('q-chapter').value;
+    const chapter = document.getElementById('q-chapter').value.trim();
     const topic = document.getElementById('q-topic').value.trim();
     const q = document.getElementById('q-text').value.trim();
     const m = document.getElementById('m-text').value.trim();
