@@ -15,6 +15,7 @@
 <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 
 <style>
 :root { 
@@ -263,6 +264,20 @@ svg { fill: currentColor; }
 }
 .multiselect-option:hover { background: var(--bg); }
 .multiselect-option input { cursor: pointer; width: 16px; height: 16px; accent-color: var(--primary); margin: 0; }
+
+/* Validation Error Animation */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-6px); }
+}
+
+.input-error {
+    border-color: var(--error) !important;
+    animation: shake 0.4s ease-in-out;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
 </style>
 </head>
 <body>
@@ -1010,10 +1025,15 @@ function clearForm() {
     if (checkboxes) checkboxes.forEach(cb => cb.checked = false);
     if (document.getElementById('ms-text')) document.getElementById('ms-text').innerText = 'Select tags...';
 
-    document.getElementById('q-text').value = '';
+    const qInput = document.getElementById('q-text');
+    const fileInput = document.getElementById('q-file');
+    qInput.classList.remove('input-error');
+    fileInput.classList.remove('input-error');
+
+    qInput.value = '';
     document.getElementById('m-text').value = '';
     document.getElementById('s-text').value = '';
-    document.getElementById('q-file').value = '';
+    fileInput.value = '';
     document.getElementById('upload-progress-container').style.display = 'none';
     document.getElementById('upload-progress-bar').style.width = '0%';
     
@@ -1024,19 +1044,33 @@ function clearForm() {
     resetButtons();
 }
 
-function saveQuestion() {
+async function saveQuestion() {
+    const qInput = document.getElementById('q-text');
+    const fileInput = document.getElementById('q-file');
+
+    // Remove existing error classes before checking
+    qInput.classList.remove('input-error');
+    fileInput.classList.remove('input-error');
+
     const status = document.getElementById('q-status').value;
     const selectElement = document.getElementById('q-tag');
     const tag = Array.from(selectElement.selectedOptions).map(opt => opt.value).filter(val => val !== "");
     
-    const q = document.getElementById('q-text').value.trim();
+    const q = qInput.value.trim();
     const m = document.getElementById('m-text').value.trim();
     const s = document.getElementById('s-text').value.trim();
-    const fileInput = document.getElementById('q-file');
     const saveBtn = document.getElementById('save-btn');
     
+    // Trigger the visual shake feedback if fields are empty
     if (!q && !fileInput.files.length && !editingId) {
-        alert("Please enter a question or upload a file."); return;
+        qInput.classList.add('input-error');
+        fileInput.classList.add('input-error');
+        
+        // Auto-remove the error state when the user interacts again
+        qInput.addEventListener('input', () => qInput.classList.remove('input-error'), { once: true });
+        fileInput.addEventListener('change', () => fileInput.classList.remove('input-error'), { once: true });
+        
+        return; // Stop execution
     }
 
     saveBtn.disabled = true;
@@ -1046,9 +1080,33 @@ function saveQuestion() {
     const payload = { tag: tag, q: q, m: m, s: s, status: status };
 
     if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        if (file.size > 800000) { 
-            alert("File is too large! Please compress it."); resetButtons(); return;
+        let file = fileInput.files[0];
+        
+        // Check if it's an image to apply compression
+        if (file.type.startsWith('image/')) {
+            const options = {
+                maxSizeMB: 0.25, // Compress to max ~250KB
+                maxWidthOrHeight: 1600, // Downscale massive 4K phone photos
+                useWebWorker: true
+            };
+            
+            try {
+                document.getElementById('upload-progress-container').style.display = 'block';
+                document.getElementById('upload-progress-bar').style.width = '30%'; // Show initial progress
+                
+                // Compress the file
+                file = await window.imageCompression(file, options);
+            } catch (error) {
+                console.error("Compression failed:", error);
+                alert("Could not process the image. Please try another one.");
+                resetButtons();
+                return;
+            }
+        } else if (file.size > 2000000) { 
+            // 2MB limit for PDFs
+            alert("PDF is too large! Please keep it under 2MB."); 
+            resetButtons(); 
+            return;
         }
 
         const reader = new FileReader();
@@ -1056,7 +1114,13 @@ function saveQuestion() {
         const progressBar = document.getElementById('upload-progress-bar');
         
         reader.onprogress = (e) => {
-            if (e.lengthComputable) progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+            if (e.lengthComputable) {
+                // If it was compressed, map the remaining progress 30% -> 100%
+                const percent = file.type.startsWith('image/') ? 
+                    30 + Math.round((e.loaded / e.total) * 70) : 
+                    Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percent + '%';
+            }
         };
         
         reader.onload = (e) => {
