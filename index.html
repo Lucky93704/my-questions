@@ -74,6 +74,12 @@ header p { color: #64748b; font-size: 1.1rem; }
         <input type="password" id="pin-input" maxlength="4" placeholder="••••" inputmode="numeric">
         <button id="unlock-btn">Unlock</button>
     </div>
+    
+    <div style="margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <input type="checkbox" id="remember-me" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--primary);">
+        <label for="remember-me" style="cursor: pointer; font-size: 0.95rem; color: var(--text);">Remember this device</label>
+    </div>
+    
     <p id="error-msg">Incorrect PIN. Try again.</p>
 </div>
 
@@ -97,7 +103,8 @@ header p { color: #64748b; font-size: 1.1rem; }
 
 <script>
 // --- SESSION CHECK ---
-if (sessionStorage.getItem('isUnlocked') === 'true') {
+// Now checks both sessionStorage and localStorage
+if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
     document.getElementById('pin-screen').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
 }
@@ -127,8 +134,13 @@ function attemptUnlock() {
         unlockBtn.disabled = true;
         document.getElementById('pin-input').disabled = true;
         
-        // Save to sessionStorage 
-        sessionStorage.setItem('isUnlocked', 'true');
+        // Save to appropriate storage based on checkbox
+        const rememberMe = document.getElementById('remember-me').checked;
+        if (rememberMe) {
+            localStorage.setItem('isUnlocked', 'true'); // Persists across browser restarts
+        } else {
+            sessionStorage.setItem('isUnlocked', 'true'); // Persists only for current tab
+        }
         
         // Run fade-out and fade-in animations with slight delays for smoothness
         setTimeout(() => {
@@ -166,8 +178,9 @@ function handleLogout() {
     logoutBtn.innerHTML = '<span class="spinner"></span> Locking...';
     logoutBtn.disabled = true;
     
-    // Remove the unlock state from sessionStorage
+    // Remove the unlock state from both storages
     sessionStorage.removeItem('isUnlocked');
+    localStorage.removeItem('isUnlocked');
     
     setTimeout(() => {
         const pinScreen = document.getElementById('pin-screen');
@@ -188,6 +201,9 @@ function handleLogout() {
             const pinInput = document.getElementById('pin-input');
             pinInput.value = '';
             pinInput.disabled = false;
+            
+            // Reset Checkbox
+            document.getElementById('remember-me').checked = false;
             
             // Fade in PIN screen
             pinScreen.classList.remove('anim-fade-out');
