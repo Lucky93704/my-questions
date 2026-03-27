@@ -345,12 +345,12 @@ svg { fill: currentColor; }
         
         <div class="form-group" style="display:flex; gap:15px; flex-wrap:wrap;">
             <div style="flex:1; min-width: 200px;">
-                <label>Chapter Name</label>
-                <input type="text" id="q-chapter" placeholder="e.g., Ancient History">
+                <label>Topic Name (Optional)</label>
+                <input type="text" id="q-topic" placeholder="e.g., Indus Valley">
             </div>
             <div style="flex:1; min-width: 200px;">
-                <label>Topic Name (Optional)</label>
-                <input type="text" id="q-topic" placeholder="e.g., Indus Valley, Article 32">
+                <label>Subtopic Name (Optional)</label>
+                <input type="text" id="q-subtopic" placeholder="e.g., Harappa">
             </div>
         </div>
 
@@ -558,9 +558,10 @@ function renderErrorChart(tagCounts) {
     }
 }
 
-function getContextBadgeHTML(chapter, topic) {
+function getContextBadgeHTML(chapter, topic, subtopic) {
     let text = `📖 ${chapter || 'Unknown'}`;
     if (topic) text += ` › ${topic}`;
+    if (subtopic) text += ` › ${subtopic}`;
     return `<span class="tag-badge context-badge">${text}</span>`;
 }
 
@@ -584,7 +585,8 @@ function handleGlobalSearch() {
         const mText = (q.m || "").toLowerCase();
         const sText = (q.s || "").toLowerCase();
         const tText = (q.topic || "").toLowerCase();
-        return qText.includes(query) || mText.includes(query) || sText.includes(query) || tText.includes(query);
+        const subText = (q.subtopic || "").toLowerCase();
+        return qText.includes(query) || mText.includes(query) || sText.includes(query) || tText.includes(query) || subText.includes(query);
     });
 
     if (filtered.length === 0) {
@@ -608,7 +610,7 @@ function handleGlobalSearch() {
 
         let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
-        let contextHTML = getContextBadgeHTML(item.chapter, item.topic);
+        let contextHTML = getContextBadgeHTML(item.chapter, item.topic, item.subtopic);
         let modeHTML = `<span class="tag-badge context-badge">🎯 ${item.mode === 'mock' ? 'Mock Test' : 'Practice'}</span>`;
 
         div.innerHTML = `
@@ -749,7 +751,7 @@ function renderQuestions() {
 
         let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
-        let contextHTML = getContextBadgeHTML(item.chapter, item.topic);
+        let contextHTML = getContextBadgeHTML(item.chapter, item.topic, item.subtopic);
 
         div.innerHTML = `
             <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom: 5px;">${tagHTML} ${contextHTML}</div>
@@ -831,7 +833,7 @@ function renderFlashcard() {
 
     let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (Reveal to view attachment)</i>";
     let tagHTML = getTagHTML(item.tag);
-    let contextHTML = getContextBadgeHTML(item.chapter, item.topic);
+    let contextHTML = getContextBadgeHTML(item.chapter, item.topic, item.subtopic);
 
     card.innerHTML = `
         <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom: 20px; justify-content:center;">${tagHTML} ${contextHTML}</div>
@@ -901,8 +903,8 @@ function editQuestion(id) {
         opt.selected = tagsToSelect.includes(opt.value);
     });
 
-    document.getElementById('q-chapter').value = item.chapter || '';
     document.getElementById('q-topic').value = item.topic || '';
+    document.getElementById('q-subtopic').value = item.subtopic || '';
     document.getElementById('q-text').value = item.q || '';
     document.getElementById('m-text').value = item.m || '';
     document.getElementById('s-text').value = item.s || '';
@@ -927,8 +929,8 @@ function openModal() {
     editingId = null; 
     document.getElementById('modal-title').innerText = "Add New Doubt";
     
-    document.getElementById('q-chapter').value = '';
     document.getElementById('q-topic').value = '';
+    document.getElementById('q-subtopic').value = '';
 
     removeExistingFile = false;
     document.getElementById('file-edit-hint').style.display = 'none';
@@ -946,8 +948,8 @@ function closeModal() {
 
 function clearForm() {
     document.getElementById('q-tag').selectedIndex = -1;
-    document.getElementById('q-chapter').value = '';
     document.getElementById('q-topic').value = '';
+    document.getElementById('q-subtopic').value = '';
     document.getElementById('q-text').value = '';
     document.getElementById('m-text').value = '';
     document.getElementById('s-text').value = '';
@@ -966,8 +968,8 @@ function saveQuestion() {
     const selectElement = document.getElementById('q-tag');
     const tag = Array.from(selectElement.selectedOptions).map(opt => opt.value).filter(val => val !== "");
     
-    const chapter = document.getElementById('q-chapter').value.trim();
     const topic = document.getElementById('q-topic').value.trim();
+    const subtopic = document.getElementById('q-subtopic').value.trim();
     const q = document.getElementById('q-text').value.trim();
     const m = document.getElementById('m-text').value.trim();
     const s = document.getElementById('s-text').value.trim();
@@ -984,8 +986,8 @@ function saveQuestion() {
 
     const payload = { 
         tag: tag, 
-        chapter: chapter, 
         topic: topic, 
+        subtopic: subtopic, 
         q: q, 
         m: m, 
         s: s 
@@ -1026,6 +1028,7 @@ function processToDatabase(payload) {
         .then(() => closeModal())
         .catch(err => { alert("Update failed"); resetButtons(); });
     } else {
+        payload.chapter = currentActiveChapter; 
         payload.mode = currentMode; 
         payload.timestamp = firebase.firestore.FieldValue.serverTimestamp();
         
