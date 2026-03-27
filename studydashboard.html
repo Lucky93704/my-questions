@@ -57,7 +57,7 @@ body {
 .back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
 svg { fill: currentColor; }
 
-.streak-badge { background: #ffedd5; color: #ea580c; padding: 4px 12px; border-radius: 20px; font-size: 1rem; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.streak-badge { background: #ffedd5; color: #ea580c; padding: 6px 14px; border-radius: 20px; font-size: 1rem; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 [data-theme="dark"] .streak-badge { background: #431407; color: #fdba74; }
 
 /* Date & Progress Card */
@@ -69,10 +69,11 @@ svg { fill: currentColor; }
 .date-input:focus { border-color: var(--target); }
 .carry-over-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
 .carry-over-btn:hover { border-color: var(--primary); color: var(--primary); }
+.holiday-btn:hover { border-color: var(--error); color: var(--error); } /* Changed to red as it's destructive */
 
 .progress-bar-bg { height: 12px; background: var(--bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
 .progress-bar-fill { height: 100%; width: 0%; background: var(--target); transition: width 0.4s ease-out, background-color 0.3s; }
-.progress-text { text-align: right; font-size: 0.85rem; font-weight: bold; color: var(--target); margin-top: 5px; transition: color 0.3s;}
+.progress-text { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 0.85rem; font-weight: bold; color: var(--target); margin-top: 5px; transition: color 0.3s;}
 
 /* Guilty Animation */
 @keyframes guiltyShake {
@@ -151,8 +152,6 @@ svg { fill: currentColor; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 550px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 .modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--primary); font-size: 1.6rem; }
-
-/* New Date Range UI inside Analytics */
 .date-range-container { background: var(--bg); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); }
 .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; justify-content: center; }
 .preset-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
@@ -162,13 +161,10 @@ svg { fill: currentColor; }
 .custom-dates label { font-size: 0.9rem; font-weight: bold; color: var(--text); }
 .custom-dates input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg); color: var(--text); outline: none; font-family: inherit; }
 .custom-dates input:focus { border-color: var(--target); }
-
-/* Dual Analytics Tabs */
 .analytics-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
 .tab-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: 0.2s; }
 .tab-btn:hover { border-color: var(--target); color: var(--target); }
 .tab-btn.active { background: var(--target); color: white; border-color: var(--target); }
-
 #analytics-subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 15px; font-weight: 500; }
 .close-modal { margin-top: 25px; background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s;}
 .close-modal:hover { border-color: var(--error); color: var(--error); }
@@ -245,13 +241,19 @@ svg { fill: currentColor; }
                 <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Analytics
             </button>
         </div>
-        <h2>Study Dashboard <span id="streak-counter" class="streak-badge" title="Consecutive days with 100% completion">🔥 0 Days</span></h2>
+        <h2>Study Dashboard <span id="streak-counter" class="streak-badge" title="Consecutive days with 100% completion">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M11.71 1.63L12 1.93c.69 1.15 1.77 2.11 3.01 2.72 2.05 1 3.99 2.5 3.99 5.35 0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.85 1.94-4.35 3.99-5.35 1.24-.61 2.32-1.57 3.01-2.72l.29-.3z"/></svg>
+            0 Days</span>
+        </h2>
     </div>
 
     <div class="progress-card" id="progress-card">
         <div class="date-selector">
             <h3 id="display-date-text">Today's Plan</h3>
             <div class="date-controls">
+                <button class="carry-over-btn holiday-btn" id="holiday-btn" onclick="addHoliday()" title="Mark today as a Holiday (Breaks Streak & Clears Tasks)">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
+                </button>
                 <button class="carry-over-btn" id="carry-over-btn" onclick="carryOverTasks()" title="Bring unfinished tasks & recurring tasks from yesterday to this date">
                     <svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/></svg>
                 </button>
@@ -276,7 +278,9 @@ svg { fill: currentColor; }
             <option value="Mock">Mock Test</option>
         </select>
         <label class="recurring-label" title="Repeat this task every day">
-            <input type="checkbox" id="new-task-recurring"> 🔁 Daily
+            <input type="checkbox" id="new-task-recurring"> 
+            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.39 14.47 20 13.3 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+            Daily
         </label>
         <button class="add-btn" id="add-task-btn" onclick="addTask()">Add Target</button>
     </div>
@@ -318,8 +322,8 @@ let editingTargetId = null;
 let currentFilter = 'All';
 let previousPercentage = -1; 
 let weeklyChartInstance = null;
-let currentChartTab = 'completion'; // For dual analytics
-let lastAnalyticsData = null; // Store fetched analytics data
+let currentChartTab = 'completion'; 
+let lastAnalyticsData = null; 
 
 // Helper to get local date string YYYY-MM-DD
 function getLocalISOString(date) {
@@ -410,7 +414,8 @@ function renderTask(id, data, container) {
     
     const checkIcon = data.completed ? `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` : ``;
     const safeTaskText = data.task ? data.task.replace(/'/g, "\\'") : "";
-    const recurringIcon = data.isRecurring ? `<span title="Recurring Task" style="font-size: 0.8rem; margin-top:2px;">🔁</span>` : ``;
+    
+    const recurringIcon = data.isRecurring ? `<span title="Recurring Task" style="display:flex; align-items:center; margin-left:5px;"><svg viewBox="0 0 24 24" width="14" height="14" style="fill: currentColor;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.39 14.47 20 13.3 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></span>` : ``;
 
     div.innerHTML = `
         <div class="task-left" onclick="toggleTask('${id}', ${data.completed})">
@@ -485,13 +490,62 @@ function deleteTask(id) {
     }
 }
 
+// ==========================================
+// ADD HOLIDAY LOGIC (Deletes tasks & breaks streak)
+// ==========================================
+async function addHoliday() {
+    const reason = prompt("Enter a compulsory reason for your holiday (this will clear your tasks for the day and break your streak):");
+    if (!reason || reason.trim() === "") {
+        alert("Holiday reason is compulsory! Holiday action cancelled.");
+        return;
+    }
+
+    const date = document.getElementById('target-date').value;
+    const btn = document.getElementById('holiday-btn');
+    btn.disabled = true;
+
+    try {
+        // 1. Fetch all existing targets for the selected date
+        const snapshot = await db.collection("dailyTargets").where("date", "==", date).get();
+        
+        // 2. Initialize a batch to delete old tasks and add the new holiday note
+        const batch = db.batch();
+        
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // 3. Add the holiday task as INCOMPLETE to guarantee the streak resets
+        const newRef = db.collection("dailyTargets").doc();
+        batch.set(newRef, {
+            task: "Holiday: " + reason.trim(),
+            subject: "Mock", // Mock uses the reddish tag so it stands out
+            date: date,
+            completed: false, // Ensures the day is not 100% complete
+            isRecurring: false,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await batch.commit();
+        
+    } catch (error) {
+        console.error("Error setting holiday:", error);
+        alert("Failed to set holiday.");
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 function updateProgress(completed, total) {
     const fill = document.getElementById('progress-fill');
     const text = document.getElementById('progress-text');
     const card = document.getElementById('progress-card');
     
+    const checkCircleSVG = `<svg viewBox="0 0 24 24" width="16" height="16" style="fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+    const warningSVG = `<svg viewBox="0 0 24 24" width="16" height="16" style="fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
+
     if (total === 0) {
-        fill.style.width = '0%'; text.innerText = `0/0 Completed (0%)`;
+        fill.style.width = '0%'; text.innerHTML = `0/0 Completed (0%)`;
         fill.style.background = 'var(--target)'; card.classList.remove('guilty-card'); 
     } else {
         const percentage = Math.round((completed / total) * 100);
@@ -499,7 +553,7 @@ function updateProgress(completed, total) {
 
         if (percentage === 100) {
             fill.style.background = 'var(--success)'; text.style.color = 'var(--success)';
-            text.innerText = `${completed}/${total} Completed (${percentage}%) 🎉 All done!`;
+            text.innerHTML = `${completed}/${total} Completed (${percentage}%) ${checkCircleSVG} All done!`;
             card.classList.remove('guilty-card');
             
             if (previousPercentage !== 100 && previousPercentage !== -1) {
@@ -507,7 +561,7 @@ function updateProgress(completed, total) {
             }
         } else {
             fill.style.background = 'var(--target)'; text.style.color = 'var(--error)';
-            text.innerText = `${completed}/${total} Completed (${percentage}%) 🥺 Missing Targets!`;
+            text.innerHTML = `${completed}/${total} Completed (${percentage}%) ${warningSVG} Missing Targets!`;
             card.classList.remove('guilty-card');
             void card.offsetWidth; 
             card.classList.add('guilty-card');
@@ -526,9 +580,9 @@ async function calculateStreak() {
     try {
         const todayStr = getLocalISOString(new Date());
         
-        // Fetch up to 30 days of past tasks
+        // Fetch up to 90 days of past tasks to find historical streaks
         const startLimit = new Date();
-        startLimit.setDate(startLimit.getDate() - 30);
+        startLimit.setDate(startLimit.getDate() - 90);
         const startLimitStr = getLocalISOString(startLimit);
 
         const snapshot = await db.collection("dailyTargets")
@@ -544,11 +598,11 @@ async function calculateStreak() {
             if (data.completed) daysData[data.date].completed++;
         });
 
-        let streak = 0;
+        let currentStreak = 0;
+        let lastStreak = 0;
         let checkDate = new Date();
+        let checkingCurrent = true;
 
-        // If today is 100% complete, it counts toward the streak.
-        // If today is incomplete, we check yesterday to see if the past streak is intact.
         if (daysData[todayStr] && daysData[todayStr].total > 0 && daysData[todayStr].completed === daysData[todayStr].total) {
             // Start checking from today
         } else {
@@ -556,18 +610,35 @@ async function calculateStreak() {
             checkDate.setDate(checkDate.getDate() - 1);
         }
 
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 90; i++) {
             const dateStr = getLocalISOString(checkDate);
-            if (daysData[dateStr] && daysData[dateStr].total > 0 && daysData[dateStr].completed === daysData[dateStr].total) {
-                streak++;
-                checkDate.setDate(checkDate.getDate() - 1);
+            const isComplete = daysData[dateStr] && daysData[dateStr].total > 0 && daysData[dateStr].completed === daysData[dateStr].total;
+
+            if (checkingCurrent) {
+                if (isComplete) {
+                    currentStreak++;
+                } else {
+                    checkingCurrent = false; // Current streak is broken
+                }
             } else {
-                break; // Streak broken
+                // If current streak is broken, search for the last streak
+                if (isComplete) {
+                    lastStreak++;
+                } else if (lastStreak > 0) {
+                    break; // End of the last known streak found
+                }
             }
+            checkDate.setDate(checkDate.getDate() - 1);
         }
 
         const streakBadge = document.getElementById('streak-counter');
-        streakBadge.innerText = `🔥 ${streak} Day${streak !== 1 ? 's' : ''}`;
+        const flameSVG = `<svg viewBox="0 0 24 24" width="18" height="18"><path d="M11.71 1.63L12 1.93c.69 1.15 1.77 2.11 3.01 2.72 2.05 1 3.99 2.5 3.99 5.35 0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.85 1.94-4.35 3.99-5.35 1.24-.61 2.32-1.57 3.01-2.72l.29-.3z"/></svg>`;
+
+        if (currentStreak === 0 && lastStreak > 0) {
+            streakBadge.innerHTML = `${flameSVG} 0 Days (Last: ${lastStreak})`;
+        } else {
+            streakBadge.innerHTML = `${flameSVG} ${currentStreak} Day${currentStreak !== 1 ? 's' : ''}`;
+        }
         
     } catch (e) {
         console.error("Error calculating streak:", e);
@@ -575,7 +646,7 @@ async function calculateStreak() {
 }
 
 // ==========================================
-// CARRY OVER LOGIC (Updated for Recurring)
+// CARRY OVER LOGIC 
 // ==========================================
 async function carryOverTasks() {
     const btn = document.getElementById('carry-over-btn');
@@ -588,12 +659,10 @@ async function carryOverTasks() {
     const yesterdayStr = getLocalISOString(targetDate);
 
     try {
-        // First, fetch TODAY's tasks to avoid copying duplicates
         const todaySnap = await db.collection("dailyTargets").where("date", "==", targetDateStr).get();
         const todayTaskNames = new Set();
         todaySnap.forEach(doc => todayTaskNames.add(doc.data().task.trim().toLowerCase()));
 
-        // Next, fetch YESTERDAY's tasks
         const yesterdaySnap = await db.collection("dailyTargets").where("date", "==", yesterdayStr).get();
 
         const batch = db.batch();
@@ -602,7 +671,6 @@ async function carryOverTasks() {
         yesterdaySnap.forEach(doc => {
             const data = doc.data();
             
-            // Carry over if (task is unfinished OR marked as recurring) AND it doesn't already exist today
             const shouldCarryOver = !data.completed || data.isRecurring;
             const notAlreadyAdded = !todayTaskNames.has(data.task.trim().toLowerCase());
             
@@ -754,7 +822,6 @@ function renderChart() {
             }
         });
     } else if (currentChartTab === 'subjects') {
-        // Tab 2: Subject Breakdown (Bar Chart)
         const subjLabels = Object.keys(data.subjects);
         const subjData = Object.values(data.subjects);
 
