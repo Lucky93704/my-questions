@@ -177,14 +177,19 @@ body {
 .btn-submit { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center;}
 .btn-submit:disabled { background: var(--border); color: #94a3b8; cursor: not-allowed; }
 
-/* Utilities */
-.theme-toggle { position: fixed; top: 20px; right: 20px; cursor: pointer; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 8px; z-index: 50;}
+/* Utilities - Theme Toggle */
+.theme-toggle { position: fixed; top: 20px; right: 20px; background: none; border: none; cursor: pointer; color: var(--text); padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; z-index: 50; }
+.theme-toggle:hover { background: var(--border); }
+.theme-toggle svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
+.rotate { transform: rotate(360deg); }
 
 </style>
 </head>
 <body>
 
-<button class="theme-toggle" id="theme-btn">🌓 Toggle Theme</button>
+<button class="theme-toggle" id="theme-btn">
+    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
+</button>
 
 <div id="chapter-view" class="container">
     <div class="header">
@@ -425,14 +430,34 @@ function addToDataStore(newQuestion) {
     renderQuestions();
 }
 
-// Theme Logic
+// --- THEME LOGIC ---
 const themeBtn = document.getElementById('theme-btn');
+const themeIcon = document.getElementById('theme-icon');
+const body = document.body;
+const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
+const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
+
+if (localStorage.getItem('theme') === 'dark') {
+    body.setAttribute('data-theme', 'dark');
+    themeIcon.innerHTML = `<path d="${moonPath}" />`;
+} else {
+    themeIcon.innerHTML = `<path d="${sunPath}" />`;
+}
+
 themeBtn.addEventListener('click', () => {
-    if (document.body.hasAttribute('data-theme')) {
-        document.body.removeAttribute('data-theme');
-    } else {
-        document.body.setAttribute('data-theme', 'dark');
-    }
+    themeIcon.classList.add('rotate');
+    setTimeout(() => {
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+            themeIcon.innerHTML = `<path d="${sunPath}" />`;
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+            themeIcon.innerHTML = `<path d="${moonPath}" />`;
+        }
+    }, 250);
+    setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
 });
 </script>
 
