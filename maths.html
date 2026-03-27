@@ -112,11 +112,17 @@ body {
     margin-bottom: 20px;
     border: 1px solid var(--border);
     position: relative;
+    transition: 0.3s;
 }
 
+/* Accordion Header & Chevron */
+.question-header { display: flex; justify-content: space-between; align-items: flex-start;}
+.q-title-row { cursor: pointer; display: flex; align-items: flex-start; flex: 1; padding-right: 15px; }
+.q-title-row h4 { margin: 0; padding-left: 10px; font-size: 1.1rem; color: var(--text); line-height: 1.4;}
+.chevron { transition: transform 0.3s ease; width: 24px; height: 24px; fill: var(--primary); flex-shrink: 0; margin-top: 2px;}
+.question-item.expanded .chevron { transform: rotate(180deg); }
+
 /* Edit & Delete Action Buttons */
-.question-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;}
-.question-header h4 { margin: 0; font-size: 1.1rem; flex: 1; padding-right: 15px;}
 .action-btns { display: flex; gap: 8px; flex-shrink: 0;}
 .icon-btn { 
     background: none; border: none; cursor: pointer; color: #94a3b8; 
@@ -127,8 +133,13 @@ body {
 .icon-btn.edit:hover { color: var(--primary); }
 .icon-btn.delete:hover { color: var(--error); }
 
+/* Hidden Details inside Accordion */
+.question-details { display: none; margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px; }
+.question-item.expanded .question-details { display: block; animation: fadeIn 0.3s ease-in-out;}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
 .mistake { color: var(--error); margin: 10px 0; }
-.solution { color: #22c55e; border-top: 1px dashed var(--border); padding-top: 10px; }
+.solution { color: #22c55e; margin: 10px 0 0 0;}
 .attachment-preview { max-width: 100%; max-height: 300px; border-radius: 6px; margin-top: 10px; border: 1px solid var(--border); }
 .pdf-badge { display: inline-block; background: var(--error); color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; text-decoration: none;}
 
@@ -189,7 +200,9 @@ body {
 
 <div id="chapter-view" class="container">
     <div class="header">
+        <button class="back-btn" onclick="window.location.href='index.html'">← Back</button>
         <h2>Maths Chapters</h2>
+        <div class="header-spacer"></div>
     </div>
     <div class="chapter-grid" id="chapter-grid">
         <div class="chapter-card" onclick="showModeSelection('Number System')"><h3>Number System</h3></div>
@@ -232,10 +245,10 @@ body {
     </div>
     <div class="chapter-grid">
         <div class="chapter-card mode-card" onclick="openQuestionsList('mock')">
-            <h3>📝 Mock Test</h3>
+            <h3>📝 Mock Test Mistakes</h3>
         </div>
         <div class="chapter-card mode-card" onclick="openQuestionsList('practice')">
-            <h3>🎯 Practice </h3>
+            <h3>🎯 Practice Mistakes</h3>
         </div>
     </div>
 </div>
@@ -305,14 +318,15 @@ const db = firebase.firestore();
 // ==========================================
 
 let currentActiveChapter = "";
-let currentMode = "practice"; // Tracks if we are viewing 'practice' or 'mock'
-let editingId = null; // Tracks if we are editing an existing question
+let currentMode = "practice"; 
+let editingId = null; 
 let mathDoubts = {}; 
 let unsubscribe = null; 
 
 // SVG Icons
 const editIcon = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
 const deleteIcon = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+const chevronIcon = `<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>`;
 
 function hideAllViews() {
     document.getElementById('chapter-view').style.display = 'none';
@@ -336,7 +350,6 @@ function showModeSelection(chapterName) {
     window.scrollTo(0,0);
 }
 
-// Opens the list of questions and filters by the selected mode
 function openQuestionsList(mode) {
     currentMode = mode;
     hideAllViews();
@@ -348,7 +361,6 @@ function openQuestionsList(mode) {
     const container = document.getElementById('questions-container');
     container.innerHTML = '<p style="text-align:center; opacity:0.6;"><span class="spinner" style="border-top-color: var(--primary);"></span> Loading doubts...</p>';
 
-    // Fetch from Firestore
     unsubscribe = db.collection("mathDoubts")
         .where("chapter", "==", currentActiveChapter)
         .orderBy("timestamp", "desc")
@@ -356,10 +368,8 @@ function openQuestionsList(mode) {
             mathDoubts[currentActiveChapter] = [];
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                // Treat older questions (without a mode) as practice by default
                 const docMode = data.mode || 'practice'; 
                 
-                // Only push to array if the mode matches what we clicked
                 if (docMode === currentMode) {
                     mathDoubts[currentActiveChapter].push({ id: doc.id, ...data });
                 }
@@ -373,7 +383,15 @@ function openQuestionsList(mode) {
     window.scrollTo(0,0);
 }
 
-// Render Logic (Now with Edit/Delete buttons)
+// Expand / Collapse Function
+function toggleDetails(id) {
+    const item = document.getElementById(`q-item-${id}`);
+    if(item) {
+        item.classList.toggle('expanded');
+    }
+}
+
+// Render Logic with Accordion Design
 function renderQuestions() {
     const container = document.getElementById('questions-container');
     container.innerHTML = '';
@@ -388,6 +406,7 @@ function renderQuestions() {
     questions.forEach(item => {
         const div = document.createElement('div');
         div.className = 'question-item';
+        div.id = `q-item-${item.id}`; // Assigned ID for toggling
         
         let fileHTML = "";
         if (item.fileData) {
@@ -398,19 +417,25 @@ function renderQuestions() {
             }
         }
 
-        let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text</i>";
+        let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text (View attached file)</i>";
 
         div.innerHTML = `
             <div class="question-header">
-                <h4>${qTextHTML}</h4>
+                <div class="q-title-row" onclick="toggleDetails('${item.id}')">
+                    ${chevronIcon}
+                    <h4>${qTextHTML}</h4>
+                </div>
                 <div class="action-btns">
                     <button class="icon-btn edit" onclick="editQuestion('${item.id}')" title="Edit">${editIcon}</button>
                     <button class="icon-btn delete" onclick="deleteQuestion('${item.id}')" title="Delete">${deleteIcon}</button>
                 </div>
             </div>
-            ${fileHTML}
-            <p class="mistake"><strong>Mistake:</strong> ${item.m ? item.m.replace(/\n/g, '<br>') : ''}</p>
-            <p class="solution"><strong>Solution:</strong> ${item.s ? item.s.replace(/\n/g, '<br>') : ''}</p>
+            
+            <div class="question-details">
+                ${fileHTML}
+                <p class="mistake"><strong>Mistake:</strong> ${item.m ? item.m.replace(/\n/g, '<br>') : ''}</p>
+                <p class="solution"><strong>Solution:</strong> ${item.s ? item.s.replace(/\n/g, '<br>') : ''}</p>
+            </div>
         `;
         container.appendChild(div);
     });
@@ -432,20 +457,20 @@ function editQuestion(id) {
     const item = mathDoubts[currentActiveChapter].find(q => q.id === id);
     if (!item) return;
     
-    editingId = id; // Set global ID flag so the save function knows it's an update
+    editingId = id; 
     
     document.getElementById('modal-title').innerText = "Edit Doubt";
     document.getElementById('q-text').value = item.q || '';
     document.getElementById('m-text').value = item.m || '';
     document.getElementById('s-text').value = item.s || '';
-    document.getElementById('file-edit-hint').style.display = 'block'; // Show hint about file
+    document.getElementById('file-edit-hint').style.display = 'block'; 
     
     document.getElementById('save-btn').innerHTML = "Update Question";
     document.getElementById('add-modal').style.display = 'flex';
 }
 
 function openModal() {
-    editingId = null; // Ensure we are creating a new question
+    editingId = null; 
     document.getElementById('modal-title').innerText = "Add New Doubt";
     document.getElementById('file-edit-hint').style.display = 'none';
     document.getElementById('add-modal').style.display = 'flex';
@@ -490,7 +515,6 @@ function saveQuestion() {
     cancelBtn.disabled = true;
     saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
 
-    // Base payload
     const payload = { 
         q: q, 
         m: m, 
@@ -527,14 +551,12 @@ function saveQuestion() {
 
 function processToDatabase(payload) {
     if (editingId) {
-        // Update existing document
         db.collection("mathDoubts").doc(editingId).update(payload)
         .then(() => closeModal())
         .catch(err => { console.error(err); alert("Update failed"); resetButtons(); });
     } else {
-        // Create new document
         payload.chapter = currentActiveChapter;
-        payload.mode = currentMode; // Attaches 'mock' or 'practice'
+        payload.mode = currentMode; 
         payload.timestamp = firebase.firestore.FieldValue.serverTimestamp();
         
         db.collection("mathDoubts").add(payload)
