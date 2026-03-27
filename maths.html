@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maths Doubts - SSC Portal</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
 <style>
 :root { 
     --primary: #2563eb; 
@@ -275,14 +278,27 @@ body {
 </div>
 
 <script>
-let currentActiveChapter = "";
-
-// Starter Data
-const mathDoubts = {
-    "Number System": [
-        { q: "Find unit digit of 7^105", m: "Used wrong cyclicity", s: "7^1 = 7", fileData: null, fileType: null }
-    ]
+// ==========================================
+// FIREBASE CONFIGURATION (From your screenshot)
+// ==========================================
+const firebaseConfig = {
+    apiKey: "AIzaSyCAw1Eozvog8hUdZW7THJQBlgze79sCkGk",
+    authDomain: "my-site-7fd99.firebaseapp.com",
+    projectId: "my-site-7fd99",
+    storageBucket: "my-site-7fd99.firebasestorage.app",
+    messagingSenderId: "1024490010463",
+    appId: "1:1024490010463:web:130447b333eaa7a5f468ea",
+    measurementId: "G-WS0G17WRE9"
 };
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+// ==========================================
+
+let currentActiveChapter = "";
+let mathDoubts = {}; 
+let unsubscribe = null; // Used to stop listening to old chapters
 
 // Navigation
 function showQuestions(chapterName) {
@@ -290,13 +306,37 @@ function showQuestions(chapterName) {
     document.getElementById('chapter-view').style.display = 'none';
     document.getElementById('question-view').style.display = 'block';
     document.getElementById('current-chapter-title').innerText = chapterName;
-    renderQuestions();
+    
+    const container = document.getElementById('questions-container');
+    container.innerHTML = '<p style="text-align:center; opacity:0.6;"><span class="spinner" style="border-top-color: var(--primary);"></span> Loading doubts...</p>';
+
+    // Stop listening to the previous chapter if we switch
+    if (unsubscribe) {
+        unsubscribe();
+    }
+
+    // Real-time listener for Firestore (Reading from "mathDoubts")
+    unsubscribe = db.collection("mathDoubts")
+        .where("chapter", "==", chapterName)
+        .orderBy("timestamp", "desc")
+        .onSnapshot((snapshot) => {
+            mathDoubts[currentActiveChapter] = [];
+            snapshot.forEach((doc) => {
+                mathDoubts[currentActiveChapter].push({ id: doc.id, ...doc.data() });
+            });
+            renderQuestions();
+        }, (error) => {
+            console.error("Error fetching data:", error);
+            container.innerHTML = '<p style="text-align:center; color:#ef4444;">Error loading questions. Did you set Firestore rules to allow read/write?</p>';
+        });
+
     window.scrollTo(0,0);
 }
 
 function showChapters() {
     document.getElementById('chapter-view').style.display = 'block';
     document.getElementById('question-view').style.display = 'none';
+    if (unsubscribe) unsubscribe(); // Stop downloading data when back on home screen
     window.scrollTo(0,0);
 }
 
@@ -355,7 +395,6 @@ function clearForm() {
     document.getElementById('upload-progress-container').style.display = 'none';
     document.getElementById('upload-progress-bar').style.width = '0%';
     
-    // Reset save & cancel button state
     const saveBtn = document.getElementById('save-btn');
     const cancelBtn = document.getElementById('cancel-btn');
     saveBtn.disabled = false;
@@ -363,7 +402,7 @@ function clearForm() {
     saveBtn.innerHTML = "Save Question";
 }
 
-// Save Data (Handling File Uploads, Progress & Loading Animation)
+// Save Data to Firestore
 function saveQuestion() {
     const q = document.getElementById('q-text').value.trim();
     const m = document.getElementById('m-text').value.trim();
@@ -377,25 +416,39 @@ function saveQuestion() {
         return;
     }
 
-    // Trigger loading state on buttons
     saveBtn.disabled = true;
     cancelBtn.disabled = true;
     saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
 
-    const newQuestion = { q, m, s, fileData: null, fileType: null };
+    const newQuestion = { 
+        chapter: currentActiveChapter,
+        q: q, 
+        m: m, 
+        s: s, 
+        fileData: null, 
+        fileType: null,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp() // For sorting
+    };
 
-    // Process file if it exists
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
+        
+        // Firestore Document Size Warning Check (Keep images under ~800kb)
+        if (file.size > 800000) { 
+            alert("File is too large! Firestore has a 1MB limit for text-based image saves. Please compress the image first.");
+            saveBtn.disabled = false;
+            cancelBtn.disabled = false;
+            saveBtn.innerHTML = "Save Question";
+            return;
+        }
+
         const reader = new FileReader();
         const progressContainer = document.getElementById('upload-progress-container');
         const progressBar = document.getElementById('upload-progress-bar');
         
-        // Show progress UI
         progressContainer.style.display = 'block';
         progressBar.style.width = '0%';
 
-        // Track Progress
         reader.onprogress = function(e) {
             if (e.lengthComputable) {
                 const percentLoaded = Math.round((e.loaded / e.total) * 100);
@@ -403,31 +456,33 @@ function saveQuestion() {
             }
         };
         
-        // Once completed
         reader.onload = function(e) {
-            setTimeout(() => {
-                newQuestion.fileData = e.target.result;
-                newQuestion.fileType = file.type;
-                addToDataStore(newQuestion);
-            }, 600); // Slight delay so the user sees it finish
+            newQuestion.fileData = e.target.result;
+            newQuestion.fileType = file.type;
+            addToDataStore(newQuestion);
         };
         
         reader.readAsDataURL(file);
     } else {
-        // If there's no file, still simulate a tiny loading state so the UX feels responsive
-        setTimeout(() => {
-            addToDataStore(newQuestion);
-        }, 600);
+        addToDataStore(newQuestion);
     }
 }
 
+// Adding to "mathDoubts" collection
 function addToDataStore(newQuestion) {
-    if (!mathDoubts[currentActiveChapter]) {
-        mathDoubts[currentActiveChapter] = [];
-    }
-    mathDoubts[currentActiveChapter].unshift(newQuestion); 
-    closeModal();
-    renderQuestions();
+    db.collection("mathDoubts").add(newQuestion)
+    .then(() => {
+        closeModal();
+    })
+    .catch((error) => {
+        console.error("Error adding document: ", error);
+        alert("Error saving doubt. Check the console.");
+        const saveBtn = document.getElementById('save-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        saveBtn.disabled = false;
+        cancelBtn.disabled = false;
+        saveBtn.innerHTML = "Save Question";
+    });
 }
 
 // --- THEME LOGIC ---
