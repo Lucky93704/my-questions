@@ -133,7 +133,7 @@ svg { fill: currentColor; }
 .mode-card { text-align: center; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; gap: 15px;}
 .mode-card h3 { font-size: 1.5rem; color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px;}
 
-/* Tag Badges (Adapted for GK) */
+/* Tag Badges */
 .tag-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 600; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid transparent; margin-right: 5px;}
 .tag-Fact { background: #fee2e2; color: #991b1b; border-color: #fca5a5;}
 .tag-Concept { background: #e0e7ff; color: #3730a3; border-color: #a5b4fc;}
@@ -145,6 +145,8 @@ svg { fill: currentColor; }
 [data-theme="dark"] .tag-CurrentAffairs { background: #451a03; color: #fde047; border-color: #78350f;}
 [data-theme="dark"] .tag-Silly { background: #3b0764; color: #d8b4fe; border-color: #581c87;}
 [data-theme="dark"] .tag-Time { background: #431407; color: #fdba74; border-color: #7c2d12;}
+.context-badge { background: #e2e8f0; color: #1e293b; border-color: #cbd5e1; }
+[data-theme="dark"] .context-badge { background: #334155; color: #e2e8f0; border-color: #475569; }
 
 /* Question Items (Accordion) */
 .q-list { margin-top: 20px; padding-bottom: 50px;}
@@ -341,6 +343,17 @@ svg { fill: currentColor; }
     <div class="modal-content">
         <h3 id="modal-title">Add New Doubt</h3>
         
+        <div class="form-group" style="display:flex; gap:15px; flex-wrap:wrap;">
+            <div style="flex:1; min-width: 200px;">
+                <label>Chapter Name</label>
+                <select id="q-chapter"></select>
+            </div>
+            <div style="flex:1; min-width: 200px;">
+                <label>Topic Name (Optional)</label>
+                <input type="text" id="q-topic" placeholder="e.g., Indus Valley, Article 32">
+            </div>
+        </div>
+
         <div class="form-group">
             <label>Error Type</label>
             <select id="q-tag" multiple size="5">
@@ -366,7 +379,7 @@ svg { fill: currentColor; }
             <div id="file-edit-hint" class="file-hint">Leave blank to keep existing file.</div>
             
             <div id="existing-file-container" style="display: none; margin-top: 10px; align-items: center; gap: 10px;">
-                <span class="tag-badge" style="background: var(--bg); border: 1px solid var(--border); color: var(--primary); margin: 0;">📎 Attachment Present</span>
+                <span class="tag-badge context-badge" style="margin: 0;">📎 Attachment Present</span>
                 <button type="button" class="btn-cancel" style="padding: 4px 10px; font-size: 0.8rem; border-color: var(--error); color: var(--error);" onclick="flagFileRemoval()">Remove File</button>
             </div>
             <div id="remove-file-msg" style="display: none; margin-top: 10px; font-size: 0.85rem; color: var(--error); font-weight: bold;">⚠️ File marked for removal upon saving.</div>
@@ -453,8 +466,16 @@ function parseMarkdown(text) {
 }
 
 function initPortal() {
+    // Populate the chapter dropdown in the modal
+    const chapterSelect = document.getElementById('q-chapter');
+    chaptersList.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.innerText = c;
+        chapterSelect.appendChild(opt);
+    });
+
     renderChapterGrid({});
-    // Fetching from gkDoubts instead of englishDoubts
     heatmapUnsubscribe = db.collection("gkDoubts").onSnapshot((snapshot) => {
         const counts = {};
         const tagCounts = { 'Fact': 0, 'Concept': 0, 'CurrentAffairs': 0, 'Silly': 0, 'Time': 0 };
@@ -546,6 +567,12 @@ function renderErrorChart(tagCounts) {
     }
 }
 
+function getContextBadgeHTML(chapter, topic) {
+    let text = `📖 ${chapter || 'Unknown'}`;
+    if (topic) text += ` › ${topic}`;
+    return `<span class="tag-badge context-badge">${text}</span>`;
+}
+
 function handleGlobalSearch() {
     const query = document.getElementById('global-search').value.toLowerCase().trim();
     const resultsContainer = document.getElementById('global-search-results');
@@ -565,7 +592,8 @@ function handleGlobalSearch() {
         const qText = (q.q || "").toLowerCase();
         const mText = (q.m || "").toLowerCase();
         const sText = (q.s || "").toLowerCase();
-        return qText.includes(query) || mText.includes(query) || sText.includes(query);
+        const tText = (q.topic || "").toLowerCase();
+        return qText.includes(query) || mText.includes(query) || sText.includes(query) || tText.includes(query);
     });
 
     if (filtered.length === 0) {
@@ -589,10 +617,11 @@ function handleGlobalSearch() {
 
         let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
-        let contextBadge = `<span class="tag-badge" style="background:var(--border); color:var(--text); margin-left: 10px;">${item.chapter} (${item.mode === 'mock' ? 'Mock Test' : 'Practice'})</span>`;
+        let contextHTML = getContextBadgeHTML(item.chapter, item.topic);
+        let modeHTML = `<span class="tag-badge context-badge">🎯 ${item.mode === 'mock' ? 'Mock Test' : 'Practice'}</span>`;
 
         div.innerHTML = `
-            <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom: 5px;">${tagHTML} ${contextBadge}</div>
+            <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom: 5px;">${tagHTML} ${contextHTML} ${modeHTML}</div>
             <div class="question-header">
                 <div class="q-title-row" onclick="document.getElementById('q-search-${item.id}').classList.toggle('expanded')">
                     ${chevronIcon}
@@ -651,7 +680,6 @@ function openQuestionsList(mode) {
     const container = document.getElementById('questions-container');
     container.innerHTML = '<p style="text-align:center; opacity:0.6;"><span class="spinner" style="border-top-color: var(--primary);"></span> Loading doubts...</p>';
 
-    // Fetching from gkDoubts
     listUnsubscribe = db.collection("gkDoubts")
         .where("chapter", "==", currentActiveChapter)
         .orderBy("timestamp", "desc")
@@ -689,7 +717,6 @@ function getTagHTML(tag) {
     const tagsArray = Array.isArray(tag) ? tag : [tag];
     let htmlStr = "";
 
-    // Tags adapted for GK
     tagsArray.forEach(t => {
         if (!t) return;
         let label = t;
@@ -703,7 +730,7 @@ function getTagHTML(tag) {
         htmlStr += `<span class="tag-badge tag-${t}">${icon} ${label}</span>`;
     });
     
-    return htmlStr + (htmlStr ? `<br>` : "");
+    return htmlStr;
 }
 
 function renderQuestions() {
@@ -731,9 +758,10 @@ function renderQuestions() {
 
         let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
+        let contextHTML = getContextBadgeHTML(item.chapter, item.topic);
 
         div.innerHTML = `
-            ${tagHTML}
+            <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom: 5px;">${tagHTML} ${contextHTML}</div>
             <div class="question-header">
                 <div class="q-title-row" onclick="toggleDetails('${item.id}')">
                     ${chevronIcon}
@@ -811,9 +839,11 @@ function renderFlashcard() {
     }
 
     let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (Reveal to view attachment)</i>";
+    let tagHTML = getTagHTML(item.tag);
+    let contextHTML = getContextBadgeHTML(item.chapter, item.topic);
 
     card.innerHTML = `
-        ${getTagHTML(item.tag)}
+        <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom: 20px; justify-content:center;">${tagHTML} ${contextHTML}</div>
         <div class="fc-question">${qTextHTML}</div>
         
         <button class="fc-reveal-btn btn-icon" onclick="revealFlashcard()">
@@ -880,6 +910,8 @@ function editQuestion(id) {
         opt.selected = tagsToSelect.includes(opt.value);
     });
 
+    document.getElementById('q-chapter').value = item.chapter || currentActiveChapter;
+    document.getElementById('q-topic').value = item.topic || '';
     document.getElementById('q-text').value = item.q || '';
     document.getElementById('m-text').value = item.m || '';
     document.getElementById('s-text').value = item.s || '';
@@ -904,6 +936,9 @@ function openModal() {
     editingId = null; 
     document.getElementById('modal-title').innerText = "Add New Doubt";
     
+    document.getElementById('q-chapter').value = currentActiveChapter;
+    document.getElementById('q-topic').value = '';
+
     removeExistingFile = false;
     document.getElementById('file-edit-hint').style.display = 'none';
     document.getElementById('existing-file-container').style.display = 'none';
@@ -920,6 +955,8 @@ function closeModal() {
 
 function clearForm() {
     document.getElementById('q-tag').selectedIndex = -1;
+    document.getElementById('q-chapter').value = currentActiveChapter;
+    document.getElementById('q-topic').value = '';
     document.getElementById('q-text').value = '';
     document.getElementById('m-text').value = '';
     document.getElementById('s-text').value = '';
@@ -938,6 +975,8 @@ function saveQuestion() {
     const selectElement = document.getElementById('q-tag');
     const tag = Array.from(selectElement.selectedOptions).map(opt => opt.value).filter(val => val !== "");
     
+    const chapter = document.getElementById('q-chapter').value;
+    const topic = document.getElementById('q-topic').value.trim();
     const q = document.getElementById('q-text').value.trim();
     const m = document.getElementById('m-text').value.trim();
     const s = document.getElementById('s-text').value.trim();
@@ -952,7 +991,14 @@ function saveQuestion() {
     document.getElementById('cancel-btn').disabled = true;
     saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
 
-    const payload = { tag: tag, q: q, m: m, s: s };
+    const payload = { 
+        tag: tag, 
+        chapter: chapter, 
+        topic: topic, 
+        q: q, 
+        m: m, 
+        s: s 
+    };
 
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
@@ -984,13 +1030,11 @@ function saveQuestion() {
 }
 
 function processToDatabase(payload) {
-    // Writing to gkDoubts
     if (editingId) {
         db.collection("gkDoubts").doc(editingId).update(payload)
         .then(() => closeModal())
         .catch(err => { alert("Update failed"); resetButtons(); });
     } else {
-        payload.chapter = currentActiveChapter;
         payload.mode = currentMode; 
         payload.timestamp = firebase.firestore.FieldValue.serverTimestamp();
         
