@@ -15,6 +15,7 @@
     --text: #1e293b; 
     --border: #e2e8f0; 
     --btn-hover: #1d4ed8;
+    --error: #ef4444;
 }
 [data-theme="dark"] { 
     --primary: #60a5fa; 
@@ -23,6 +24,7 @@
     --text: #f8fafc; 
     --border: #334155; 
     --btn-hover: #3b82f6;
+    --error: #f87171;
 }
 
 body { 
@@ -39,6 +41,7 @@ body {
 
 /* Views */
 #chapter-view { display: block; }
+#mode-view { display: none; }
 #question-view { display: none; }
 
 /* Headers & Buttons */
@@ -96,6 +99,10 @@ body {
 
 .chapter-card h3 { margin: 0; font-size: 1.1rem; }
 
+/* Mode Selection Cards */
+.mode-card { text-align: center; padding: 40px 20px; }
+.mode-card h3 { font-size: 1.5rem; color: var(--primary); margin: 0; }
+
 /* Question Items */
 .q-list { margin-top: 20px; padding-bottom: 50px;}
 .question-item {
@@ -104,13 +111,26 @@ body {
     border-radius: 10px;
     margin-bottom: 20px;
     border: 1px solid var(--border);
+    position: relative;
 }
 
-.question-item h4 { margin-top: 0; font-size: 1.1rem; }
-.mistake { color: #ef4444; margin: 10px 0; }
+/* Edit & Delete Action Buttons */
+.question-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;}
+.question-header h4 { margin: 0; font-size: 1.1rem; flex: 1; padding-right: 15px;}
+.action-btns { display: flex; gap: 8px; flex-shrink: 0;}
+.icon-btn { 
+    background: none; border: none; cursor: pointer; color: #94a3b8; 
+    padding: 6px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+}
+.icon-btn svg { width: 18px; height: 18px; fill: currentColor; }
+.icon-btn:hover { background: var(--bg); }
+.icon-btn.edit:hover { color: var(--primary); }
+.icon-btn.delete:hover { color: var(--error); }
+
+.mistake { color: var(--error); margin: 10px 0; }
 .solution { color: #22c55e; border-top: 1px dashed var(--border); padding-top: 10px; }
 .attachment-preview { max-width: 100%; max-height: 300px; border-radius: 6px; margin-top: 10px; border: 1px solid var(--border); }
-.pdf-badge { display: inline-block; background: #ef4444; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; text-decoration: none;}
+.pdf-badge { display: inline-block; background: var(--error); color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; text-decoration: none;}
 
 /* Modal Styling */
 .modal-overlay {
@@ -139,40 +159,13 @@ body {
     box-sizing: border-box; font-family: inherit;
 }
 .form-group textarea { resize: vertical; min-height: 80px; }
+.file-hint { font-size: 0.8rem; color: #64748b; margin-top: 5px; display: none;}
 
-/* Progress Bar Styling */
-.progress-container {
-    width: 100%;
-    background-color: var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    margin-top: 10px;
-    height: 8px;
-    display: none; 
-}
-.progress-bar {
-    height: 100%;
-    background-color: var(--primary);
-    width: 0%;
-    transition: width 0.1s ease;
-}
-
-/* Loading Spinner CSS */
-.spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: #ffffff;
-    animation: spin 1s ease-in-out infinite;
-    margin-right: 8px;
-    vertical-align: text-bottom;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+/* Progress Bar & Spinner */
+.progress-container { width: 100%; background-color: var(--border); border-radius: 6px; overflow: hidden; margin-top: 10px; height: 8px; display: none; }
+.progress-bar { height: 100%; background-color: var(--primary); width: 0%; transition: width 0.1s ease; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: #ffffff; animation: spin 1s ease-in-out infinite; margin-right: 8px; vertical-align: text-bottom; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
@@ -180,12 +173,12 @@ body {
 .btn-submit { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center;}
 .btn-submit:disabled { background: var(--border); color: #94a3b8; cursor: not-allowed; }
 
-/* Utilities - Theme Toggle */
+/* Utilities */
 .theme-toggle { position: fixed; top: 20px; right: 20px; background: none; border: none; cursor: pointer; color: var(--text); padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; z-index: 50; }
 .theme-toggle:hover { background: var(--border); }
 .theme-toggle svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
 .rotate { transform: rotate(360deg); }
-
+.header-spacer { width: 80px; }
 </style>
 </head>
 <body>
@@ -199,61 +192,77 @@ body {
         <h2>Maths Chapters</h2>
     </div>
     <div class="chapter-grid" id="chapter-grid">
-        <div class="chapter-card" onclick="showQuestions('Number System')"><h3>Number System</h3></div>
-        <div class="chapter-card" onclick="showQuestions('HCF and LCM')"><h3>HCF and LCM</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Percentage')"><h3>Percentage</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Simple Interest')"><h3>Simple Interest</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Compound Interest')"><h3>Compound Interest</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Installment')"><h3>Installment</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Profit and Loss')"><h3>Profit and Loss</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Discount')"><h3>Discount</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Ratio and Proportion')"><h3>Ratio and Proportion</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Partnership')"><h3>Partnership</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Average')"><h3>Average</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Mixture & Alligation')"><h3>Mixture & Alligation</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Time & Work (Pipe & Cistern)')"><h3>Time & Work (Pipe & Cistern)</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Time & Distance')"><h3>Time & Distance</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Data Interpretation')"><h3>Data Interpretation</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Algebra')"><h3>Algebra</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Equations')"><h3>Equations</h3></div>
-        <div class="chapter-card" onclick="showQuestions('AP, GP, HP')"><h3>AP, GP, HP</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Surds and indices')"><h3>Surds and indices</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Simplification')"><h3>Simplification</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Plane Geometry')"><h3>Plane Geometry</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Mensuration 2D')"><h3>Mensuration 2D</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Mensuration 3D')"><h3>Mensuration 3D</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Trigonometry')"><h3>Trigonometry</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Height and Distance')"><h3>Height and Distance</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Coordinate Geometry')"><h3>Coordinate Geometry</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Statistics')"><h3>Statistics</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Permutation & Combination')"><h3>Permutation & Combination</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Probability')"><h3>Probability</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Number System')"><h3>Number System</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('HCF and LCM')"><h3>HCF and LCM</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Percentage')"><h3>Percentage</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Simple Interest')"><h3>Simple Interest</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Compound Interest')"><h3>Compound Interest</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Installment')"><h3>Installment</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Profit and Loss')"><h3>Profit and Loss</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Discount')"><h3>Discount</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Ratio and Proportion')"><h3>Ratio and Proportion</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Partnership')"><h3>Partnership</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Average')"><h3>Average</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Mixture & Alligation')"><h3>Mixture & Alligation</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Time & Work (Pipe & Cistern)')"><h3>Time & Work (Pipe & Cistern)</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Time & Distance')"><h3>Time & Distance</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Data Interpretation')"><h3>Data Interpretation</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Algebra')"><h3>Algebra</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Equations')"><h3>Equations</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('AP, GP, HP')"><h3>AP, GP, HP</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Surds and indices')"><h3>Surds and indices</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Simplification')"><h3>Simplification</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Plane Geometry')"><h3>Plane Geometry</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Mensuration 2D')"><h3>Mensuration 2D</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Mensuration 3D')"><h3>Mensuration 3D</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Trigonometry')"><h3>Trigonometry</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Height and Distance')"><h3>Height and Distance</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Coordinate Geometry')"><h3>Coordinate Geometry</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Statistics')"><h3>Statistics</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Permutation & Combination')"><h3>Permutation & Combination</h3></div>
+        <div class="chapter-card" onclick="showModeSelection('Probability')"><h3>Probability</h3></div>
+    </div>
+</div>
+
+<div id="mode-view" class="container">
+    <div class="header">
+        <button class="back-btn" onclick="showChapters()">← Back</button>
+        <h2 id="mode-chapter-title">Chapter Name</h2>
+        <div class="header-spacer"></div>
+    </div>
+    <div class="chapter-grid">
+        <div class="chapter-card mode-card" onclick="openQuestionsList('mock')">
+            <h3>📝 Mock Test</h3>
+        </div>
+        <div class="chapter-card mode-card" onclick="openQuestionsList('practice')">
+            <h3>🎯 Practice </h3>
+        </div>
     </div>
 </div>
 
 <div id="question-view" class="container">
     <div class="header">
-        <button class="back-btn" onclick="showChapters()">← Back</button>
+        <button class="back-btn" onclick="showModeSelection(currentActiveChapter)">← Back</button>
         <h2 id="current-chapter-title">Chapter Name</h2>
         <button class="add-btn" onclick="openModal()">+ Add Question</button>
     </div>
     
-    <div id="questions-container" class="q-list">
-        </div>
+    <div id="questions-container" class="q-list"></div>
 </div>
 
 <div class="modal-overlay" id="add-modal">
     <div class="modal-content">
-        <h3>Add New Doubt</h3>
+        <h3 id="modal-title">Add New Doubt</h3>
         
         <div class="form-group">
-            <label>Question / Context (Optional if uploading image)</label>
+            <label>Question / Context</label>
             <textarea id="q-text" placeholder="Type the question here..."></textarea>
         </div>
         
         <div class="form-group">
             <label>Attach Image or PDF</label>
             <input type="file" id="q-file" accept=".jpg, .jpeg, .png, .pdf">
+            <div id="file-edit-hint" class="file-hint">Leave blank to keep existing file.</div>
             
             <div class="progress-container" id="upload-progress-container">
                 <div class="progress-bar" id="upload-progress-bar"></div>
@@ -279,7 +288,7 @@ body {
 
 <script>
 // ==========================================
-// FIREBASE CONFIGURATION (From your screenshot)
+// FIREBASE CONFIGURATION
 // ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyCAw1Eozvog8hUdZW7THJQBlgze79sCkGk",
@@ -291,56 +300,80 @@ const firebaseConfig = {
     measurementId: "G-WS0G17WRE9"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 // ==========================================
 
 let currentActiveChapter = "";
+let currentMode = "practice"; // Tracks if we are viewing 'practice' or 'mock'
+let editingId = null; // Tracks if we are editing an existing question
 let mathDoubts = {}; 
-let unsubscribe = null; // Used to stop listening to old chapters
+let unsubscribe = null; 
 
-// Navigation
-function showQuestions(chapterName) {
-    currentActiveChapter = chapterName;
+// SVG Icons
+const editIcon = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+const deleteIcon = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+
+function hideAllViews() {
     document.getElementById('chapter-view').style.display = 'none';
+    document.getElementById('mode-view').style.display = 'none';
+    document.getElementById('question-view').style.display = 'none';
+}
+
+function showChapters() {
+    hideAllViews();
+    document.getElementById('chapter-view').style.display = 'block';
+    if (unsubscribe) unsubscribe(); 
+    window.scrollTo(0,0);
+}
+
+function showModeSelection(chapterName) {
+    currentActiveChapter = chapterName;
+    hideAllViews();
+    document.getElementById('mode-view').style.display = 'block';
+    document.getElementById('mode-chapter-title').innerText = chapterName;
+    if (unsubscribe) unsubscribe(); 
+    window.scrollTo(0,0);
+}
+
+// Opens the list of questions and filters by the selected mode
+function openQuestionsList(mode) {
+    currentMode = mode;
+    hideAllViews();
     document.getElementById('question-view').style.display = 'block';
-    document.getElementById('current-chapter-title').innerText = chapterName;
+    
+    const modeTitle = mode === 'mock' ? 'Mock Test' : 'Practice';
+    document.getElementById('current-chapter-title').innerText = `${currentActiveChapter} - ${modeTitle}`;
     
     const container = document.getElementById('questions-container');
     container.innerHTML = '<p style="text-align:center; opacity:0.6;"><span class="spinner" style="border-top-color: var(--primary);"></span> Loading doubts...</p>';
 
-    // Stop listening to the previous chapter if we switch
-    if (unsubscribe) {
-        unsubscribe();
-    }
-
-    // Real-time listener for Firestore (Reading from "mathDoubts")
+    // Fetch from Firestore
     unsubscribe = db.collection("mathDoubts")
-        .where("chapter", "==", chapterName)
+        .where("chapter", "==", currentActiveChapter)
         .orderBy("timestamp", "desc")
         .onSnapshot((snapshot) => {
             mathDoubts[currentActiveChapter] = [];
             snapshot.forEach((doc) => {
-                mathDoubts[currentActiveChapter].push({ id: doc.id, ...doc.data() });
+                const data = doc.data();
+                // Treat older questions (without a mode) as practice by default
+                const docMode = data.mode || 'practice'; 
+                
+                // Only push to array if the mode matches what we clicked
+                if (docMode === currentMode) {
+                    mathDoubts[currentActiveChapter].push({ id: doc.id, ...data });
+                }
             });
             renderQuestions();
         }, (error) => {
             console.error("Error fetching data:", error);
-            container.innerHTML = '<p style="text-align:center; color:#ef4444;">Error loading questions. Did you set Firestore rules to allow read/write?</p>';
+            container.innerHTML = '<p style="text-align:center; color:var(--error);">Error loading questions.</p>';
         });
 
     window.scrollTo(0,0);
 }
 
-function showChapters() {
-    document.getElementById('chapter-view').style.display = 'block';
-    document.getElementById('question-view').style.display = 'none';
-    if (unsubscribe) unsubscribe(); // Stop downloading data when back on home screen
-    window.scrollTo(0,0);
-}
-
-// Render Logic
+// Render Logic (Now with Edit/Delete buttons)
 function renderQuestions() {
     const container = document.getElementById('questions-container');
     container.innerHTML = '';
@@ -348,7 +381,7 @@ function renderQuestions() {
     const questions = mathDoubts[currentActiveChapter] || [];
     
     if (questions.length === 0) {
-        container.innerHTML = '<p style="text-align:center; opacity:0.6;">No doubts added for this chapter yet.</p>';
+        container.innerHTML = '<p style="text-align:center; opacity:0.6;">No doubts added here yet.</p>';
         return;
     }
 
@@ -358,32 +391,69 @@ function renderQuestions() {
         
         let fileHTML = "";
         if (item.fileData) {
-            if (item.fileType.includes("image")) {
-                fileHTML = `<img src="${item.fileData}" class="attachment-preview" alt="Question Attachment">`;
-            } else if (item.fileType === "application/pdf") {
+            if (item.fileType && item.fileType.includes("image")) {
+                fileHTML = `<img src="${item.fileData}" class="attachment-preview">`;
+            } else {
                 fileHTML = `<a href="${item.fileData}" download="attachment.pdf" class="pdf-badge">📄 Download Attached PDF</a>`;
             }
         }
 
-        let qHTML = item.q ? `<h4>${item.q}</h4>` : "";
+        let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text</i>";
 
         div.innerHTML = `
-            ${qHTML}
+            <div class="question-header">
+                <h4>${qTextHTML}</h4>
+                <div class="action-btns">
+                    <button class="icon-btn edit" onclick="editQuestion('${item.id}')" title="Edit">${editIcon}</button>
+                    <button class="icon-btn delete" onclick="deleteQuestion('${item.id}')" title="Delete">${deleteIcon}</button>
+                </div>
+            </div>
             ${fileHTML}
-            <p class="mistake"><strong>Mistake:</strong> ${item.m}</p>
-            <p class="solution"><strong>Solution:</strong> ${item.s}</p>
+            <p class="mistake"><strong>Mistake:</strong> ${item.m ? item.m.replace(/\n/g, '<br>') : ''}</p>
+            <p class="solution"><strong>Solution:</strong> ${item.s ? item.s.replace(/\n/g, '<br>') : ''}</p>
         `;
         container.appendChild(div);
     });
 }
 
-// Modal Logic
+// --- DELETE & EDIT LOGIC ---
+
+function deleteQuestion(id) {
+    if (confirm("Are you sure you want to delete this doubt? This cannot be undone.")) {
+        db.collection("mathDoubts").doc(id).delete()
+        .catch(error => {
+            console.error("Error deleting: ", error);
+            alert("Failed to delete.");
+        });
+    }
+}
+
+function editQuestion(id) {
+    const item = mathDoubts[currentActiveChapter].find(q => q.id === id);
+    if (!item) return;
+    
+    editingId = id; // Set global ID flag so the save function knows it's an update
+    
+    document.getElementById('modal-title').innerText = "Edit Doubt";
+    document.getElementById('q-text').value = item.q || '';
+    document.getElementById('m-text').value = item.m || '';
+    document.getElementById('s-text').value = item.s || '';
+    document.getElementById('file-edit-hint').style.display = 'block'; // Show hint about file
+    
+    document.getElementById('save-btn').innerHTML = "Update Question";
+    document.getElementById('add-modal').style.display = 'flex';
+}
+
 function openModal() {
+    editingId = null; // Ensure we are creating a new question
+    document.getElementById('modal-title').innerText = "Add New Doubt";
+    document.getElementById('file-edit-hint').style.display = 'none';
     document.getElementById('add-modal').style.display = 'flex';
 }
 
 function closeModal() {
     document.getElementById('add-modal').style.display = 'none';
+    editingId = null;
     clearForm();
 }
 
@@ -402,7 +472,7 @@ function clearForm() {
     saveBtn.innerHTML = "Save Question";
 }
 
-// Save Data to Firestore
+// --- SAVE / UPDATE LOGIC ---
 function saveQuestion() {
     const q = document.getElementById('q-text').value.trim();
     const m = document.getElementById('m-text').value.trim();
@@ -411,7 +481,7 @@ function saveQuestion() {
     const saveBtn = document.getElementById('save-btn');
     const cancelBtn = document.getElementById('cancel-btn');
     
-    if (!q && !fileInput.files.length) {
+    if (!q && !fileInput.files.length && !editingId) {
         alert("Please enter a question or upload an image/file.");
         return;
     }
@@ -420,69 +490,64 @@ function saveQuestion() {
     cancelBtn.disabled = true;
     saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
 
-    const newQuestion = { 
-        chapter: currentActiveChapter,
+    // Base payload
+    const payload = { 
         q: q, 
         m: m, 
-        s: s, 
-        fileData: null, 
-        fileType: null,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp() // For sorting
+        s: s
     };
 
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
-        
-        // Firestore Document Size Warning Check (Keep images under ~800kb)
         if (file.size > 800000) { 
-            alert("File is too large! Firestore has a 1MB limit for text-based image saves. Please compress the image first.");
-            saveBtn.disabled = false;
-            cancelBtn.disabled = false;
-            saveBtn.innerHTML = "Save Question";
-            return;
+            alert("File is too large! Please compress the image first.");
+            resetButtons(); return;
         }
 
         const reader = new FileReader();
-        const progressContainer = document.getElementById('upload-progress-container');
+        document.getElementById('upload-progress-container').style.display = 'block';
         const progressBar = document.getElementById('upload-progress-bar');
         
-        progressContainer.style.display = 'block';
-        progressBar.style.width = '0%';
-
-        reader.onprogress = function(e) {
+        reader.onprogress = (e) => {
             if (e.lengthComputable) {
-                const percentLoaded = Math.round((e.loaded / e.total) * 100);
-                progressBar.style.width = percentLoaded + '%';
+                progressBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
             }
         };
         
-        reader.onload = function(e) {
-            newQuestion.fileData = e.target.result;
-            newQuestion.fileType = file.type;
-            addToDataStore(newQuestion);
+        reader.onload = (e) => {
+            payload.fileData = e.target.result;
+            payload.fileType = file.type;
+            processToDatabase(payload);
         };
-        
         reader.readAsDataURL(file);
     } else {
-        addToDataStore(newQuestion);
+        processToDatabase(payload);
     }
 }
 
-// Adding to "mathDoubts" collection
-function addToDataStore(newQuestion) {
-    db.collection("mathDoubts").add(newQuestion)
-    .then(() => {
-        closeModal();
-    })
-    .catch((error) => {
-        console.error("Error adding document: ", error);
-        alert("Error saving doubt. Check the console.");
-        const saveBtn = document.getElementById('save-btn');
-        const cancelBtn = document.getElementById('cancel-btn');
-        saveBtn.disabled = false;
-        cancelBtn.disabled = false;
-        saveBtn.innerHTML = "Save Question";
-    });
+function processToDatabase(payload) {
+    if (editingId) {
+        // Update existing document
+        db.collection("mathDoubts").doc(editingId).update(payload)
+        .then(() => closeModal())
+        .catch(err => { console.error(err); alert("Update failed"); resetButtons(); });
+    } else {
+        // Create new document
+        payload.chapter = currentActiveChapter;
+        payload.mode = currentMode; // Attaches 'mock' or 'practice'
+        payload.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        
+        db.collection("mathDoubts").add(payload)
+        .then(() => closeModal())
+        .catch(err => { console.error(err); alert("Save failed"); resetButtons(); });
+    }
+}
+
+function resetButtons() {
+    const saveBtn = document.getElementById('save-btn');
+    saveBtn.disabled = false;
+    document.getElementById('cancel-btn').disabled = false;
+    saveBtn.innerHTML = editingId ? "Update Question" : "Save Question";
 }
 
 // --- THEME LOGIC ---
