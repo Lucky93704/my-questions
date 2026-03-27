@@ -11,6 +11,7 @@
     --card-bg: #ffffff; 
     --text: #1e293b; 
     --border: #e2e8f0; 
+    --btn-hover: #1d4ed8;
 }
 [data-theme="dark"] { 
     --primary: #60a5fa; 
@@ -18,6 +19,7 @@
     --card-bg: #1e293b; 
     --text: #f8fafc; 
     --border: #334155; 
+    --btn-hover: #3b82f6;
 }
 
 body { 
@@ -29,14 +31,14 @@ body {
     transition: 0.3s; 
 }
 
-/* Container for scannability */
+/* Container */
 .container { max-width: 900px; margin: auto; padding-top: 40px; }
 
 /* Views */
 #chapter-view { display: block; }
 #question-view { display: none; }
 
-/* Header Logic */
+/* Headers & Buttons */
 .header { 
     display: flex; 
     justify-content: space-between; 
@@ -53,6 +55,19 @@ body {
     cursor: pointer;
     font-size: 1rem;
 }
+
+.add-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: 0.2s;
+}
+.add-btn:hover { background: var(--btn-hover); }
 
 /* Chapter Grid */
 .chapter-grid { 
@@ -79,7 +94,7 @@ body {
 .chapter-card h3 { margin: 0; font-size: 1.1rem; }
 
 /* Question Items */
-.q-list { margin-top: 20px; }
+.q-list { margin-top: 20px; padding-bottom: 50px;}
 .question-item {
     background: var(--card-bg);
     padding: 20px;
@@ -88,12 +103,82 @@ body {
     border: 1px solid var(--border);
 }
 
+.question-item h4 { margin-top: 0; font-size: 1.1rem; }
 .mistake { color: #ef4444; margin: 10px 0; }
 .solution { color: #22c55e; border-top: 1px dashed var(--border); padding-top: 10px; }
+.attachment-preview { max-width: 100%; max-height: 300px; border-radius: 6px; margin-top: 10px; border: 1px solid var(--border); }
+.pdf-badge { display: inline-block; background: #ef4444; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; text-decoration: none;}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none; justify-content: center; align-items: center;
+    z-index: 100;
+}
+.modal-content {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-content h3 { margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px;}
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+.form-group textarea, .form-group input[type="file"] {
+    width: 100%; padding: 10px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--bg); color: var(--text);
+    box-sizing: border-box; font-family: inherit;
+}
+.form-group textarea { resize: vertical; min-height: 80px; }
+
+/* Progress Bar Styling */
+.progress-container {
+    width: 100%;
+    background-color: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 10px;
+    height: 8px;
+    display: none; 
+}
+.progress-bar {
+    height: 100%;
+    background-color: var(--primary);
+    width: 0%;
+    transition: width 0.1s ease;
+}
+
+/* Loading Spinner CSS */
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #ffffff;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+    vertical-align: text-bottom;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+.btn-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-submit { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center;}
+.btn-submit:disabled { background: var(--border); color: #94a3b8; cursor: not-allowed; }
 
 /* Utilities */
-.hidden { display: none !important; }
-.theme-toggle { position: fixed; top: 20px; right: 20px; cursor: pointer; background: var(--card-bg); border: 1px solid var(--border); padding: 8px; border-radius: 8px; }
+.theme-toggle { position: fixed; top: 20px; right: 20px; cursor: pointer; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 8px; z-index: 50;}
 
 </style>
 </head>
@@ -118,80 +203,226 @@ body {
         <div class="chapter-card" onclick="showQuestions('Partnership')"><h3>Partnership</h3></div>
         <div class="chapter-card" onclick="showQuestions('Average')"><h3>Average</h3></div>
         <div class="chapter-card" onclick="showQuestions('Mixture & Alligation')"><h3>Mixture & Alligation</h3></div>
-        <div class="chapter-card" onclick="showQuestions('Time & Work')"><h3>Time & Work</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Time & Work (Pipe & Cistern)')"><h3>Time & Work (Pipe & Cistern)</h3></div>
         <div class="chapter-card" onclick="showQuestions('Time & Distance')"><h3>Time & Distance</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Data Interpretation')"><h3>Data Interpretation</h3></div>
         <div class="chapter-card" onclick="showQuestions('Algebra')"><h3>Algebra</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Equations')"><h3>Equations</h3></div>
+        <div class="chapter-card" onclick="showQuestions('AP, GP, HP')"><h3>AP, GP, HP</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Surds and indices')"><h3>Surds and indices</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Simplification')"><h3>Simplification</h3></div>
         <div class="chapter-card" onclick="showQuestions('Plane Geometry')"><h3>Plane Geometry</h3></div>
         <div class="chapter-card" onclick="showQuestions('Mensuration 2D')"><h3>Mensuration 2D</h3></div>
         <div class="chapter-card" onclick="showQuestions('Mensuration 3D')"><h3>Mensuration 3D</h3></div>
         <div class="chapter-card" onclick="showQuestions('Trigonometry')"><h3>Trigonometry</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Height and Distance')"><h3>Height and Distance</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Coordinate Geometry')"><h3>Coordinate Geometry</h3></div>
         <div class="chapter-card" onclick="showQuestions('Statistics')"><h3>Statistics</h3></div>
+        <div class="chapter-card" onclick="showQuestions('Permutation & Combination')"><h3>Permutation & Combination</h3></div>
         <div class="chapter-card" onclick="showQuestions('Probability')"><h3>Probability</h3></div>
     </div>
 </div>
 
 <div id="question-view" class="container">
     <div class="header">
-        <button class="back-btn" onclick="showChapters()">← Back to Chapters</button>
+        <button class="back-btn" onclick="showChapters()">← Back</button>
         <h2 id="current-chapter-title">Chapter Name</h2>
+        <button class="add-btn" onclick="openModal()">+ Add Question</button>
     </div>
     
     <div id="questions-container" class="q-list">
         </div>
 </div>
 
+<div class="modal-overlay" id="add-modal">
+    <div class="modal-content">
+        <h3>Add New Doubt</h3>
+        
+        <div class="form-group">
+            <label>Question / Context (Optional if uploading image)</label>
+            <textarea id="q-text" placeholder="Type the question here..."></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Attach Image or PDF</label>
+            <input type="file" id="q-file" accept=".jpg, .jpeg, .png, .pdf">
+            
+            <div class="progress-container" id="upload-progress-container">
+                <div class="progress-bar" id="upload-progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>My Mistake</label>
+            <textarea id="m-text" placeholder="What went wrong?"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Smart Solution</label>
+            <textarea id="s-text" placeholder="Write the trick or correct method..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" id="cancel-btn" onclick="closeModal()">Cancel</button>
+            <button class="btn-submit" id="save-btn" onclick="saveQuestion()">Save Question</button>
+        </div>
+    </div>
+</div>
+
 <script>
-/* DATA STORAGE 
-   Add your questions here for each chapter.
-*/
+let currentActiveChapter = "";
+
+// Starter Data
 const mathDoubts = {
     "Number System": [
-        { q: "Find unit digit of 7^105", m: "Used wrong cyclicity", s: "7^1 = 7" },
-        { q: "Sum of first 50 natural numbers", m: "Used n(n+1) but forgot to divide by 2", s: "n(n+1)/2 = 50*51/2 = 1275" }
-    ],
-    "Plane Geometry": [
-        { q: "Sides 5, 12, 13 area?", m: "Used Heron's formula", s: "Right triangle: 1/2 * 5 * 12 = 30" }
-    ],
-    "Percentage": [
-        { q: "20% increase then 20% decrease", m: "Thought it stays the same", s: "Successive: - (x²/100) = 4% decrease" }
+        { q: "Find unit digit of 7^105", m: "Used wrong cyclicity", s: "7^1 = 7", fileData: null, fileType: null }
     ]
 };
 
-// Navigation Logic
+// Navigation
 function showQuestions(chapterName) {
-    // 1. Hide Chapter List, Show Question View
+    currentActiveChapter = chapterName;
     document.getElementById('chapter-view').style.display = 'none';
     document.getElementById('question-view').style.display = 'block';
-    
-    // 2. Update Title
     document.getElementById('current-chapter-title').innerText = chapterName;
-    
-    // 3. Clear and Load Questions
-    const container = document.getElementById('questions-container');
-    container.innerHTML = '';
-    
-    const questions = mathDoubts[chapterName] || [];
-    
-    if (questions.length === 0) {
-        container.innerHTML = '<p style="text-align:center; opacity:0.6;">No doubts added for this chapter yet.</p>';
-    } else {
-        questions.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'question-item';
-            div.innerHTML = `
-                <h4>${item.q}</h4>
-                <p class="mistake"><strong>Mistake:</strong> ${item.m}</p>
-                <p class="solution"><strong>Solution:</strong> ${item.s}</p>
-            `;
-            container.appendChild(div);
-        });
-    }
+    renderQuestions();
     window.scrollTo(0,0);
 }
 
 function showChapters() {
     document.getElementById('chapter-view').style.display = 'block';
     document.getElementById('question-view').style.display = 'none';
+    window.scrollTo(0,0);
+}
+
+// Render Logic
+function renderQuestions() {
+    const container = document.getElementById('questions-container');
+    container.innerHTML = '';
+    
+    const questions = mathDoubts[currentActiveChapter] || [];
+    
+    if (questions.length === 0) {
+        container.innerHTML = '<p style="text-align:center; opacity:0.6;">No doubts added for this chapter yet.</p>';
+        return;
+    }
+
+    questions.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'question-item';
+        
+        let fileHTML = "";
+        if (item.fileData) {
+            if (item.fileType.includes("image")) {
+                fileHTML = `<img src="${item.fileData}" class="attachment-preview" alt="Question Attachment">`;
+            } else if (item.fileType === "application/pdf") {
+                fileHTML = `<a href="${item.fileData}" download="attachment.pdf" class="pdf-badge">📄 Download Attached PDF</a>`;
+            }
+        }
+
+        let qHTML = item.q ? `<h4>${item.q}</h4>` : "";
+
+        div.innerHTML = `
+            ${qHTML}
+            ${fileHTML}
+            <p class="mistake"><strong>Mistake:</strong> ${item.m}</p>
+            <p class="solution"><strong>Solution:</strong> ${item.s}</p>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// Modal Logic
+function openModal() {
+    document.getElementById('add-modal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('add-modal').style.display = 'none';
+    clearForm();
+}
+
+function clearForm() {
+    document.getElementById('q-text').value = '';
+    document.getElementById('m-text').value = '';
+    document.getElementById('s-text').value = '';
+    document.getElementById('q-file').value = '';
+    document.getElementById('upload-progress-container').style.display = 'none';
+    document.getElementById('upload-progress-bar').style.width = '0%';
+    
+    // Reset save & cancel button state
+    const saveBtn = document.getElementById('save-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    saveBtn.disabled = false;
+    cancelBtn.disabled = false;
+    saveBtn.innerHTML = "Save Question";
+}
+
+// Save Data (Handling File Uploads, Progress & Loading Animation)
+function saveQuestion() {
+    const q = document.getElementById('q-text').value.trim();
+    const m = document.getElementById('m-text').value.trim();
+    const s = document.getElementById('s-text').value.trim();
+    const fileInput = document.getElementById('q-file');
+    const saveBtn = document.getElementById('save-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    
+    if (!q && !fileInput.files.length) {
+        alert("Please enter a question or upload an image/file.");
+        return;
+    }
+
+    // Trigger loading state on buttons
+    saveBtn.disabled = true;
+    cancelBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
+
+    const newQuestion = { q, m, s, fileData: null, fileType: null };
+
+    // Process file if it exists
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        const progressContainer = document.getElementById('upload-progress-container');
+        const progressBar = document.getElementById('upload-progress-bar');
+        
+        // Show progress UI
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+
+        // Track Progress
+        reader.onprogress = function(e) {
+            if (e.lengthComputable) {
+                const percentLoaded = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percentLoaded + '%';
+            }
+        };
+        
+        // Once completed
+        reader.onload = function(e) {
+            setTimeout(() => {
+                newQuestion.fileData = e.target.result;
+                newQuestion.fileType = file.type;
+                addToDataStore(newQuestion);
+            }, 600); // Slight delay so the user sees it finish
+        };
+        
+        reader.readAsDataURL(file);
+    } else {
+        // If there's no file, still simulate a tiny loading state so the UX feels responsive
+        setTimeout(() => {
+            addToDataStore(newQuestion);
+        }, 600);
+    }
+}
+
+function addToDataStore(newQuestion) {
+    if (!mathDoubts[currentActiveChapter]) {
+        mathDoubts[currentActiveChapter] = [];
+    }
+    mathDoubts[currentActiveChapter].unshift(newQuestion); 
+    closeModal();
+    renderQuestions();
 }
 
 // Theme Logic
