@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root { 
@@ -94,6 +95,14 @@ svg { fill: currentColor; }
 .back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500;}
 .add-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: 0.2s; }
 .add-btn:hover { background: var(--btn-hover); }
+
+/* NEW: Dashboard & Search Styles */
+.dashboard-widgets { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; }
+.widget-card { background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1px solid var(--border); flex: 1; min-width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.widget-card h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: var(--text); }
+.search-bar { width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; background: var(--bg); color: var(--text); box-sizing: border-box; outline: none; transition: 0.3s;}
+.search-bar:focus { border-color: var(--primary); }
+#global-search-results { display: none; margin-bottom: 30px; }
 
 /* Chapter Grid & Heatmap */
 .chapter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
@@ -241,8 +250,24 @@ svg { fill: currentColor; }
         <h2>Maths Chapters</h2>
         <div class="header-spacer"></div>
     </div>
-    <div class="chapter-grid" id="chapter-grid">
+
+    <div class="dashboard-widgets">
+        <div class="widget-card">
+            <h3>Global Search</h3>
+            <input type="text" id="global-search" class="search-bar" placeholder="Search doubts globally by keyword..." onkeyup="handleGlobalSearch()">
         </div>
+        <div class="widget-card">
+            <h3>Error Distribution</h3>
+            <div style="position: relative; height: 160px; width: 100%;">
+                <canvas id="errorChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div id="global-search-results" class="q-list"></div>
+    
+    <div class="chapter-grid" id="chapter-grid">
+    </div>
 </div>
 
 <div id="mode-view" class="container">
@@ -327,7 +352,7 @@ svg { fill: currentColor; }
         <div class="form-group">
             <label>Question / Context</label>
             <textarea id="q-text" placeholder="Type the question here..."></textarea>
-            <span class="math-hint">💡 Tip: Use LaTeX for math! E.g. type \( \frac{1}{2} \) for fractions.</span>
+            <span class="math-hint">庁 Tip: Use LaTeX for math! E.g. type \( \frac{1}{2} \) for fractions.</span>
         </div>
         
         <div class="form-group">
@@ -340,13 +365,13 @@ svg { fill: currentColor; }
         <div class="form-group">
             <label>My Mistake</label>
             <textarea id="m-text" placeholder="What went wrong?"></textarea>
-            <span class="math-hint">💡 LaTeX supported here too!</span>
+            <span class="math-hint">庁 LaTeX supported here too!</span>
         </div>
 
         <div class="form-group">
             <label>Smart Solution</label>
             <textarea id="s-text" placeholder="Write the trick or correct method..."></textarea>
-            <span class="math-hint">💡 LaTeX supported here too!</span>
+            <span class="math-hint">庁 LaTeX supported here too!</span>
         </div>
 
         <div class="modal-actions">
@@ -394,6 +419,10 @@ let currentMode = "practice";
 let editingId = null; 
 let activeQuestionsArray = []; 
 
+// NEW: Global state for Search and Chart
+let allGlobalQuestions = [];
+let errorChartInstance = null;
+
 let listUnsubscribe = null; 
 let heatmapUnsubscribe = null;
 
@@ -411,11 +440,29 @@ function initPortal() {
     renderChapterGrid({});
     heatmapUnsubscribe = db.collection("mathDoubts").onSnapshot((snapshot) => {
         const counts = {};
+        const tagCounts = { 'Calculation': 0, 'Concept': 0, 'Formula': 0, 'Silly': 0, 'Time': 0 };
+        allGlobalQuestions = []; // Reset global tracking
+
         snapshot.forEach(doc => {
-            const chap = doc.data().chapter;
+            const data = doc.data();
+            const chap = data.chapter;
+            
+            // Tally chapters for heatmap
             counts[chap] = (counts[chap] || 0) + 1;
+            
+            // Tally tags for chart
+            const tag = data.tag;
+            if (tag && tagCounts[tag] !== undefined) {
+                tagCounts[tag]++;
+            }
+
+            // Store full database in memory for rapid global search
+            allGlobalQuestions.push({ id: doc.id, ...data });
         });
+        
         renderChapterGrid(counts);
+        renderErrorChart(tagCounts);
+        handleGlobalSearch(); // refresh search results if user is currently typing
     });
 }
 
@@ -441,6 +488,111 @@ function renderChapterGrid(countsMap) {
         
         grid.appendChild(card);
     });
+}
+
+// --- NEW: RENDER CHART & GLOBAL SEARCH ---
+function renderErrorChart(tagCounts) {
+    const ctx = document.getElementById('errorChart').getContext('2d');
+    const labels = ['Calculation', 'Concept', 'Formula', 'Silly', 'Time'];
+    const data = labels.map(label => tagCounts[label]);
+    
+    // Aesthetic colors matching your CSS theme tags
+    const bgColors = ['#fca5a5', '#a5b4fc', '#fde047', '#d8b4fe', '#fdba74'];
+
+    if(errorChartInstance) {
+        errorChartInstance.data.datasets[0].data = data;
+        errorChartInstance.update();
+    } else {
+        errorChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: bgColors,
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: 'var(--text)', font: { family: "'Segoe UI', sans-serif" } } }
+                }
+            }
+        });
+    }
+}
+
+function handleGlobalSearch() {
+    const query = document.getElementById('global-search').value.toLowerCase().trim();
+    const resultsContainer = document.getElementById('global-search-results');
+    const gridContainer = document.getElementById('chapter-grid');
+
+    if (!query) {
+        resultsContainer.style.display = 'none';
+        gridContainer.style.display = 'grid'; 
+        return;
+    }
+
+    resultsContainer.style.display = 'block';
+    gridContainer.style.display = 'none'; 
+    resultsContainer.innerHTML = '';
+
+    const filtered = allGlobalQuestions.filter(q => {
+        const qText = (q.q || "").toLowerCase();
+        const mText = (q.m || "").toLowerCase();
+        const sText = (q.s || "").toLowerCase();
+        return qText.includes(query) || mText.includes(query) || sText.includes(query);
+    });
+
+    if (filtered.length === 0) {
+        resultsContainer.innerHTML = '<p style="text-align:center; opacity:0.6;">No matching doubts found.</p>';
+        return;
+    }
+
+    filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'question-item';
+        div.id = `q-search-${item.id}`; 
+        
+        let fileHTML = "";
+        if (item.fileData) {
+            if (item.fileType && item.fileType.includes("image")) {
+                fileHTML = `<img src="${item.fileData}" class="attachment-preview">`;
+            } else {
+                fileHTML = `<a href="${item.fileData}" download="attachment.pdf" class="pdf-badge"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Download PDF</a>`;
+            }
+        }
+
+        let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text (View attached file)</i>";
+        let tagHTML = getTagHTML(item.tag);
+        
+        // Show chapter and mode in global search so the user knows where it's from
+        let contextBadge = `<span class="tag-badge" style="background:var(--border); color:var(--text); margin-left: 10px;">${item.chapter} (${item.mode === 'mock' ? 'Mock Test' : 'Practice'})</span>`;
+
+        div.innerHTML = `
+            <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom: 5px;">${tagHTML} ${contextBadge}</div>
+            <div class="question-header">
+                <div class="q-title-row" onclick="document.getElementById('q-search-${item.id}').classList.toggle('expanded')">
+                    ${chevronIcon}
+                    <h4>${qTextHTML}</h4>
+                </div>
+            </div>
+            
+            <div class="question-details">
+                ${fileHTML}
+                <p class="mistake"><strong>Mistake:</strong> ${item.m ? item.m.replace(/\n/g, '<br>') : ''}</p>
+                <p class="solution"><strong>Solution:</strong> ${item.s ? item.s.replace(/\n/g, '<br>') : ''}</p>
+            </div>
+        `;
+        resultsContainer.appendChild(div);
+    });
+
+    if (window.MathJax) {
+        MathJax.typesetPromise([resultsContainer]).catch((err) => console.log('MathJax error: ', err));
+    }
 }
 
 // --- NAVIGATION ---
