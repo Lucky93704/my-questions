@@ -24,7 +24,7 @@ header h1 { color: var(--primary); font-size: 2.5rem; margin: 0; }
 header p { color: #64748b; font-size: 1.1rem; }
 
 #home-screen { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-.subject-card { background: var(--card-bg); padding: 40px 20px; text-align: center; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-size: 1.5rem; font-weight: bold; color: var(--primary); display: block; transition: 0.2s; border: 2px solid transparent; }
+.subject-card { background: var(--card-bg); padding: 40px 20px; text-align: center; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-size: 1.5rem; font-weight: bold; color: var(--primary); display: block; transition: 0.2s; border: 2px solid transparent; cursor: pointer; font-family: inherit;}
 .subject-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-color: var(--primary); color: var(--secondary); }
 
 /* PIN Screen Styles */
@@ -43,14 +43,19 @@ header p { color: #64748b; font-size: 1.1rem; }
 #logout-btn { background: transparent; color: var(--error); border: 2px solid var(--error); padding: 8px 20px; font-size: 1rem; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; min-width: 120px;}
 #logout-btn:hover:not(:disabled) { background: var(--error); color: white; transform: translateY(-2px); }
 
+/* Modal Styles for Dashboard Selection */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeIn 0.3s ease; }
+.modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--primary); font-size: 1.5rem; }
+.modal-options { display: flex; flex-direction: column; gap: 15px; }
+.modal-btn { background: var(--bg); border: 2px solid var(--border); padding: 15px; border-radius: 8px; color: var(--text); font-weight: bold; font-size: 1.1rem; transition: 0.2s; text-decoration: none; display: block; }
+.modal-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.close-modal { margin-top: 20px; background: transparent; border: none; color: #64748b; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s;}
+.close-modal:hover { color: var(--error); }
+
 /* Login Animations */
-@keyframes fadeOutUp {
-    to { opacity: 0; transform: translateY(-20px); }
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeOutUp { to { opacity: 0; transform: translateY(-20px); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .anim-fade-out { animation: fadeOutUp 0.4s ease forwards; }
 .anim-fade-in { animation: fadeIn 0.5s ease forwards; }
 
@@ -95,9 +100,9 @@ header p { color: #64748b; font-size: 1.1rem; }
         <a href="gk.html" class="subject-card">GK</a>
         <a href="reasoning.html" class="subject-card">Reasoning</a>
         
-        <a href="dashboard.html" class="subject-card" style="grid-column: 1 / -1; margin-top: 10px; background: transparent; border: 2px dashed var(--primary);">
+        <button onclick="document.getElementById('dashboard-modal').style.display='flex'" class="subject-card" style="grid-column: 1 / -1; margin-top: 10px; background: transparent; border: 2px dashed var(--primary); width: 100%;">
             Dashboard 📊
-        </a>
+        </button>
     </div>
 
     <div class="logout-container">
@@ -105,9 +110,19 @@ header p { color: #64748b; font-size: 1.1rem; }
     </div>
 </div>
 
+<div id="dashboard-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-content">
+        <h3>Select Dashboard</h3>
+        <div class="modal-options">
+            <a href="dashboard.html" class="modal-btn">📉 Doubts Dashboard</a>
+            <a href="targets.html" class="modal-btn">🎯 Study Dashboard</a>
+        </div>
+        <button class="close-modal" onclick="document.getElementById('dashboard-modal').style.display='none'">Cancel</button>
+    </div>
+</div>
+
 <script>
 // --- SESSION CHECK ---
-// Now checks both sessionStorage and localStorage
 if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
     document.getElementById('pin-screen').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
@@ -133,20 +148,17 @@ function attemptUnlock() {
     const unlockBtn = document.getElementById('unlock-btn');
     
     if (enteredPin === correctPin) {
-        // Trigger loading animation on button
         unlockBtn.innerHTML = '<span class="spinner"></span> Unlocking...';
         unlockBtn.disabled = true;
         document.getElementById('pin-input').disabled = true;
         
-        // Save to appropriate storage based on checkbox
         const rememberMe = document.getElementById('remember-me').checked;
         if (rememberMe) {
-            localStorage.setItem('isUnlocked', 'true'); // Persists across browser restarts
+            localStorage.setItem('isUnlocked', 'true');
         } else {
-            sessionStorage.setItem('isUnlocked', 'true'); // Persists only for current tab
+            sessionStorage.setItem('isUnlocked', 'true');
         }
         
-        // Run fade-out and fade-in animations with slight delays for smoothness
         setTimeout(() => {
             const pinScreen = document.getElementById('pin-screen');
             const mainContent = document.getElementById('main-content');
@@ -159,8 +171,8 @@ function attemptUnlock() {
                 mainContent.style.display = 'block';
                 mainContent.classList.remove('anim-fade-out');
                 mainContent.classList.add('anim-fade-in');
-            }, 400); // Wait for fade out to complete
-        }, 500); // Brief artificial delay to show the spinner
+            }, 400);
+        }, 500);
         
     } else {
         const errorMsg = document.getElementById('error-msg');
@@ -177,12 +189,9 @@ function attemptUnlock() {
 // --- LOGOUT LOGIC ---
 function handleLogout() {
     const logoutBtn = document.getElementById('logout-btn');
-    
-    // Trigger loading animation on logout button
     logoutBtn.innerHTML = '<span class="spinner"></span> Locking...';
     logoutBtn.disabled = true;
     
-    // Remove the unlock state from both storages
     sessionStorage.removeItem('isUnlocked');
     localStorage.removeItem('isUnlocked');
     
@@ -190,14 +199,12 @@ function handleLogout() {
         const pinScreen = document.getElementById('pin-screen');
         const mainContent = document.getElementById('main-content');
         
-        // Fade out main content
         mainContent.classList.remove('anim-fade-in');
         mainContent.classList.add('anim-fade-out');
         
         setTimeout(() => {
             mainContent.style.display = 'none';
             
-            // Reset the Unlock Screen components
             const unlockBtn = document.getElementById('unlock-btn');
             unlockBtn.innerHTML = 'Unlock';
             unlockBtn.disabled = false;
@@ -206,15 +213,12 @@ function handleLogout() {
             pinInput.value = '';
             pinInput.disabled = false;
             
-            // Reset Checkbox
             document.getElementById('remember-me').checked = false;
             
-            // Fade in PIN screen
             pinScreen.classList.remove('anim-fade-out');
             pinScreen.style.display = 'flex';
             pinScreen.classList.add('anim-fade-in');
             
-            // Reset Logout button state for next time
             logoutBtn.innerHTML = 'Lock Portal';
             logoutBtn.disabled = false;
             
@@ -222,12 +226,10 @@ function handleLogout() {
     }, 500);
 }
 
-// Event Listeners for unlocking & locking
+// Event Listeners
 document.getElementById('unlock-btn').addEventListener('click', attemptUnlock);
 document.getElementById('pin-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        attemptUnlock();
-    }
+    if (e.key === 'Enter') { attemptUnlock(); }
 });
 document.getElementById('logout-btn').addEventListener('click', handleLogout);
 
