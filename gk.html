@@ -240,6 +240,25 @@ svg { fill: currentColor; }
 }
 .rotate { transform: rotate(360deg); }
 .header-spacer { width: 80px; }
+
+/* Custom Multi-Select Dropdown */
+.multiselect-wrapper { position: relative; width: 100%; user-select: none; }
+.multiselect-display { 
+    width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; 
+    background: var(--bg); color: var(--text); cursor: pointer; display: flex; 
+    justify-content: space-between; align-items: center; box-sizing: border-box; font-family: inherit;
+}
+.multiselect-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg);
+    border: 1px solid var(--border); border-radius: 6px; margin-top: 4px; z-index: 1000;
+    max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.multiselect-dropdown.show { display: block; }
+.multiselect-option {
+    padding: 8px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; margin: 0; font-weight: 500; font-size: 0.95rem;
+}
+.multiselect-option:hover { background: var(--bg); }
+.multiselect-option input { cursor: pointer; width: 16px; height: 16px; accent-color: var(--primary); margin: 0; }
 </style>
 </head>
 <body>
@@ -356,13 +375,25 @@ svg { fill: currentColor; }
 
         <div class="form-group">
             <label>Error Type</label>
-            <select id="q-tag">
-                <option value="">No Tag</option>
-                <option value="Fact">Factual Error / Forgetting</option>
-                <option value="Concept">Conceptual Gap</option>
-                <option value="CurrentAffairs">Static/Current Affairs Linkage</option>
-                <option value="Silly">Silly Mistake / Misread</option>
-                <option value="Time">Time Management</option>
+            <div class="multiselect-wrapper" id="ms-wrapper">
+                <div class="multiselect-display" onclick="document.getElementById('ms-dropdown').classList.toggle('show')">
+                    <span id="ms-text">Select tags...</span>
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="multiselect-dropdown" id="ms-dropdown">
+                    <label class="multiselect-option"><input type="checkbox" value="Fact" onchange="syncMultiSelect()"> Factual Error / Forgetting</label>
+                    <label class="multiselect-option"><input type="checkbox" value="Concept" onchange="syncMultiSelect()"> Conceptual Gap</label>
+                    <label class="multiselect-option"><input type="checkbox" value="CurrentAffairs" onchange="syncMultiSelect()"> Static/Current Affairs</label>
+                    <label class="multiselect-option"><input type="checkbox" value="Silly" onchange="syncMultiSelect()"> Silly Mistake</label>
+                    <label class="multiselect-option"><input type="checkbox" value="Time" onchange="syncMultiSelect()"> Time Management</label>
+                </div>
+            </div>
+            <select id="q-tag" multiple style="display: none;">
+                <option value="Fact">Fact</option>
+                <option value="Concept">Concept</option>
+                <option value="CurrentAffairs">CurrentAffairs</option>
+                <option value="Silly">Silly</option>
+                <option value="Time">Time</option>
             </select>
         </div>
 
@@ -426,6 +457,30 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 // ==========================================
+
+// --- Custom Multi-Select Logic ---
+function syncMultiSelect() {
+    const select = document.getElementById('q-tag');
+    const checkboxes = document.querySelectorAll('#ms-dropdown input[type="checkbox"]');
+    let selectedTexts = [];
+    
+    checkboxes.forEach(cb => {
+        const option = Array.from(select.options).find(opt => opt.value === cb.value);
+        if (option) option.selected = cb.checked;
+        if (cb.checked) selectedTexts.push(cb.parentNode.innerText.trim());
+    });
+    
+    document.getElementById('ms-text').innerText = selectedTexts.length > 0 ? selectedTexts.join(', ') : 'Select tags...';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const wrapper = document.getElementById('ms-wrapper');
+    const dropdown = document.getElementById('ms-dropdown');
+    if (wrapper && dropdown && !wrapper.contains(event.target)) {
+        dropdown.classList.remove('show');
+    }
+});
 
 // --- CHAPTERS FOR GK ---
 const chaptersList = [
@@ -906,6 +961,12 @@ function editQuestion(id) {
         opt.selected = tagsToSelect.includes(opt.value);
     });
 
+    const checkboxes = document.querySelectorAll('#ms-dropdown input[type="checkbox"]');
+    if (checkboxes) {
+        checkboxes.forEach(cb => cb.checked = tagsToSelect.includes(cb.value));
+        syncMultiSelect();
+    }
+
     document.getElementById('q-topic').value = item.topic || '';
     document.getElementById('q-subtopic').value = item.subtopic || '';
     document.getElementById('q-text').value = item.q || '';
@@ -951,6 +1012,11 @@ function closeModal() {
 
 function clearForm() {
     document.getElementById('q-tag').selectedIndex = -1;
+    
+    const checkboxes = document.querySelectorAll('#ms-dropdown input[type="checkbox"]');
+    if (checkboxes) checkboxes.forEach(cb => cb.checked = false);
+    if (document.getElementById('ms-text')) document.getElementById('ms-text').innerText = 'Select tags...';
+
     document.getElementById('q-topic').value = '';
     document.getElementById('q-subtopic').value = '';
     document.getElementById('q-text').value = '';
