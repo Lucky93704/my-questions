@@ -69,7 +69,7 @@ svg { fill: currentColor; }
 .date-input:focus { border-color: var(--target); }
 .carry-over-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
 .carry-over-btn:hover { border-color: var(--primary); color: var(--primary); }
-.holiday-btn:hover { border-color: var(--error); color: var(--error); } /* Changed to red as it's destructive */
+.holiday-btn:hover { border-color: var(--error); color: var(--error); }
 
 .progress-bar-bg { height: 12px; background: var(--bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
 .progress-bar-fill { height: 100%; width: 0%; background: var(--target); transition: width 0.4s ease-out, background-color 0.3s; }
@@ -150,7 +150,7 @@ svg { fill: currentColor; }
 /* Analytics Modal Styles */
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 550px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 550px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
 .modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--primary); font-size: 1.6rem; }
 .date-range-container { background: var(--bg); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); }
 .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; justify-content: center; }
@@ -161,6 +161,14 @@ svg { fill: currentColor; }
 .custom-dates label { font-size: 0.9rem; font-weight: bold; color: var(--text); }
 .custom-dates input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg); color: var(--text); outline: none; font-family: inherit; }
 .custom-dates input:focus { border-color: var(--target); }
+
+/* Insights Box */
+.insights-box { background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #d97706; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; display: none; align-items: flex-start; gap: 10px; text-align: left; line-height: 1.4; }
+[data-theme="dark"] .insights-box { color: #fbbf24; }
+.insights-box.success-insight { background: rgba(34, 197, 94, 0.1); border-color: var(--success); color: var(--success); }
+[data-theme="dark"] .insights-box.success-insight { color: var(--success); }
+.insights-box svg { flex-shrink: 0; margin-top: 2px; fill: currentColor; }
+
 .analytics-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
 .tab-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: 0.2s; }
 .tab-btn:hover { border-color: var(--target); color: var(--target); }
@@ -215,6 +223,8 @@ svg { fill: currentColor; }
         </div>
 
         <p id="analytics-subtitle">Select date range</p>
+
+        <div id="analytics-insights" class="insights-box"></div>
 
         <div class="analytics-tabs">
             <button class="tab-btn active" id="tab-completion" onclick="switchChartTab('completion')">Completion %</button>
@@ -325,7 +335,6 @@ let weeklyChartInstance = null;
 let currentChartTab = 'completion'; 
 let lastAnalyticsData = null; 
 
-// Helper to get local date string YYYY-MM-DD
 function getLocalISOString(date) {
     const offset = date.getTimezoneOffset() * 60000;
     return (new Date(date - offset)).toISOString().split('T')[0];
@@ -338,7 +347,6 @@ function initDate() {
 function updateDateHeader(selectedDateStr) {
     const selectedDate = new Date(selectedDateStr);
     const todayStr = getLocalISOString(new Date());
-
     const headerText = document.getElementById('display-date-text');
     if (selectedDateStr === todayStr) {
         headerText.innerText = "Today's Plan";
@@ -414,7 +422,6 @@ function renderTask(id, data, container) {
     
     const checkIcon = data.completed ? `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` : ``;
     const safeTaskText = data.task ? data.task.replace(/'/g, "\\'") : "";
-    
     const recurringIcon = data.isRecurring ? `<span title="Recurring Task" style="display:flex; align-items:center; margin-left:5px;"><svg viewBox="0 0 24 24" width="14" height="14" style="fill: currentColor;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.39 14.47 20 13.3 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></span>` : ``;
 
     div.innerHTML = `
@@ -490,9 +497,6 @@ function deleteTask(id) {
     }
 }
 
-// ==========================================
-// ADD HOLIDAY LOGIC (Deletes tasks & breaks streak)
-// ==========================================
 async function addHoliday() {
     const reason = prompt("Enter a compulsory reason for your holiday (this will clear your tasks for the day and break your streak):");
     if (!reason || reason.trim() === "") {
@@ -505,23 +509,19 @@ async function addHoliday() {
     btn.disabled = true;
 
     try {
-        // 1. Fetch all existing targets for the selected date
         const snapshot = await db.collection("dailyTargets").where("date", "==", date).get();
-        
-        // 2. Initialize a batch to delete old tasks and add the new holiday note
         const batch = db.batch();
         
         snapshot.forEach(doc => {
             batch.delete(doc.ref);
         });
 
-        // 3. Add the holiday task as INCOMPLETE to guarantee the streak resets
         const newRef = db.collection("dailyTargets").doc();
         batch.set(newRef, {
             task: "Holiday: " + reason.trim(),
-            subject: "Mock", // Mock uses the reddish tag so it stands out
+            subject: "Mock", 
             date: date,
-            completed: false, // Ensures the day is not 100% complete
+            completed: false, 
             isRecurring: false,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -568,19 +568,12 @@ function updateProgress(completed, total) {
         }
         previousPercentage = percentage;
     }
-    
-    // Always calculate streak when progress is updated
     calculateStreak();
 }
 
-// ==========================================
-// STUDY STREAK LOGIC
-// ==========================================
 async function calculateStreak() {
     try {
         const todayStr = getLocalISOString(new Date());
-        
-        // Fetch up to 90 days of past tasks to find historical streaks
         const startLimit = new Date();
         startLimit.setDate(startLimit.getDate() - 90);
         const startLimitStr = getLocalISOString(startLimit);
@@ -606,7 +599,6 @@ async function calculateStreak() {
         if (daysData[todayStr] && daysData[todayStr].total > 0 && daysData[todayStr].completed === daysData[todayStr].total) {
             // Start checking from today
         } else {
-            // Start checking from yesterday
             checkDate.setDate(checkDate.getDate() - 1);
         }
 
@@ -618,14 +610,13 @@ async function calculateStreak() {
                 if (isComplete) {
                     currentStreak++;
                 } else {
-                    checkingCurrent = false; // Current streak is broken
+                    checkingCurrent = false; 
                 }
             } else {
-                // If current streak is broken, search for the last streak
                 if (isComplete) {
                     lastStreak++;
                 } else if (lastStreak > 0) {
-                    break; // End of the last known streak found
+                    break; 
                 }
             }
             checkDate.setDate(checkDate.getDate() - 1);
@@ -645,9 +636,6 @@ async function calculateStreak() {
     }
 }
 
-// ==========================================
-// CARRY OVER LOGIC 
-// ==========================================
 async function carryOverTasks() {
     const btn = document.getElementById('carry-over-btn');
     btn.style.opacity = '0.5'; btn.disabled = true;
@@ -655,7 +643,6 @@ async function carryOverTasks() {
     const targetDateStr = document.getElementById('target-date').value;
     const targetDate = new Date(targetDateStr);
     targetDate.setDate(targetDate.getDate() - 1);
-    
     const yesterdayStr = getLocalISOString(targetDate);
 
     try {
@@ -670,7 +657,6 @@ async function carryOverTasks() {
 
         yesterdaySnap.forEach(doc => {
             const data = doc.data();
-            
             const shouldCarryOver = !data.completed || data.isRecurring;
             const notAlreadyAdded = !todayTaskNames.has(data.task.trim().toLowerCase());
             
@@ -701,9 +687,6 @@ async function carryOverTasks() {
     btn.style.opacity = '1'; btn.disabled = false;
 }
 
-// ==========================================
-// DUAL ANALYTICS LOGIC
-// ==========================================
 function openAnalyticsModal() {
     document.getElementById('analytics-modal').style.display = 'flex';
     const weekBtn = document.querySelector('.presets button:first-child');
@@ -761,20 +744,63 @@ async function fetchAnalyticsData() {
             .get();
 
         let completed = 0; let incomplete = 0; let total = 0;
-        const subjects = { Maths: 0, English: 0, GK: 0, Reasoning: 0, Mock: 0 };
+        
+        // Track stats per subject for the insight box
+        const subjectStats = {
+            Maths: { total: 0, completed: 0 },
+            English: { total: 0, completed: 0 },
+            GK: { total: 0, completed: 0 },
+            Reasoning: { total: 0, completed: 0 },
+            Mock: { total: 0, completed: 0 }
+        };
         
         snapshot.forEach(doc => {
             const data = doc.data();
             total++;
-            if (data.completed) {
-                completed++;
-                if (subjects[data.subject] !== undefined) subjects[data.subject]++;
-            } else {
-                incomplete++;
+            if (subjectStats[data.subject] !== undefined) {
+                subjectStats[data.subject].total++;
+                if (data.completed) {
+                    completed++;
+                    subjectStats[data.subject].completed++;
+                } else {
+                    incomplete++;
+                }
             }
         });
 
-        lastAnalyticsData = { completed, incomplete, total, subjects };
+        // Calculate Weak Subject Insight
+        const insightsDiv = document.getElementById('analytics-insights');
+        let weakSubject = null;
+        let lowestCompletion = 101;
+        let hasIncomplete = false;
+
+        for (const [subj, stats] of Object.entries(subjectStats)) {
+            if (stats.total > 0) {
+                let pct = (stats.completed / stats.total) * 100;
+                if (pct < 100) hasIncomplete = true;
+                if (pct < lowestCompletion) {
+                    lowestCompletion = pct;
+                    weakSubject = subj;
+                }
+            }
+        }
+
+        insightsDiv.className = 'insights-box'; // Reset class
+        
+        if (total === 0) {
+            insightsDiv.style.display = 'none';
+        } else if (!hasIncomplete) {
+            insightsDiv.style.display = 'flex';
+            insightsDiv.classList.add('success-insight');
+            insightsDiv.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 
+            <div><strong>Perfect!</strong> You have a 100% completion rate for the selected period. Great consistency!</div>`;
+        } else if (weakSubject) {
+            insightsDiv.style.display = 'flex';
+            insightsDiv.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> 
+            <div><strong>Study Tip:</strong> Your lowest completion rate is in <strong>${weakSubject}</strong> (${Math.round(lowestCompletion)}%). Try scheduling it earlier in the day when your energy is highest!</div>`;
+        }
+
+        lastAnalyticsData = { completed, incomplete, total, subjectStats };
         renderChart();
 
     } catch(error) {
@@ -822,8 +848,9 @@ function renderChart() {
             }
         });
     } else if (currentChartTab === 'subjects') {
-        const subjLabels = Object.keys(data.subjects);
-        const subjData = Object.values(data.subjects);
+        const subjLabels = Object.keys(data.subjectStats);
+        // Map the completed values out of the stats object for the chart
+        const subjData = Object.values(data.subjectStats).map(s => s.completed);
 
         weeklyChartInstance = new Chart(ctx, {
             type: 'bar',
@@ -874,7 +901,6 @@ themeBtn.addEventListener('click', () => {
     setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
 });
 
-// Run Init
 window.onload = () => {
     initDate();
     fetchTargets();
