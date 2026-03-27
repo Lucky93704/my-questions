@@ -12,6 +12,8 @@
 <title>Study Dashboard - SSC Portal</title>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root { 
@@ -51,23 +53,34 @@ body {
 /* Header */
 .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
 .header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; color: var(--target); }
-.header-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.header-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
 svg { fill: currentColor; }
 
 /* Date & Progress Card */
-.progress-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px;}
+.progress-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s, transform 0.3s;}
 .date-selector { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
 .date-selector h3 { margin: 0; font-size: 1.2rem; }
+.date-controls { display: flex; align-items: center; gap: 10px; }
 .date-input { padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s; cursor: pointer; font-weight: bold;}
 .date-input:focus { border-color: var(--target); }
+.carry-over-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+.carry-over-btn:hover { border-color: var(--primary); color: var(--primary); }
 
 .progress-bar-bg { height: 12px; background: var(--bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
-.progress-bar-fill { height: 100%; width: 0%; background: var(--target); transition: width 0.4s ease-out; }
-.progress-text { text-align: right; font-size: 0.85rem; font-weight: bold; color: var(--target); margin-top: 5px;}
+.progress-bar-fill { height: 100%; width: 0%; background: var(--target); transition: width 0.4s ease-out, background-color 0.3s; }
+.progress-text { text-align: right; font-size: 0.85rem; font-weight: bold; color: var(--target); margin-top: 5px; transition: color 0.3s;}
+
+/* Guilty Animation */
+@keyframes guiltyShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+.guilty-card { animation: guiltyShake 0.5s ease; border-color: var(--error) !important; }
 
 /* Add Task Form */
-.add-task-form { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+.add-task-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .add-task-form input[type="text"] { flex: 2; min-width: 250px; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s;}
 .add-task-form input[type="text"]:focus { border-color: var(--target); }
 .add-task-form select { flex: 1; min-width: 120px; padding: 12px; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 1rem; outline: none; cursor: pointer; }
@@ -75,12 +88,21 @@ svg { fill: currentColor; }
 .add-btn:hover { background: var(--target-hover); transform: translateY(-2px); }
 .add-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
+/* Quick Filters */
+.filters-container { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+.filters-container::-webkit-scrollbar { display: none; }
+.filter-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: 0.2s; white-space: nowrap; }
+.filter-btn:hover { border-color: var(--target); color: var(--target); }
+.filter-btn.active { background: var(--target); color: white; border-color: var(--target); }
+[data-theme="dark"] .filter-btn.active { background: var(--target); color: white; }
+
 /* Task List */
 .task-list { display: flex; flex-direction: column; gap: 12px; }
 .task-item { background: var(--card-bg); padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 15px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
 .task-item:hover { border-color: var(--target); transform: translateX(3px); }
 .task-item.completed { opacity: 0.6; background: var(--bg); }
 .task-item.completed .task-text { text-decoration: line-through; color: #64748b; }
+.task-hidden { display: none !important; }
 
 .task-left { display: flex; align-items: center; gap: 15px; flex: 1; overflow: hidden; }
 .custom-checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; background: var(--bg);}
@@ -100,7 +122,7 @@ svg { fill: currentColor; }
 [data-theme="dark"] .subj-Reasoning { background: #581c87; color: #e9d5ff; }
 [data-theme="dark"] .subj-Mock { background: #7f1d1d; color: #fecaca; }
 
-/* Icon Buttons (Edit & Delete) */
+/* Icon Buttons */
 .icon-btn { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
 .icon-btn:hover { background: rgba(0,0,0,0.05); }
 .icon-btn.edit-btn:hover { color: var(--primary); background: rgba(37, 99, 235, 0.1); }
@@ -109,7 +131,7 @@ svg { fill: currentColor; }
 
 .empty-state { text-align: center; padding: 40px 20px; color: #64748b; font-style: italic; }
 
-/* Validation Shake */
+/* Input Validation */
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-6px); } }
 .input-error { border-color: var(--error) !important; animation: shake 0.4s ease-in-out; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
 
@@ -118,6 +140,16 @@ svg { fill: currentColor; }
 .theme-toggle:hover { transform: translateY(-5px); border-color: var(--primary); color: var(--primary); }
 .theme-toggle svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
 .rotate { transform: rotate(360deg); }
+
+/* Analytics Modal Styles */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.modal-content h3 { margin-top: 0; margin-bottom: 5px; color: var(--primary); font-size: 1.4rem; }
+.modal-content p { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
+.close-modal { margin-top: 25px; background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s;}
+.close-modal:hover { border-color: var(--error); color: var(--error); }
+.chart-container { position: relative; height: 250px; width: 100%; display: flex; justify-content: center;}
 
 @media (max-width: 600px) {
     .header { flex-direction: column; align-items: stretch; gap: 15px; }
@@ -136,26 +168,42 @@ svg { fill: currentColor; }
     <svg id="theme-icon" viewBox="0 0 24 24"></svg>
 </button>
 
+<div id="analytics-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-content">
+        <h3>Weekly Activity</h3>
+        <p>Distribution of completed tasks over the last 7 days</p>
+        <div class="chart-container">
+            <canvas id="weeklyChart"></canvas>
+        </div>
+        <button class="close-modal" onclick="document.getElementById('analytics-modal').style.display='none'">Close</button>
+    </div>
+</div>
+
 <div class="container">
     <div class="header">
         <div class="header-actions">
             <button class="back-btn" onclick="window.location.href='index.html'">
-                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                Home
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Home
             </button>
             <button class="back-btn" onclick="window.location.href='doubtsdashboard.html'" style="background: transparent; border: 2px solid var(--border); color: var(--text);">
-                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                Doubts Dashboard
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> Doubts
+            </button>
+            <button class="back-btn" onclick="showAnalytics()" style="background: var(--target); color: white;">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Analytics
             </button>
         </div>
         <h2>Study Dashboard</h2>
-        <div style="width: 140px; display: none;" id="desktop-spacer"></div>
     </div>
 
-    <div class="progress-card">
+    <div class="progress-card" id="progress-card">
         <div class="date-selector">
             <h3 id="display-date-text">Today's Plan</h3>
-            <input type="date" id="target-date" class="date-input" onchange="fetchTargets()">
+            <div class="date-controls">
+                <button class="carry-over-btn" id="carry-over-btn" onclick="carryOverTasks()" title="Bring unfinished tasks from yesterday to this date">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/></svg>
+                </button>
+                <input type="date" id="target-date" class="date-input" onchange="fetchTargets()">
+            </div>
         </div>
         <div>
             <div class="progress-bar-bg">
@@ -175,6 +223,15 @@ svg { fill: currentColor; }
             <option value="Mock">Mock Test</option>
         </select>
         <button class="add-btn" id="add-task-btn" onclick="addTask()">Add Target</button>
+    </div>
+
+    <div class="filters-container" id="filters-container">
+        <button class="filter-btn active" onclick="setFilter('All', this)">All</button>
+        <button class="filter-btn" onclick="setFilter('Maths', this)">Maths</button>
+        <button class="filter-btn" onclick="setFilter('English', this)">English</button>
+        <button class="filter-btn" onclick="setFilter('GK', this)">GK</button>
+        <button class="filter-btn" onclick="setFilter('Reasoning', this)">Reasoning</button>
+        <button class="filter-btn" onclick="setFilter('Mock', this)">Mock Test</button>
     </div>
 
     <div class="task-list" id="task-list">
@@ -202,17 +259,15 @@ const db = firebase.firestore();
 
 let targetsUnsubscribe = null;
 let editingTargetId = null;
+let currentFilter = 'All';
+let previousPercentage = -1; 
+let weeklyChartInstance = null;
 
 function initDate() {
     const today = new Date();
     const offset = today.getTimezoneOffset() * 60000;
     const localISOTime = (new Date(today - offset)).toISOString().split('T')[0];
-    
     document.getElementById('target-date').value = localISOTime;
-    
-    if(window.innerWidth > 700) {
-        document.getElementById('desktop-spacer').style.display = 'block';
-    }
 }
 
 function updateDateHeader(selectedDateStr) {
@@ -230,6 +285,21 @@ function updateDateHeader(selectedDateStr) {
     }
 }
 
+function setFilter(subject, btnElement) {
+    currentFilter = subject;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+    
+    const tasks = document.querySelectorAll('.task-item');
+    tasks.forEach(task => {
+        if (currentFilter === 'All' || task.getAttribute('data-subject') === currentFilter) {
+            task.classList.remove('task-hidden');
+        } else {
+            task.classList.add('task-hidden');
+        }
+    });
+}
+
 function fetchTargets() {
     const selectedDate = document.getElementById('target-date').value;
     updateDateHeader(selectedDate);
@@ -237,6 +307,7 @@ function fetchTargets() {
     editingTargetId = null;
     document.getElementById('add-task-btn').innerText = "Add Target";
     document.getElementById('new-task-text').value = '';
+    previousPercentage = -1; 
     
     const listContainer = document.getElementById('task-list');
     listContainer.innerHTML = '<div class="empty-state"><span class="spinner" style="border-top-color: var(--target);"></span> Loading...</div>';
@@ -266,18 +337,18 @@ function fetchTargets() {
             updateProgress(completed, total);
         }, (error) => {
             console.error("Error fetching targets:", error);
-            listContainer.innerHTML = '<div class="empty-state" style="color:var(--error);">Failed to load targets. Please check connection or Security Rules.</div>';
+            listContainer.innerHTML = '<div class="empty-state" style="color:var(--error);">Failed to load targets. Please check connection.</div>';
         });
 }
 
 function renderTask(id, data, container) {
     const div = document.createElement('div');
     div.className = `task-item ${data.completed ? 'completed' : ''}`;
+    div.setAttribute('data-subject', data.subject);
     
-    const checkIcon = data.completed 
-        ? `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` 
-        : ``;
-
+    if (currentFilter !== 'All' && data.subject !== currentFilter) { div.classList.add('task-hidden'); }
+    
+    const checkIcon = data.completed ? `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` : ``;
     const safeTaskText = data.task ? data.task.replace(/'/g, "\\'") : "";
 
     div.innerHTML = `
@@ -287,10 +358,10 @@ function renderTask(id, data, container) {
         </div>
         <div class="task-right">
             <span class="subj-badge subj-${data.subject}">${data.subject}</span>
-            <button class="icon-btn edit-btn" onclick="editTarget('${id}', '${safeTaskText}', '${data.subject}')" title="Edit Target">
+            <button class="icon-btn edit-btn" onclick="editTarget('${id}', '${safeTaskText}', '${data.subject}')" title="Edit">
                 <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
             </button>
-            <button class="icon-btn delete-btn" onclick="deleteTask('${id}')" title="Delete Target">
+            <button class="icon-btn delete-btn" onclick="deleteTask('${id}')" title="Delete">
                 <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
             </button>
         </div>
@@ -302,10 +373,7 @@ function editTarget(id, taskText, subject) {
     editingTargetId = id;
     document.getElementById('new-task-text').value = taskText;
     document.getElementById('new-task-subject').value = subject;
-    
-    const btn = document.getElementById('add-task-btn');
-    btn.innerText = "Update Target";
-    
+    document.getElementById('add-task-btn').innerText = "Update Target";
     window.scrollTo({ top: 0, behavior: 'smooth' });
     document.getElementById('new-task-text').focus();
 }
@@ -329,76 +397,169 @@ function addTask() {
     
     if (editingTargetId) {
         btn.innerText = "Updating...";
-        db.collection("dailyTargets").doc(editingTargetId).update({
-            task: taskText,
-            subject: subject
-        }).then(() => {
-            input.value = '';
-            editingTargetId = null; 
-            btn.disabled = false;
-            btn.innerText = "Add Target"; 
-        }).catch(err => {
-            console.error("Error updating target:", err);
-            alert("Failed to update target.");
-            btn.disabled = false;
-            btn.innerText = "Update Target";
+        db.collection("dailyTargets").doc(editingTargetId).update({ task: taskText, subject: subject }).then(() => {
+            input.value = ''; editingTargetId = null; btn.disabled = false; btn.innerText = "Add Target"; 
         });
     } else {
         btn.innerText = "Adding...";
         db.collection("dailyTargets").add({
-            task: taskText,
-            subject: subject,
-            date: date,
-            completed: false,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            task: taskText, subject: subject, date: date, completed: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
-            input.value = '';
-            btn.disabled = false;
-            btn.innerText = "Add Target";
-        }).catch(err => {
-            console.error("Error adding target:", err);
-            alert("Failed to add target.");
-            btn.disabled = false;
-            btn.innerText = "Add Target";
+            input.value = ''; btn.disabled = false; btn.innerText = "Add Target";
         });
     }
 }
 
 function toggleTask(id, currentStatus) {
-    db.collection("dailyTargets").doc(id).update({
-        completed: !currentStatus
-    }).catch(err => console.error("Error updating task status:", err));
+    db.collection("dailyTargets").doc(id).update({ completed: !currentStatus });
 }
 
 function deleteTask(id) {
     if (confirm("Delete this target?")) {
-        db.collection("dailyTargets").doc(id).delete()
-            .catch(err => console.error("Error deleting task:", err));
+        db.collection("dailyTargets").doc(id).delete();
     }
 }
 
 function updateProgress(completed, total) {
     const fill = document.getElementById('progress-fill');
     const text = document.getElementById('progress-text');
+    const card = document.getElementById('progress-card');
     
     if (total === 0) {
-        fill.style.width = '0%';
-        text.innerText = `0/0 Completed (0%)`;
-        fill.style.background = 'var(--target)';
-        return;
+        fill.style.width = '0%'; text.innerText = `0/0 Completed (0%)`;
+        fill.style.background = 'var(--target)'; card.classList.remove('guilty-card'); return;
     }
 
     const percentage = Math.round((completed / total) * 100);
     fill.style.width = `${percentage}%`;
-    text.innerText = `${completed}/${total} Completed (${percentage}%)`;
 
     if (percentage === 100) {
-        fill.style.background = 'var(--success)';
-        text.style.color = 'var(--success)';
-        text.innerText += " 🎉 All done!";
+        fill.style.background = 'var(--success)'; text.style.color = 'var(--success)';
+        text.innerText = `${completed}/${total} Completed (${percentage}%) 🎉 All done!`;
+        card.classList.remove('guilty-card');
+        
+        if (previousPercentage !== 100 && previousPercentage !== -1) {
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#22c55e', '#3b82f6', '#8b5cf6', '#eab308'] });
+        }
     } else {
-        fill.style.background = 'var(--target)';
-        text.style.color = 'var(--target)';
+        fill.style.background = 'var(--target)'; text.style.color = 'var(--error)';
+        text.innerText = `${completed}/${total} Completed (${percentage}%) 🥺 Missing Targets!`;
+        card.classList.remove('guilty-card');
+        void card.offsetWidth; 
+        card.classList.add('guilty-card');
+    }
+    previousPercentage = percentage;
+}
+
+// ==========================================
+// CARRY OVER LOGIC
+// ==========================================
+async function carryOverTasks() {
+    const btn = document.getElementById('carry-over-btn');
+    btn.style.opacity = '0.5'; btn.disabled = true;
+
+    const targetDateStr = document.getElementById('target-date').value;
+    const targetDate = new Date(targetDateStr);
+    targetDate.setDate(targetDate.getDate() - 1);
+    
+    const offset = targetDate.getTimezoneOffset() * 60000;
+    const yesterdayStr = (new Date(targetDate - offset)).toISOString().split('T')[0];
+
+    try {
+        const snapshot = await db.collection("dailyTargets")
+            .where("date", "==", yesterdayStr)
+            .where("completed", "==", false)
+            .get();
+
+        if (snapshot.empty) {
+            alert("Great job! No unfinished tasks to carry over from yesterday.");
+        } else {
+            const batch = db.batch();
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const newRef = db.collection("dailyTargets").doc();
+                batch.set(newRef, {
+                    task: data.task,
+                    subject: data.subject,
+                    date: targetDateStr, // Copied to the currently selected date
+                    completed: false,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+            await batch.commit();
+            alert(`Carried over ${snapshot.size} task(s) from ${yesterdayStr} to today!`);
+        }
+    } catch (error) {
+        console.error("Error carrying over tasks:", error);
+        alert("Failed to fetch yesterday's tasks.");
+    }
+    btn.style.opacity = '1'; btn.disabled = false;
+}
+
+// ==========================================
+// WEEKLY ANALYTICS LOGIC
+// ==========================================
+async function showAnalytics() {
+    document.getElementById('analytics-modal').style.display = 'flex';
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    
+    const endDateStr = document.getElementById('target-date').value;
+    const endDate = new Date(endDateStr);
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - 6);
+    
+    const offset = startDate.getTimezoneOffset() * 60000;
+    const startDateStr = (new Date(startDate - offset)).toISOString().split('T')[0];
+
+    try {
+        const snapshot = await db.collection("dailyTargets")
+            .where("date", ">=", startDateStr)
+            .where("date", "<=", endDateStr)
+            .get();
+
+        const subjectCounts = { Maths: 0, English: 0, GK: 0, Reasoning: 0, Mock: 0 };
+        let totalCompleted = 0;
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.completed && subjectCounts[data.subject] !== undefined) {
+                subjectCounts[data.subject]++;
+                totalCompleted++;
+            }
+        });
+
+        if (totalCompleted === 0) {
+            document.querySelector('.chart-container').innerHTML = '<div style="margin-top: 50px; color: #64748b; font-style: italic;">No completed tasks in the last 7 days.</div>';
+            return;
+        }
+
+        const dataValues = Object.values(subjectCounts);
+        const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
+        
+        if (weeklyChartInstance) { weeklyChartInstance.destroy(); }
+
+        weeklyChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(subjectCounts),
+                datasets: [{
+                    data: dataValues,
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#a855f7', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: getComputedStyle(document.body).getPropertyValue('--card-bg').trim()
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: textColor, font: { family: "'Segoe UI', sans-serif", size: 12 } } },
+                    tooltip: { callbacks: { label: function(context) { return ' ' + context.label + ': ' + context.raw + ' tasks'; } } }
+                }
+            }
+        });
+    } catch(error) {
+        console.error("Error fetching analytics:", error);
     }
 }
 
@@ -409,25 +570,19 @@ const body = document.body;
 const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
 const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
 
-if (localStorage.getItem('theme') === 'dark') {
-    body.setAttribute('data-theme', 'dark');
-    themeIcon.innerHTML = `<path d="${moonPath}" />`;
-} else {
-    themeIcon.innerHTML = `<path d="${sunPath}" />`;
-}
+if (localStorage.getItem('theme') === 'dark') { body.setAttribute('data-theme', 'dark'); themeIcon.innerHTML = `<path d="${moonPath}" />`; } 
+else { themeIcon.innerHTML = `<path d="${sunPath}" />`; }
 
 themeBtn.addEventListener('click', () => {
     themeIcon.classList.add('rotate');
     setTimeout(() => {
         if (body.getAttribute('data-theme') === 'dark') {
-            body.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'light');
-            themeIcon.innerHTML = `<path d="${sunPath}" />`;
+            body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeIcon.innerHTML = `<path d="${sunPath}" />`;
         } else {
-            body.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            themeIcon.innerHTML = `<path d="${moonPath}" />`;
+            body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeIcon.innerHTML = `<path d="${moonPath}" />`;
         }
+        // Redraw chart if open to update legend colors
+        if(weeklyChartInstance && document.getElementById('analytics-modal').style.display === 'flex') { showAnalytics(); }
     }, 250);
     setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
 });
