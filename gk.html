@@ -559,9 +559,13 @@ function renderErrorChart(tagCounts) {
 }
 
 function getContextBadgeHTML(chapter, topic, subtopic) {
-    let text = `📖 ${chapter || 'Unknown'}`;
-    if (topic) text += ` › ${topic}`;
+    // If there is no topic and no subtopic, don't show the badge at all
+    if (!topic && !subtopic) return ""; 
+    
+    // Start the badge with the topic instead of the chapter
+    let text = `📖 ${topic || 'No Topic'}`;
     if (subtopic) text += ` › ${subtopic}`;
+    
     return `<span class="tag-badge context-badge">${text}</span>`;
 }
 
