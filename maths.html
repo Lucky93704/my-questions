@@ -129,7 +129,7 @@ svg { fill: currentColor; }
 .mode-card h3 { font-size: 1.5rem; color: var(--primary); margin: 0; display: flex; align-items: center; gap: 10px;}
 
 /* Tag Badges */
-.tag-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 600; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid transparent;}
+.tag-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 600; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid transparent; margin-right: 5px;}
 .tag-Calculation { background: #fee2e2; color: #991b1b; border-color: #fca5a5;}
 .tag-Concept { background: #e0e7ff; color: #3730a3; border-color: #a5b4fc;}
 .tag-Formula { background: #fef3c7; color: #92400e; border-color: #fde047;}
@@ -339,7 +339,7 @@ svg { fill: currentColor; }
         
         <div class="form-group">
             <label>Error Type</label>
-            <select id="q-tag">
+            <select id="q-tag" multiple size="6">
                 <option value="">No Tag</option>
                 <option value="Calculation">Calculation Error</option>
                 <option value="Concept">Concept Gap</option>
@@ -347,12 +347,13 @@ svg { fill: currentColor; }
                 <option value="Silly">Silly Mistake</option>
                 <option value="Time">Time Management</option>
             </select>
+            <span class="math-hint">📝 Tip: Hold Ctrl (Windows) or Cmd (Mac) to select multiple tags.</span>
         </div>
 
         <div class="form-group">
             <label>Question / Context</label>
             <textarea id="q-text" placeholder="Type the question here..."></textarea>
-            <span class="math-hint">💡 Tip: Use LaTeX for math! E.g. type \( \frac{1}{2} \) for fractions.</span>
+            <span class="math-hint">📝 Tip: Format text using <strong>**bold**</strong>, <em>*italic*</em>, <u>__underline__</u>, or <mark>==highlight==</mark>. Use LaTeX for math! E.g. type \( \frac{1}{2} \)</span>
         </div>
         
         <div class="form-group">
@@ -372,13 +373,13 @@ svg { fill: currentColor; }
         <div class="form-group">
             <label>My Mistake</label>
             <textarea id="m-text" placeholder="What went wrong?"></textarea>
-            <span class="math-hint">💡 LaTeX supported here too!</span>
+            <span class="math-hint">📝 LaTeX & Markdown supported here too!</span>
         </div>
 
         <div class="form-group">
             <label>Smart Solution</label>
             <textarea id="s-text" placeholder="Write the trick or correct method..."></textarea>
-            <span class="math-hint">💡 LaTeX supported here too!</span>
+            <span class="math-hint">📝 LaTeX & Markdown supported here too!</span>
         </div>
 
         <div class="modal-actions">
@@ -440,6 +441,17 @@ const editIcon = `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l
 const deleteIcon = `<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 const chevronIcon = `<svg class="chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>`;
 
+// --- MARKDOWN PARSER ---
+function parseMarkdown(text) {
+    if (!text) return '';
+    let html = text.replace(/\n/g, '<br>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic
+    html = html.replace(/__(.*?)__/g, '<u>$1</u>'); // Underline
+    html = html.replace(/==(.*?)==/g, '<mark>$1</mark>'); // Highlight
+    return html;
+}
+
 function initPortal() {
     renderChapterGrid({});
     heatmapUnsubscribe = db.collection("mathDoubts").onSnapshot((snapshot) => {
@@ -453,10 +465,12 @@ function initPortal() {
             
             counts[chap] = (counts[chap] || 0) + 1;
             
-            const tag = data.tag;
-            if (tag && tagCounts[tag] !== undefined) {
-                tagCounts[tag]++;
-            }
+            const tags = Array.isArray(data.tag) ? data.tag : (data.tag ? [data.tag] : []);
+            tags.forEach(t => {
+                if (t && tagCounts[t] !== undefined) {
+                    tagCounts[t]++;
+                }
+            });
 
             allGlobalQuestions.push({ id: doc.id, ...data });
         });
@@ -565,7 +579,7 @@ function handleGlobalSearch() {
             }
         }
 
-        let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text (View attached file)</i>";
+        let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
         
         let contextBadge = `<span class="tag-badge" style="background:var(--border); color:var(--text); margin-left: 10px;">${item.chapter} (${item.mode === 'mock' ? 'Mock Test' : 'Practice'})</span>`;
@@ -581,8 +595,8 @@ function handleGlobalSearch() {
             
             <div class="question-details">
                 ${fileHTML}
-                <p class="mistake"><strong>Mistake:</strong> ${item.m ? item.m.replace(/\n/g, '<br>') : ''}</p>
-                <p class="solution"><strong>Solution:</strong> ${item.s ? item.s.replace(/\n/g, '<br>') : ''}</p>
+                <p class="mistake"><strong>Mistake:</strong> ${item.m ? parseMarkdown(item.m) : ''}</p>
+                <p class="solution"><strong>Solution:</strong> ${item.s ? parseMarkdown(item.s) : ''}</p>
             </div>
         `;
         resultsContainer.appendChild(div);
@@ -662,16 +676,25 @@ function toggleDetails(id) {
 }
 
 function getTagHTML(tag) {
-    if (!tag) return "";
-    let label = tag;
-    let icon = "";
-    if(tag === 'Calculation') { label = "Calculation Error"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 14H7v-2h4v2zm0-4H7v-2h4v2zm0-4H7V7h4v2zm6 8h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/></svg>`; }
-    if(tag === 'Concept') { label = "Concept Gap"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>`; }
-    if(tag === 'Formula') { label = "Forgot Formula"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 3v18h18V3H3zm14 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>`; }
-    if(tag === 'Silly') { label = "Silly Mistake"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>`; }
-    if(tag === 'Time') { label = "Time Management"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>`; }
+    if (!tag || tag.length === 0 || (Array.isArray(tag) && tag.length === 1 && tag[0] === "")) return "";
     
-    return `<span class="tag-badge tag-${tag}">${icon} ${label}</span><br>`;
+    const tagsArray = Array.isArray(tag) ? tag : [tag];
+    let htmlStr = "";
+
+    tagsArray.forEach(t => {
+        if (!t) return;
+        let label = t;
+        let icon = "";
+        if(t === 'Calculation') { label = "Calculation Error"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 14H7v-2h4v2zm0-4H7v-2h4v2zm0-4H7V7h4v2zm6 8h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4V7h4v2z"/></svg>`; }
+        if(t === 'Concept') { label = "Concept Gap"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>`; }
+        if(t === 'Formula') { label = "Forgot Formula"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 3v18h18V3H3zm14 14H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>`; }
+        if(t === 'Silly') { label = "Silly Mistake"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>`; }
+        if(t === 'Time') { label = "Time Management"; icon = `<svg viewBox="0 0 24 24" width="14" height="14"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>`; }
+        
+        htmlStr += `<span class="tag-badge tag-${t}">${icon} ${label}</span>`;
+    });
+    
+    return htmlStr + (htmlStr ? `<br>` : "");
 }
 
 function renderQuestions() {
@@ -697,7 +720,7 @@ function renderQuestions() {
             }
         }
 
-        let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text (View attached file)</i>";
+        let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
 
         div.innerHTML = `
@@ -715,8 +738,8 @@ function renderQuestions() {
             
             <div class="question-details">
                 ${fileHTML}
-                <p class="mistake"><strong>Mistake:</strong> ${item.m ? item.m.replace(/\n/g, '<br>') : ''}</p>
-                <p class="solution"><strong>Solution:</strong> ${item.s ? item.s.replace(/\n/g, '<br>') : ''}</p>
+                <p class="mistake"><strong>Mistake:</strong> ${item.m ? parseMarkdown(item.m) : ''}</p>
+                <p class="solution"><strong>Solution:</strong> ${item.s ? parseMarkdown(item.s) : ''}</p>
             </div>
         `;
         container.appendChild(div);
@@ -778,7 +801,7 @@ function renderFlashcard() {
         }
     }
 
-    let qTextHTML = item.q ? item.q.replace(/\n/g, '<br>') : "<i>No question text (Reveal to view attachment)</i>";
+    let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (Reveal to view attachment)</i>";
 
     card.innerHTML = `
         ${getTagHTML(item.tag)}
@@ -791,8 +814,8 @@ function renderFlashcard() {
         
         <div class="fc-details" id="fc-details-block">
             ${fileHTML}
-            <p class="mistake"><strong>Your Mistake:</strong><br> ${item.m ? item.m.replace(/\n/g, '<br>') : 'N/A'}</p>
-            <p class="solution"><strong>Smart Solution:</strong><br> ${item.s ? item.s.replace(/\n/g, '<br>') : 'N/A'}</p>
+            <p class="mistake"><strong>Your Mistake:</strong><br> ${item.m ? parseMarkdown(item.m) : 'N/A'}</p>
+            <p class="solution"><strong>Smart Solution:</strong><br> ${item.s ? parseMarkdown(item.s) : 'N/A'}</p>
         </div>
     `;
 
@@ -825,11 +848,13 @@ function deleteQuestion(id) {
 }
 
 function flagFileRemoval() {
-    removeExistingFile = true;
-    document.getElementById('existing-file-container').style.display = 'none';
-    document.getElementById('file-edit-hint').style.display = 'none';
-    document.getElementById('remove-file-msg').style.display = 'block';
-    document.getElementById('q-file').value = ''; 
+    if (confirm("Are you sure you want to remove this attachment?")) {
+        removeExistingFile = true;
+        document.getElementById('existing-file-container').style.display = 'none';
+        document.getElementById('file-edit-hint').style.display = 'none';
+        document.getElementById('remove-file-msg').style.display = 'block';
+        document.getElementById('q-file').value = ''; 
+    }
 }
 
 function editQuestion(id) {
@@ -839,7 +864,13 @@ function editQuestion(id) {
     editingId = id; 
     
     document.getElementById('modal-title').innerText = "Edit Doubt";
-    document.getElementById('q-tag').value = item.tag || '';
+    
+    const selectElement = document.getElementById('q-tag');
+    const tagsToSelect = Array.isArray(item.tag) ? item.tag : (item.tag ? [item.tag] : []);
+    Array.from(selectElement.options).forEach(opt => {
+        opt.selected = tagsToSelect.includes(opt.value);
+    });
+
     document.getElementById('q-text').value = item.q || '';
     document.getElementById('m-text').value = item.m || '';
     document.getElementById('s-text').value = item.s || '';
@@ -879,7 +910,7 @@ function closeModal() {
 }
 
 function clearForm() {
-    document.getElementById('q-tag').value = '';
+    document.getElementById('q-tag').selectedIndex = -1;
     document.getElementById('q-text').value = '';
     document.getElementById('m-text').value = '';
     document.getElementById('s-text').value = '';
@@ -895,7 +926,9 @@ function clearForm() {
 }
 
 function saveQuestion() {
-    const tag = document.getElementById('q-tag').value;
+    const selectElement = document.getElementById('q-tag');
+    const tag = Array.from(selectElement.selectedOptions).map(opt => opt.value).filter(val => val !== "");
+    
     const q = document.getElementById('q-text').value.trim();
     const m = document.getElementById('m-text').value.trim();
     const s = document.getElementById('s-text').value.trim();
