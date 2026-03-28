@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
 <script>
-    // Redirect to index if not unlocked
     if (sessionStorage.getItem('isUnlocked') !== 'true' && localStorage.getItem('isUnlocked') !== 'true') {
         window.location.href = 'index.html';
     }
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Doubts Dashboard - SSC Portal</title>
+<title>Doubts Dashboard - SSC & DDA Portal</title>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+/* Existing Variables */
 :root { 
     --primary: #2563eb; 
     --bg: #f8fafc; 
@@ -46,15 +46,28 @@ body {
     color: var(--text); 
     margin: 0; 
     padding: 20px;
-    transition: 0.3s; 
+    transition: background 0.3s, color 0.3s; 
 }
 
-.container { max-width: 1000px; margin: auto; padding-top: 40px; }
+.container { max-width: 1200px; margin: auto; padding-top: 40px; }
 
 /* Header & Navigation */
 .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
 .header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; }
-.header-actions { display: flex; gap: 10px; justify-content: flex-end; min-width: 120px; }
+.header-actions { display: flex; gap: 15px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+
+/* NEW: Date Filter Select Style */
+.date-filter {
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
 
 .back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
 .add-btn { background: var(--target); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
@@ -73,9 +86,10 @@ svg { fill: currentColor; }
 .stat-card.total-card .value { color: white; }
 
 /* Charts Area */
-.charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 40px; }
+.charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 40px; }
 .chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 .chart-container h3 { margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 1.2rem; }
+.chart-container.full-width { grid-column: 1 / -1; } /* Spans full width for the tags chart */
 .canvas-wrapper { position: relative; height: 300px; width: 100%; }
 
 /* Loading State */
@@ -89,12 +103,48 @@ svg { fill: currentColor; }
 .theme-toggle svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
 .rotate { transform: rotate(360deg); }
 
+/* NEW: Custom Animated Toast Notifications */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+}
+.toast {
+    min-width: 250px;
+    background: var(--card-bg);
+    color: var(--text);
+    border-left: 5px solid var(--primary);
+    padding: 15px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideIn 0.3s ease forwards;
+    opacity: 0;
+    transform: translateX(100%);
+}
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--error); }
+.toast.fade-out { animation: slideOut 0.3s ease forwards; }
+
+@keyframes slideIn {
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOut {
+    to { transform: translateX(100%); opacity: 0; }
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 700px) {
     .header { flex-direction: column; align-items: stretch; gap: 15px; }
     .header h2 { font-size: 1.5rem; order: -1; margin-bottom: 10px; }
     .header-actions { justify-content: center; width: 100%; }
-    .back-btn, .add-btn { flex: 1; justify-content: center; }
+    .back-btn, .add-btn, .date-filter { flex: 1; justify-content: center; }
     .charts-grid { grid-template-columns: 1fr; }
     .theme-toggle { top: 15px; right: 15px; padding: 8px; }
     .theme-toggle svg { width: 20px; height: 20px; }
@@ -112,6 +162,8 @@ svg { fill: currentColor; }
     <h3 style="color: var(--text);">Crunching your data...</h3>
 </div>
 
+<div id="toast-container"></div>
+
 <div class="container">
     <div class="header">
         <button class="back-btn" onclick="window.location.href='index.html'">
@@ -120,7 +172,12 @@ svg { fill: currentColor; }
         </button>
         <h2>Doubts Dashboard</h2>
         <div class="header-actions">
-            <button class="add-btn" onclick="window.location.href='studydashboard.html'">
+            <select class="date-filter" id="date-range-filter" onchange="applyDateFilter()">
+                <option value="all">All Time</option>
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+            </select>
+            <button class="add-btn" onclick="triggerMockAction()">
                 <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                 Study Dashboard
             </button>
@@ -163,6 +220,13 @@ svg { fill: currentColor; }
                 <canvas id="statusChart"></canvas>
             </div>
         </div>
+        
+        <div class="chart-container full-width">
+            <h3>Top Problematic Topics</h3>
+            <div class="canvas-wrapper" style="height: 350px;">
+                <canvas id="tagsChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -184,58 +248,140 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 // ==========================================
 
+// --- NEW: Custom Toast Notification System ---
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    
+    container.appendChild(toast);
+
+    // Remove after 3 seconds with animation
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300); // Wait for CSS animation to finish
+    }, 3000);
+}
+
+// Example replacement for browser popup
+function triggerMockAction() {
+    showToast("Redirecting to Study Dashboard...", "success");
+    setTimeout(() => {
+        window.location.href = 'studydashboard.html';
+    }, 800);
+}
+
 // Data storage object
-const dashboardData = {
+let dashboardData = {
     maths: { total: 0, wrong: 0, unattempted: 0 },
     english: { total: 0, wrong: 0, unattempted: 0 },
     gk: { total: 0, wrong: 0, unattempted: 0 },
     reasoning: { total: 0, wrong: 0, unattempted: 0 }
 };
 
+let tagsData = {}; // NEW: Store tag frequencies
+
 let subjectChartInstance = null;
 let statusChartInstance = null;
+let tagsChartInstance = null; // NEW
 
-// The collections to fetch from
 const collections = ['mathsDoubts', 'englishDoubts', 'gkDoubts', 'reasoningDoubts'];
-let collectionsLoaded = 0;
+let activeListeners = []; // Track active Firebase listeners to cancel them on filter change
 
-function fetchDashboardData() {
+// --- UPDATED: Fetch Data with Date Filters & Tags ---
+function fetchDashboardData(daysFilter = 'all') {
+    // Show loading UI when fetching new filtered data
+    document.getElementById('loading-overlay').style.display = 'flex';
+    document.getElementById('loading-overlay').style.opacity = '1';
+
+    // 1. Unsubscribe from old listeners
+    activeListeners.forEach(unsubscribe => unsubscribe());
+    activeListeners = [];
+
+    // 2. Reset Data
+    Object.keys(dashboardData).forEach(key => {
+        dashboardData[key] = { total: 0, wrong: 0, unattempted: 0 };
+    });
+    tagsData = {}; 
+
+    // 3. Calculate Date Boundary
+    let startDate = null;
+    if (daysFilter !== 'all') {
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - parseInt(daysFilter));
+    }
+
+    let collectionsLoaded = 0;
+
     collections.forEach(collectionName => {
         const subject = collectionName.replace('Doubts', '');
         
-        db.collection(collectionName).onSnapshot((snapshot) => {
+        let query = db.collection(collectionName);
+        
+        // Apply date filter if a timestamp field exists 
+        // NOTE: Ensure your Firestore docs have a 'timestamp' or 'createdAt' Date field!
+        if (startDate) {
+            query = query.where('timestamp', '>=', startDate);
+        }
+
+        const unsubscribe = query.onSnapshot((snapshot) => {
             dashboardData[subject].total = snapshot.size;
             dashboardData[subject].wrong = 0;
             dashboardData[subject].unattempted = 0;
 
             snapshot.forEach(doc => {
                 const data = doc.data();
+                
                 if (data.status === 'Wrong') dashboardData[subject].wrong++;
                 if (data.status === 'Unattempted') dashboardData[subject].unattempted++;
+
+                // NEW: Tag Extraction (Assumes 'tag' or 'tags' array in your document)
+                // e.g., tracking "Mensuration", "Synonyms", "Number Series"
+                let docTags = data.tags || (data.tag ? [data.tag] : ['Untagged']);
+                if(!Array.isArray(docTags)) docTags = [docTags]; // Ensure array
+                
+                docTags.forEach(tag => {
+                    if(tag !== 'Untagged') {
+                        tagsData[tag] = (tagsData[tag] || 0) + 1;
+                    }
+                });
             });
 
             if (collectionsLoaded < collections.length) {
                 collectionsLoaded++;
                 if (collectionsLoaded === collections.length) {
-                    document.getElementById('loading-overlay').style.opacity = '0';
-                    setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 500);
+                    hideLoading();
+                    showToast("Data refreshed successfully", "success");
                 }
             }
-
             updateDashboardUI();
+            
         }, (error) => {
-            console.warn(`Collection ${collectionName} might not exist yet or lacks permissions.`, error);
+            console.warn(`Error in ${collectionName}:`, error);
+            showToast(`Could not load ${subject} data. Check permissions.`, "error");
+            
             if (collectionsLoaded < collections.length) {
                 collectionsLoaded++;
-                if (collectionsLoaded === collections.length) {
-                    document.getElementById('loading-overlay').style.opacity = '0';
-                    setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 500);
-                }
+                if (collectionsLoaded === collections.length) hideLoading();
             }
         });
+
+        activeListeners.push(unsubscribe);
     });
 }
 
+function hideLoading() {
+    document.getElementById('loading-overlay').style.opacity = '0';
+    setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 500);
+}
+
+function applyDateFilter() {
+    const filterValue = document.getElementById('date-range-filter').value;
+    fetchDashboardData(filterValue);
+}
+
+// --- UPDATED: UI and Charts Rendering ---
 function updateDashboardUI() {
     const totalMaths = dashboardData.maths.total;
     const totalEnglish = dashboardData.english.total;
@@ -249,11 +395,12 @@ function updateDashboardUI() {
     document.getElementById('stat-reasoning').innerText = totalReasoning;
     document.getElementById('stat-total').innerText = grandTotal;
 
-    const ctxSubject = document.getElementById('subjectChart').getContext('2d');
-    const subjectLabels = ['Maths', 'English', 'GK', 'Reasoning'];
-    const subjectData = [totalMaths, totalEnglish, totalGK, totalReasoning];
-    const subjectColors = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'];
+    const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
 
+    // 1. Subject Chart
+    const ctxSubject = document.getElementById('subjectChart').getContext('2d');
+    const subjectData = [totalMaths, totalEnglish, totalGK, totalReasoning];
+    
     if (subjectChartInstance) {
         subjectChartInstance.data.datasets[0].data = subjectData;
         subjectChartInstance.update();
@@ -261,29 +408,18 @@ function updateDashboardUI() {
         subjectChartInstance = new Chart(ctxSubject, {
             type: 'doughnut',
             data: {
-                labels: subjectLabels,
-                datasets: [{
-                    data: subjectData,
-                    backgroundColor: subjectColors,
-                    borderWidth: 0,
-                    hoverOffset: 6
-                }]
+                labels: ['Maths', 'English', 'GK', 'Reasoning'],
+                datasets: [{ data: subjectData, backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'], borderWidth: 0, hoverOffset: 6 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: 'var(--text)', padding: 20, font: { family: "'Segoe UI', sans-serif" } } }
-                }
-            }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
         });
     }
 
+    // 2. Status Chart
     const totalWrong = dashboardData.maths.wrong + dashboardData.english.wrong + dashboardData.gk.wrong + dashboardData.reasoning.wrong;
     const totalUnattempted = dashboardData.maths.unattempted + dashboardData.english.unattempted + dashboardData.gk.unattempted + dashboardData.reasoning.unattempted;
 
     const ctxStatus = document.getElementById('statusChart').getContext('2d');
-    
     if (statusChartInstance) {
         statusChartInstance.data.datasets[0].data = [totalWrong, totalUnattempted];
         statusChartInstance.update();
@@ -291,20 +427,44 @@ function updateDashboardUI() {
         statusChartInstance = new Chart(ctxStatus, {
             type: 'pie',
             data: {
-                labels: ['Wrong Attempts', 'Unattempted / Skipped'],
+                labels: ['Wrong Attempts', 'Unattempted'],
+                datasets: [{ data: [totalWrong, totalUnattempted], backgroundColor: ['#ef4444', '#94a3b8'], borderWidth: 0, hoverOffset: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } }
+        });
+    }
+
+    // 3. NEW: Micro-Topic Tags Chart (Bar Chart)
+    const ctxTags = document.getElementById('tagsChart').getContext('2d');
+    
+    // Sort tags by frequency, take top 10
+    const sortedTags = Object.keys(tagsData).sort((a, b) => tagsData[b] - tagsData[a]).slice(0, 10);
+    const sortedTagValues = sortedTags.map(tag => tagsData[tag]);
+
+    if (tagsChartInstance) {
+        tagsChartInstance.data.labels = sortedTags;
+        tagsChartInstance.data.datasets[0].data = sortedTagValues;
+        tagsChartInstance.update();
+    } else {
+        tagsChartInstance = new Chart(ctxTags, {
+            type: 'bar',
+            data: {
+                labels: sortedTags.length > 0 ? sortedTags : ['No Data'],
                 datasets: [{
-                    data: [totalWrong, totalUnattempted],
-                    backgroundColor: ['#ef4444', '#94a3b8'],
-                    borderWidth: 0,
-                    hoverOffset: 6
+                    label: 'Number of Doubts',
+                    data: sortedTagValues.length > 0 ? sortedTagValues : [0],
+                    backgroundColor: '#8b5cf6',
+                    borderRadius: 4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: 'var(--text)', padding: 20, font: { family: "'Segoe UI', sans-serif" } } }
-                }
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0, color: textColor }, grid: { color: 'rgba(150, 150, 150, 0.1)' } },
+                    x: { ticks: { color: textColor }, grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
             }
         });
     }
@@ -326,14 +486,20 @@ if (localStorage.getItem('theme') === 'dark') {
 
 function updateChartTheme() {
     const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
-    if(subjectChartInstance) {
-        subjectChartInstance.options.plugins.legend.labels.color = textColor;
-        subjectChartInstance.update();
-    }
-    if(statusChartInstance) {
-        statusChartInstance.options.plugins.legend.labels.color = textColor;
-        statusChartInstance.update();
-    }
+    const charts = [subjectChartInstance, statusChartInstance, tagsChartInstance];
+    
+    charts.forEach(chart => {
+        if(chart) {
+            if(chart.options.plugins.legend) {
+                chart.options.plugins.legend.labels.color = textColor;
+            }
+            if(chart.options.scales) {
+                chart.options.scales.x.ticks.color = textColor;
+                chart.options.scales.y.ticks.color = textColor;
+            }
+            chart.update();
+        }
+    });
 }
 
 themeBtn.addEventListener('click', () => {
@@ -353,7 +519,8 @@ themeBtn.addEventListener('click', () => {
     setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
 });
 
-window.onload = fetchDashboardData;
+// Initialize on load
+window.onload = () => fetchDashboardData('all');
 </script>
 
 </body>
