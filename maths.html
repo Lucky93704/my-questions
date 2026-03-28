@@ -385,9 +385,10 @@ svg { fill: currentColor; }
         <div class="form-group">
             <label>Attempt Status</label>
             <select id="q-status">
-                <option value="Wrong">Wrong</option>
-                <option value="Unattempted">Unattempted</option>
-            </select>
+    <option value="" selected>None</option>
+    <option value="Wrong">Wrong</option>
+    <option value="Unattempted">Unattempted</option>
+</select>
         </div>
 
         <div class="form-group">
@@ -983,7 +984,7 @@ function editQuestion(id) {
         syncMultiSelect();
     }
 
-    document.getElementById('q-status').value = item.status || 'Wrong';
+    document.getElementById('q-status').value = item.status || '';
     document.getElementById('q-class').value = item.studentClass || '';
     document.getElementById('q-text').value = item.q || '';
     document.getElementById('m-text').value = item.m || '';
@@ -1024,7 +1025,7 @@ function closeModal() {
 }
 
 function clearForm() {
-    document.getElementById('q-status').value = 'Wrong';
+    document.getElementById('q-status').value = '';
     document.getElementById('q-class').value = '';
     document.getElementById('q-tag').selectedIndex = -1;
     
