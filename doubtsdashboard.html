@@ -97,12 +97,6 @@ svg { fill: currentColor; }
 .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Theme Toggle */
-.theme-toggle { position: absolute; top: 30px; right: 30px; background: var(--card-bg); border: 2px solid var(--border); cursor: pointer; color: var(--text); padding: 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 1000;}
-.theme-toggle:hover { transform: translateY(-5px); border-color: var(--primary); color: var(--primary); }
-.theme-toggle svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
-.rotate { transform: rotate(360deg); }
-
 /* Toast Notifications */
 #toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
 .toast { min-width: 250px; background: var(--card-bg); color: var(--text); border-left: 5px solid var(--primary); padding: 15px 20px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; animation: slideIn 0.3s ease forwards; opacity: 0; transform: translateX(100%); }
@@ -120,16 +114,10 @@ svg { fill: currentColor; }
     .header-actions { justify-content: center; width: 100%; }
     .back-btn, .add-btn, .date-filter { flex: 1; justify-content: center; }
     .charts-grid { grid-template-columns: 1fr; }
-    .theme-toggle { top: 15px; right: 15px; padding: 8px; }
-    .theme-toggle svg { width: 20px; height: 20px; }
 }
 </style>
 </head>
 <body>
-
-<button class="theme-toggle" id="theme-btn" title="Toggle Theme">
-    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
-</button>
 
 <div id="loading-overlay">
     <div class="spinner"></div>
@@ -214,6 +202,16 @@ svg { fill: currentColor; }
 
 <script>
 // ==========================================
+// APPLY GLOBAL THEME (Synchronous execution)
+// ==========================================
+const body = document.body;
+if (localStorage.getItem('theme') === 'dark') {
+    body.setAttribute('data-theme', 'dark');
+} else {
+    body.removeAttribute('data-theme'); 
+}
+
+// ==========================================
 // FIREBASE CONFIGURATION
 // ==========================================
 const firebaseConfig = {
@@ -259,12 +257,12 @@ let dashboardData = {
 };
 
 let tagsData = {};
-let momentumDataObj = {}; // NEW: Store daily doubt counts
+let momentumDataObj = {}; 
 
 let subjectChartInstance = null;
 let statusChartInstance = null;
 let tagsChartInstance = null;
-let momentumChartInstance = null; // NEW
+let momentumChartInstance = null; 
 
 const collectionsMap = {
     'mathDoubts': 'maths',
@@ -288,9 +286,9 @@ function fetchDashboardData(daysFilter = 'all') {
     });
     tagsData = {}; 
 
-    // Setup Momentum Dates (Max 14 days for 'All Time' view to keep chart clean)
+    // Setup Momentum Dates
     let momentumDays = daysFilter === 'all' ? 14 : parseInt(daysFilter);
-    if (momentumDays > 30) momentumDays = 30; // Cap at 30 days
+    if (momentumDays > 30) momentumDays = 30; 
     
     momentumDataObj = {};
     for (let i = momentumDays - 1; i >= 0; i--) {
@@ -334,11 +332,10 @@ function fetchDashboardData(daysFilter = 'all') {
                     if(tag !== 'Untagged') tagsData[tag] = (tagsData[tag] || 0) + 1;
                 });
 
-                // NEW: Track Momentum (Date Grouping)
+                // Track Momentum 
                 if (data.timestamp) {
                     let docDate = data.timestamp.toDate();
                     let dateStr = docDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    // Only increment if it falls within our generated timeline window
                     if (momentumDataObj[dateStr] !== undefined) {
                         momentumDataObj[dateStr]++;
                     }
@@ -350,10 +347,9 @@ function fetchDashboardData(daysFilter = 'all') {
                 if (collectionsLoaded === collections.length) {
                     hideLoading();
                     showToast("Data refreshed successfully", "success");
-                    updateDashboardUI(); // Render charts once all 4 collections finish
+                    updateDashboardUI(); 
                 }
             }
-            // Realtime updates after initial load
             if (collectionsLoaded === collections.length) updateDashboardUI();
             
         }, (error) => {
@@ -436,7 +432,7 @@ function updateDashboardUI() {
         });
     }
 
-    // --- 3. NEW: Daily Momentum Chart (Line) ---
+    // --- 3. Daily Momentum Chart ---
     const ctxMomentum = document.getElementById('momentumChart').getContext('2d');
     const momentumLabels = Object.keys(momentumDataObj);
     const momentumValues = Object.values(momentumDataObj);
@@ -449,7 +445,7 @@ function updateDashboardUI() {
         momentumChartInstance.update();
     } else {
         let gradient = ctxMomentum.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)'); // blue-500 fading out
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)'); 
         gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
 
         momentumChartInstance = new Chart(ctxMomentum, {
@@ -462,7 +458,7 @@ function updateDashboardUI() {
                     borderColor: '#3b82f6',
                     backgroundColor: gradient,
                     borderWidth: 3,
-                    tension: 0.4, // Smooth curved line
+                    tension: 0.4, 
                     fill: true,
                     pointBackgroundColor: '#ffffff',
                     pointBorderColor: '#3b82f6',
@@ -481,7 +477,7 @@ function updateDashboardUI() {
                         grid: { color: gridColor, drawBorder: false }
                     },
                     x: { 
-                        ticks: { color: textColor, maxTicksLimit: 7 }, // Prevent label crowding
+                        ticks: { color: textColor, maxTicksLimit: 7 }, 
                         grid: { display: false }
                     }
                 },
@@ -525,62 +521,6 @@ function updateDashboardUI() {
         });
     }
 }
-
-// --- THEME LOGIC ---
-const themeBtn = document.getElementById('theme-btn');
-const themeIcon = document.getElementById('theme-icon');
-const body = document.body;
-const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
-const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
-
-if (localStorage.getItem('theme') === 'dark') {
-    body.setAttribute('data-theme', 'dark');
-    themeIcon.innerHTML = `<path d="${moonPath}" />`;
-} else {
-    themeIcon.innerHTML = `<path d="${sunPath}" />`;
-}
-
-function updateChartTheme() {
-    const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
-    const gridColor = document.body.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-    const charts = [subjectChartInstance, statusChartInstance, tagsChartInstance, momentumChartInstance];
-    
-    charts.forEach(chart => {
-        if(chart) {
-            if(chart.options.plugins.legend && chart.options.plugins.legend.labels) {
-                chart.options.plugins.legend.labels.color = textColor;
-            }
-            if(chart.options.scales) {
-                if(chart.options.scales.x) {
-                    chart.options.scales.x.ticks.color = textColor;
-                    if(chart.options.scales.x.grid) chart.options.scales.x.grid.color = gridColor;
-                }
-                if(chart.options.scales.y) {
-                    chart.options.scales.y.ticks.color = textColor;
-                    if(chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
-                }
-            }
-            chart.update();
-        }
-    });
-}
-
-themeBtn.addEventListener('click', () => {
-    themeIcon.classList.add('rotate');
-    setTimeout(() => {
-        if (body.getAttribute('data-theme') === 'dark') {
-            body.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'light');
-            themeIcon.innerHTML = `<path d="${sunPath}" />`;
-        } else {
-            body.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            themeIcon.innerHTML = `<path d="${moonPath}" />`;
-        }
-        updateChartTheme();
-    }, 250);
-    setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
-});
 
 // Initialize on load
 window.onload = () => fetchDashboardData('all');
