@@ -192,7 +192,7 @@ svg { fill: currentColor; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-6px); } }
 .input-error { border-color: var(--error) !important; animation: shake 0.4s ease-in-out; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
 
-/* Theme Toggle */
+/* Theme Toggle (Kept CSS class just in case you ever reuse it) */
 .theme-toggle { position: absolute; top: 30px; right: 30px; background: var(--card-bg); border: 2px solid var(--border); cursor: pointer; color: var(--text); padding: 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 1000;}
 .theme-toggle:hover { transform: translateY(-5px); border-color: var(--primary); color: var(--primary); }
 .theme-toggle svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
@@ -249,17 +249,11 @@ svg { fill: currentColor; }
     .add-task-form select { flex: 1; }
     .recurring-label { flex: 1; justify-content: center; }
     .add-btn { width: 100%; }
-    .theme-toggle { top: 15px; right: 15px; padding: 8px; }
-    .theme-toggle svg { width: 20px; height: 20px; }
     .custom-dates { flex-direction: column; gap: 10px; }
 }
 </style>
 </head>
 <body>
-
-<button class="theme-toggle" id="theme-btn" title="Toggle Theme">
-    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
-</button>
 
 <div id="custom-dialog-overlay" class="modal-overlay">
     <div class="modal-content custom-dialog-box">
@@ -795,7 +789,6 @@ async function calculateStreak() {
         snapshot.forEach(doc => {
             const data = doc.data();
             if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
-                // If it's a holiday, it intentionally breaks the streak since completed remains false
                 if (!daysData[data.date]) daysData[data.date] = { total: 1, completed: 0 };
             } else {
                 if (!daysData[data.date]) daysData[data.date] = { total: 0, completed: 0 };
@@ -1111,28 +1104,13 @@ function renderChart() {
     }
 }
 
-// Theme Logic
-const themeBtn = document.getElementById('theme-btn');
-const themeIcon = document.getElementById('theme-icon');
+// --- APPLY GLOBAL THEME ---
 const body = document.body;
-const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
-const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
-
-if (localStorage.getItem('theme') === 'dark') { body.setAttribute('data-theme', 'dark'); themeIcon.innerHTML = `<path d="${moonPath}" />`; } 
-else { themeIcon.innerHTML = `<path d="${sunPath}" />`; }
-
-themeBtn.addEventListener('click', () => {
-    themeIcon.classList.add('rotate');
-    setTimeout(() => {
-        if (body.getAttribute('data-theme') === 'dark') {
-            body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeIcon.innerHTML = `<path d="${sunPath}" />`;
-        } else {
-            body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeIcon.innerHTML = `<path d="${moonPath}" />`;
-        }
-        if(weeklyChartInstance && document.getElementById('analytics-modal').style.display === 'flex') { renderChart(); }
-    }, 250);
-    setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
-});
+if (localStorage.getItem('theme') === 'dark') {
+    body.setAttribute('data-theme', 'dark');
+} else {
+    body.removeAttribute('data-theme'); 
+}
 
 window.onload = () => {
     initDate();
