@@ -26,6 +26,8 @@
     --success: #22c55e;
     --target: #8b5cf6;
     --target-hover: #7c3aed;
+    --holiday-bg: linear-gradient(135deg, #fde047, #f59e0b);
+    --holiday-text: #78350f;
 }
 [data-theme="dark"] { 
     --primary: #60a5fa; 
@@ -37,6 +39,8 @@
     --success: #4ade80;
     --target: #a78bfa;
     --target-hover: #8b5cf6;
+    --holiday-bg: linear-gradient(135deg, #78350f, #b45309);
+    --holiday-text: #fef3c7;
 }
 
 body { 
@@ -127,6 +131,53 @@ svg { fill: currentColor; }
 [data-theme="dark"] .subj-GK { background: #14532d; color: #bbf7d0; }
 [data-theme="dark"] .subj-Reasoning { background: #581c87; color: #e9d5ff; }
 [data-theme="dark"] .subj-Mock { background: #7f1d1d; color: #fecaca; }
+
+/* Holiday Banner & Animation */
+@keyframes holidayBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.015); }
+}
+.holiday-banner {
+    background: var(--holiday-bg);
+    color: var(--holiday-text);
+    padding: 30px 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: holidayBreathe 3s ease-in-out infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+.holiday-banner h3 {
+    margin: 0;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.holiday-banner p {
+    margin: 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+    max-width: 80%;
+}
+.holiday-delete-btn {
+    background: rgba(255, 255, 255, 0.25);
+    border: none;
+    color: inherit;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 10px;
+}
+.holiday-delete-btn:hover { background: rgba(255, 255, 255, 0.4); }
+[data-theme="dark"] .holiday-delete-btn { background: rgba(0, 0, 0, 0.3); }
+[data-theme="dark"] .holiday-delete-btn:hover { background: rgba(0, 0, 0, 0.5); }
+
 
 /* Icon Buttons */
 .icon-btn { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
@@ -278,7 +329,7 @@ svg { fill: currentColor; }
         </div>
     </div>
 
-    <div class="add-task-form">
+    <div class="add-task-form" id="add-task-container">
         <input type="text" id="new-task-text" placeholder="What do you want to accomplish?" onkeypress="if(event.key === 'Enter') addTask()">
         <select id="new-task-subject">
             <option value="Maths">Maths</option>
@@ -391,8 +442,38 @@ function fetchTargets() {
         .orderBy("timestamp", "desc") 
         .onSnapshot((snapshot) => {
             listContainer.innerHTML = '';
-            let total = snapshot.size;
+            
+            let total = 0;
             let completed = 0;
+            let isHolidayDay = false;
+            let holidayData = null;
+            let holidayId = null;
+
+            // First pass to check for Holiday
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
+                    isHolidayDay = true;
+                    holidayData = data;
+                    holidayId = doc.id;
+                } else {
+                    total++;
+                    if (data.completed) completed++;
+                }
+            });
+
+            if (isHolidayDay) {
+                // Render Holiday UI instead of normal tasks
+                document.getElementById('add-task-container').style.display = 'none';
+                document.getElementById('filters-container').style.display = 'none';
+                renderHoliday(holidayId, holidayData, listContainer);
+                updateProgressHoliday();
+                return;
+            }
+
+            // Standard UI
+            document.getElementById('add-task-container').style.display = 'flex';
+            document.getElementById('filters-container').style.display = 'flex';
 
             if (total === 0) {
                 listContainer.innerHTML = '<div class="empty-state">No targets set for this date. Take a break or add a new goal!</div>';
@@ -402,8 +483,9 @@ function fetchTargets() {
 
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                if (data.completed) completed++;
-                renderTask(doc.id, data, listContainer);
+                if (!data.isHoliday && data.subject !== "Holiday" && !(data.task && data.task.startsWith("Holiday:"))) {
+                    renderTask(doc.id, data, listContainer);
+                }
             });
 
             updateProgress(completed, total);
@@ -440,6 +522,36 @@ function renderTask(id, data, container) {
         </div>
     `;
     container.appendChild(div);
+}
+
+function renderHoliday(id, data, container) {
+    const reason = data.task ? data.task.replace('Holiday: ', '') : 'Rest Day';
+    
+    container.innerHTML = `
+        <div class="holiday-banner">
+            <h3>
+                <svg viewBox="0 0 24 24" width="28" height="28" style="fill: currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                Holiday Mode Active
+            </h3>
+            <p><strong>Reason:</strong> ${reason}</p>
+            <button class="holiday-delete-btn" onclick="deleteTask('${id}')">Cancel Holiday</button>
+        </div>
+    `;
+}
+
+function updateProgressHoliday() {
+    const fill = document.getElementById('progress-fill');
+    const text = document.getElementById('progress-text');
+    const card = document.getElementById('progress-card');
+    
+    fill.style.width = '100%';
+    fill.style.background = '#f59e0b';
+    text.style.color = '#f59e0b';
+    text.innerHTML = `🌴 Enjoy your well-deserved break!`;
+    card.classList.remove('guilty-card');
+    
+    previousPercentage = -1; 
+    calculateStreak(); 
 }
 
 function editTarget(id, taskText, subject, isRecurring) {
@@ -492,7 +604,7 @@ function toggleTask(id, currentStatus) {
 }
 
 function deleteTask(id) {
-    if (confirm("Delete this target?")) {
+    if (confirm("Are you sure you want to delete this?")) {
         db.collection("dailyTargets").doc(id).delete();
     }
 }
@@ -519,7 +631,8 @@ async function addHoliday() {
         const newRef = db.collection("dailyTargets").doc();
         batch.set(newRef, {
             task: "Holiday: " + reason.trim(),
-            subject: "Mock", 
+            subject: "Holiday", 
+            isHoliday: true, // Specific flag to easily identify holidays
             date: date,
             completed: false, 
             isRecurring: false,
@@ -586,9 +699,14 @@ async function calculateStreak() {
         const daysData = {};
         snapshot.forEach(doc => {
             const data = doc.data();
-            if (!daysData[data.date]) daysData[data.date] = { total: 0, completed: 0 };
-            daysData[data.date].total++;
-            if (data.completed) daysData[data.date].completed++;
+            if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
+                // If it's a holiday, it intentionally breaks the streak since completed remains false
+                if (!daysData[data.date]) daysData[data.date] = { total: 1, completed: 0 };
+            } else {
+                if (!daysData[data.date]) daysData[data.date] = { total: 0, completed: 0 };
+                daysData[data.date].total++;
+                if (data.completed) daysData[data.date].completed++;
+            }
         });
 
         let currentStreak = 0;
@@ -657,6 +775,10 @@ async function carryOverTasks() {
 
         yesterdaySnap.forEach(doc => {
             const data = doc.data();
+            
+            // Skip carrying over holiday blocks
+            if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) return;
+            
             const shouldCarryOver = !data.completed || data.isRecurring;
             const notAlreadyAdded = !todayTaskNames.has(data.task.trim().toLowerCase());
             
@@ -756,6 +878,10 @@ async function fetchAnalyticsData() {
         
         snapshot.forEach(doc => {
             const data = doc.data();
+            
+            // Exclude holidays from analytics
+            if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) return;
+
             total++;
             if (subjectStats[data.subject] !== undefined) {
                 subjectStats[data.subject].total++;
