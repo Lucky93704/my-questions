@@ -90,8 +90,9 @@ header p { color: #64748b; font-size: 1.1rem; }
 
 <div id="main-content">
     <header>
-        <h1>Study Dashboard</h1>
-        <p>Targeting 100% Accuracy</p>
+        <h1 id="greeting-text">Welcome, Tasneem!</h1>
+        <p id="daily-quote" style="color: var(--secondary); font-style: italic; font-weight: 500; margin-top: 8px;">"Loading motivation..."</p>
+        <p style="margin-top: 15px; color: #64748b; font-size: 1.1rem;">Targeting 100% Accuracy</p>
     </header>
 
     <div id="home-screen">
@@ -118,10 +119,48 @@ header p { color: #64748b; font-size: 1.1rem; }
 </div>
 
 <script>
+// --- DYNAMIC GREETING & MOTIVATION ---
+function setGreetingAndQuote() {
+    const greetingElement = document.getElementById('greeting-text');
+    const quoteElement = document.getElementById('daily-quote');
+    
+    // Time-based Greeting
+    const hour = new Date().getHours();
+    let greeting = "Hello";
+    
+    if (hour >= 5 && hour < 12) {
+        greeting = "Good Morning";
+    } else if (hour >= 12 && hour < 17) {
+        greeting = "Good Afternoon";
+    } else if (hour >= 17 && hour < 22) {
+        greeting = "Good Evening";
+    } else {
+        greeting = "Late Night Study";
+    }
+    
+    greetingElement.innerText = `${greeting} `;
+
+    // SSC Motivational Quotes
+    const quotes = [
+        "Discipline is choosing between what you want now and what you want most.",
+        "Success is the sum of small efforts, repeated day in and day out.",
+        "100% accuracy isn't a gift, it's a habit.",
+        "Don't stop when you're tired. Stop when you're done.",
+        "The secret of your future is hidden in your daily routine.",
+        "Every mistake tracked is a mark secured in the real exam.",
+        "Focus on the step in front of you, not the whole staircase."
+    ];
+
+    // Pick a random quote
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    quoteElement.innerText = `"${randomQuote}"`;
+}
+
 // --- SESSION CHECK ---
 if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
     document.getElementById('pin-screen').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
+    setGreetingAndQuote(); // Run on auto-unlock
 }
 
 // --- PIN LOGIC ---
@@ -166,6 +205,9 @@ function attemptUnlock() {
                 pinScreen.style.display = 'none';
                 mainContent.style.display = 'block';
                 mainContent.classList.remove('anim-fade-out');
+                
+                setGreetingAndQuote(); // Run on manual unlock
+                
                 mainContent.classList.add('anim-fade-in');
             }, 400);
         }, 500);
