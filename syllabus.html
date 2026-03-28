@@ -48,6 +48,10 @@ header p { color: #64748b; font-size: 1.1rem; }
 .progress-overview { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); flex: 2; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
 .chart-container { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); flex: 1; min-width: 280px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
 
+/* History Chart Styles */
+.history-chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+.history-chart-container h3 { margin-top: 0; margin-bottom: 15px; color: var(--text); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+
 .progress-overview h3 { margin-top: 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;}
 .sync-status { font-size: 0.8rem; font-weight: normal; color: #64748b; display: flex; align-items: center; gap: 5px;}
 .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block;}
@@ -88,7 +92,6 @@ table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: le
 th, td { padding: 12px; border-bottom: 1px solid var(--border); }
 th { color: #64748b; font-weight: 600; font-size: 0.95rem;}
 
-/* UPDATED: Added input[type="date"] to styling */
 select, input[type="number"], input[type="date"] { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px; border-radius: 4px; outline: none; width: 100%; font-family: inherit;}
 select:focus, input:focus { border-color: var(--primary); }
 
@@ -150,6 +153,13 @@ select:focus, input:focus { border-color: var(--primary); }
         </div>
     </div>
 
+    <div class="history-chart-container">
+        <h3>📈 30-Day Completion History</h3>
+        <div style="position: relative; height: 220px; width: 100%;">
+            <canvas id="historyChart"></canvas>
+        </div>
+    </div>
+
     <div class="subject-analysis-grid" id="subject-analysis-grid"></div>
 
     <div class="subject-tabs">
@@ -186,6 +196,7 @@ const syllabusRef = db.collection("syllabusTracker").doc("mainProgress");
 
 // --- DEFAULT SYLLABUS DATA ---
 const defaultData = {
+    history: [], // NEW: Array to store historical progress
     maths: [
         "Number System", "HCF and LCM", "Percentage", "Simple Interest", "Compound Interest", 
         "Installment", "Profit and Loss", "Discount", "Ratio and Proportion", "Partnership", 
@@ -232,6 +243,7 @@ const displayNames = { maths: "Mathematics", english: "English", gk: "General Kn
 
 let syllabusData = {};
 let radarChartInstance = null;
+let historyChartInstance = null; // NEW: Chart Instance Variable
 
 // --- INITIALIZE & LOAD FROM FIREBASE ---
 async function loadSyllabusData() {
@@ -240,9 +252,10 @@ async function loadSyllabusData() {
         
         if (doc.exists) {
             syllabusData = doc.data();
+            if (!syllabusData.history) syllabusData.history = []; // Initialize if missing
             
-            // Smart Sync: Inject new topics if added to defaultData later
             for (let subject in defaultData) {
+                if (subject === 'history') continue;
                 if (!syllabusData[subject]) {
                     syllabusData[subject] = defaultData[subject];
                 } else {
@@ -253,7 +266,6 @@ async function loadSyllabusData() {
                         }
                     });
                     
-                    // Patch old structures missing new fields
                     syllabusData[subject].forEach(item => {
                         if (!item.mastery) item.mastery = 'none';
                         if (item.lastRevised === undefined) item.lastRevised = null;
@@ -261,12 +273,10 @@ async function loadSyllabusData() {
                 }
             }
         } else {
-            // First time loading ever - save defaults to DB
             syllabusData = JSON.parse(JSON.stringify(defaultData));
             await syllabusRef.set(syllabusData);
         }
 
-        // Hide loader, show dashboard
         document.getElementById('loading-state').style.display = 'none';
         document.getElementById('dashboard-content').style.display = 'block';
         
@@ -278,7 +288,6 @@ async function loadSyllabusData() {
     }
 }
 
-// --- UPDATED: renderTables() to use <input type="date"> ---
 function renderTables() {
     const subjects = ['maths', 'english', 'gk', 'reasoning'];
     
@@ -304,7 +313,6 @@ function renderTables() {
             
             if (item.lastRevised) {
                 const revDate = new Date(item.lastRevised);
-                // Format to YYYY-MM-DD required for <input type="date">
                 const year = revDate.getFullYear();
                 const month = String(revDate.getMonth() + 1).padStart(2, '0');
                 const day = String(revDate.getDate()).padStart(2, '0');
@@ -351,7 +359,6 @@ function renderTables() {
     updateAnalytics();
 }
 
-// --- UPDATED: updateData() to handle date input logic ---
 function updateData(subject, index, field, value) {
     const syncIndicator = document.getElementById('sync-indicator');
     syncIndicator.classList.add('syncing');
@@ -359,14 +366,12 @@ function updateData(subject, index, field, value) {
 
     if (field === 'revision') {
         const newRev = parseInt(value) || 0;
-        // Auto-update date only if revision goes up and we don't already have a date for today
         if (newRev > syllabusData[subject][index].revision) {
             syllabusData[subject][index].lastRevised = new Date().toISOString();
         }
         syllabusData[subject][index][field] = newRev;
         renderTables(); 
     } else if (field === 'lastRevised') {
-        // Handle manual date edits or deletions
         syllabusData[subject][index].lastRevised = value ? new Date(value).toISOString() : null;
         renderTables();
     } else {
@@ -378,7 +383,6 @@ function updateData(subject, index, field, value) {
         }
     }
     
-    // Push changes to Firebase
     syllabusRef.set(syllabusData).then(() => {
         setTimeout(() => {
             syncIndicator.classList.remove('syncing');
@@ -392,7 +396,7 @@ function updateData(subject, index, field, value) {
     });
 }
 
-// --- ANALYTICS LOGIC & RADAR CHART ---
+// --- ANALYTICS LOGIC & CHARTS ---
 function updateAnalytics() {
     let total = 0, completed = 0, doing = 0, totalRevs = 0;
     let subjectStats = { maths: 0, english: 0, gk: 0, reasoning: 0 };
@@ -401,6 +405,8 @@ function updateAnalytics() {
     analysisGrid.innerHTML = ''; 
 
     for (const subject in syllabusData) {
+        if (subject === 'history') continue; // Skip history array
+        
         let subjTotal = 0, subjDone = 0, weakCount = 0, strongCount = 0, overdueCount = 0;
         
         syllabusData[subject].forEach(item => {
@@ -446,7 +452,104 @@ function updateAnalytics() {
     progressBar.style.width = percent + '%';
     progressBar.innerText = percent > 5 ? percent + '%' : '';
 
+    // NEW: Update History Array
+    updateHistoryData(percent);
+
     updateRadarChart(subjectStats);
+}
+
+// NEW: Function to manage the 30-day history array
+function updateHistoryData(currentPercent) {
+    if (!syllabusData.history) syllabusData.history = [];
+    
+    // Get YYYY-MM-DD in local time
+    const today = new Date().toLocaleDateString('en-CA'); 
+    const lastIndex = syllabusData.history.length - 1;
+
+    // If today is already in the array, update it. Otherwise, add a new entry.
+    if (lastIndex >= 0 && syllabusData.history[lastIndex].date === today) {
+        syllabusData.history[lastIndex].percent = currentPercent;
+    } else {
+        syllabusData.history.push({ date: today, percent: currentPercent });
+        // Keep only the last 30 days
+        if (syllabusData.history.length > 30) {
+            syllabusData.history.shift();
+        }
+    }
+    
+    updateHistoryChart();
+}
+
+// NEW: Function to render/update the historical line chart
+function updateHistoryChart() {
+    if (!syllabusData.history || syllabusData.history.length === 0) return;
+
+    const ctx = document.getElementById('historyChart').getContext('2d');
+    
+    // Format dates for display (e.g., "27 Mar")
+    const labels = syllabusData.history.map(item => {
+        const d = new Date(item.date);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    });
+    const data = syllabusData.history.map(item => item.percent);
+
+    const textColor = document.body.getAttribute('data-theme') === 'dark' ? '#cbd5e1' : '#64748b';
+    const gridColor = document.body.getAttribute('data-theme') === 'dark' ? '#334155' : '#e2e8f0';
+
+    if (historyChartInstance) {
+        historyChartInstance.data.labels = labels;
+        historyChartInstance.data.datasets[0].data = data;
+        historyChartInstance.options.scales.x.ticks.color = textColor;
+        historyChartInstance.options.scales.y.ticks.color = textColor;
+        historyChartInstance.options.scales.x.grid.color = gridColor;
+        historyChartInstance.options.scales.y.grid.color = gridColor;
+        historyChartInstance.update();
+    } else {
+        historyChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Overall Completion (%)',
+                    data: data,
+                    borderColor: '#10b981', // green success color
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3, // slight curve to the line
+                    pointBackgroundColor: '#10b981',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: textColor, stepSize: 25 },
+                        grid: { color: gridColor }
+                    },
+                    x: {
+                        ticks: { color: textColor, maxTicksLimit: 10 },
+                        grid: { color: gridColor }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + '% Completed';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 function updateRadarChart(stats) {
