@@ -48,7 +48,6 @@ header p { color: #64748b; font-size: 1.1rem; }
 .progress-overview { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); flex: 2; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
 .chart-container { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); flex: 1; min-width: 280px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
 
-/* History Chart Styles */
 .history-chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
 .history-chart-container h3 { margin-top: 0; margin-bottom: 15px; color: var(--text); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
 
@@ -75,20 +74,28 @@ header p { color: #64748b; font-size: 1.1rem; }
 .stat-badges { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.8rem; font-weight: bold; }
 .badge { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text);}
 .badge-weak { color: var(--error); background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2); }
+.badge-average { color: var(--warning); background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2); }
 .badge-strong { color: var(--success); background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.2); }
 .badge-overdue { color: var(--warning); background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); }
 
-/* Subject Sections */
-.subject-tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+/* Subject Tabs & Filters */
+.subject-tabs { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
 .tab-btn { background: var(--card-bg); border: 1px solid var(--border); padding: 10px 20px; border-radius: 8px; cursor: pointer; color: var(--text); font-weight: bold; transition: 0.2s; white-space: nowrap; }
 .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 .tab-btn:hover:not(.active) { border-color: var(--primary); }
+
+.filter-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; padding: 12px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.filter-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; color: var(--text); font-size: 0.85rem; transition: 0.2s; font-weight: 500;}
+.filter-btn svg { width: 16px; height: 16px; stroke-width: 2; stroke: currentColor; fill: none;}
+.filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+.filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.filter-divider { width: 1px; height: 24px; background: var(--border); margin: 0 5px; }
 
 .subject-content { display: none; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow-x: auto;}
 .subject-content.active { display: block; animation: fadeIn 0.3s ease; }
 
 /* Table Styles */
-table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left; min-width: 600px;}
+table { width: 100%; border-collapse: collapse; margin-top: 5px; text-align: left; min-width: 600px;}
 th, td { padding: 12px; border-bottom: 1px solid var(--border); }
 th { color: #64748b; font-weight: 600; font-size: 0.95rem;}
 
@@ -169,6 +176,37 @@ select:focus, input:focus { border-color: var(--primary); }
         <button class="tab-btn" onclick="switchTab('reasoning')">Reasoning</button>
     </div>
 
+    <div class="filter-bar">
+        <button class="filter-btn active filter-group-1" id="filter-all" onclick="setFilter('all')">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/></svg> All
+        </button>
+        <button class="filter-btn filter-group-1" id="filter-weak" onclick="setFilter('weak')">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Weak
+        </button>
+        <button class="filter-btn filter-group-1" id="filter-average" onclick="setFilter('average')">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Average
+        </button>
+        <button class="filter-btn filter-group-1" id="filter-strong" onclick="setFilter('strong')">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Strong
+        </button>
+        <button class="filter-btn filter-group-1" id="filter-not-started" onclick="setFilter('not-started')">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="4 4" /></svg> Not Started
+        </button>
+        <button class="filter-btn filter-group-1" id="filter-doing" onclick="setFilter('doing')">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> In Progress
+        </button>
+        <button class="filter-btn filter-group-1" id="filter-done" onclick="setFilter('done')">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Completed
+        </button>
+        <div class="filter-divider"></div>
+        <button class="filter-btn filter-group-2" id="sort-least" onclick="setSort('least')">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg> Least Revised
+        </button>
+        <button class="filter-btn filter-group-2" id="sort-most" onclick="setSort('most')">
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"/></svg> Most Revised
+        </button>
+    </div>
+
     <div id="maths" class="subject-content active"></div>
     <div id="english" class="subject-content"></div>
     <div id="gk" class="subject-content"></div>
@@ -196,7 +234,7 @@ const syllabusRef = db.collection("syllabusTracker").doc("mainProgress");
 
 // --- DEFAULT SYLLABUS DATA ---
 const defaultData = {
-    history: [], // NEW: Array to store historical progress
+    history: [], 
     maths: [
         "Number System", "HCF and LCM", "Percentage", "Simple Interest", "Compound Interest", 
         "Installment", "Profit and Loss", "Discount", "Ratio and Proportion", "Partnership", 
@@ -243,7 +281,11 @@ const displayNames = { maths: "Mathematics", english: "English", gk: "General Kn
 
 let syllabusData = {};
 let radarChartInstance = null;
-let historyChartInstance = null; // NEW: Chart Instance Variable
+let historyChartInstance = null;
+
+// Filter State
+let activeFilter = 'all';
+let activeSort = 'default';
 
 // --- INITIALIZE & LOAD FROM FIREBASE ---
 async function loadSyllabusData() {
@@ -252,7 +294,7 @@ async function loadSyllabusData() {
         
         if (doc.exists) {
             syllabusData = doc.data();
-            if (!syllabusData.history) syllabusData.history = []; // Initialize if missing
+            if (!syllabusData.history) syllabusData.history = []; 
             
             for (let subject in defaultData) {
                 if (subject === 'history') continue;
@@ -266,9 +308,10 @@ async function loadSyllabusData() {
                         }
                     });
                     
-                    syllabusData[subject].forEach(item => {
+                    syllabusData[subject].forEach((item, index) => {
                         if (!item.mastery) item.mastery = 'none';
                         if (item.lastRevised === undefined) item.lastRevised = null;
+                        if (!item.id) item.id = `${subject.charAt(0)}${index+1}`; // Add ID if missing on old data
                     });
                 }
             }
@@ -286,6 +329,26 @@ async function loadSyllabusData() {
         console.error("Error loading syllabus from Firebase:", error);
         document.getElementById('loading-state').innerHTML = `<span style="color:var(--error);">Failed to connect to database. Please refresh.</span>`;
     }
+}
+
+// --- FILTER CONTROLS ---
+function setFilter(filterType) {
+    activeFilter = filterType;
+    document.querySelectorAll('.filter-group-1').forEach(el => el.classList.remove('active'));
+    document.getElementById('filter-' + filterType).classList.add('active');
+    renderTables();
+}
+
+function setSort(sortType) {
+    if (activeSort === sortType) {
+        activeSort = 'default';
+        document.getElementById('sort-' + sortType).classList.remove('active');
+    } else {
+        activeSort = sortType;
+        document.querySelectorAll('.filter-group-2').forEach(el => el.classList.remove('active'));
+        document.getElementById('sort-' + sortType).classList.add('active');
+    }
+    renderTables();
 }
 
 function renderTables() {
@@ -307,7 +370,24 @@ function renderTables() {
                 <tbody>
         `;
         
-        syllabusData[subject].forEach((item, index) => {
+        // Apply Filters & Sorting
+        let displayData = [...syllabusData[subject]];
+        
+        if (activeFilter === 'weak') displayData = displayData.filter(i => i.mastery === 'weak');
+        if (activeFilter === 'average') displayData = displayData.filter(i => i.mastery === 'average');
+        if (activeFilter === 'strong') displayData = displayData.filter(i => i.mastery === 'strong');
+        if (activeFilter === 'not-started') displayData = displayData.filter(i => i.status === 'not-started');
+        if (activeFilter === 'doing') displayData = displayData.filter(i => i.status === 'doing');
+        if (activeFilter === 'done') displayData = displayData.filter(i => i.status === 'done');
+        
+        if (activeSort === 'least') displayData.sort((a,b) => a.revision - b.revision);
+        if (activeSort === 'most') displayData.sort((a,b) => b.revision - a.revision);
+
+        if (displayData.length === 0) {
+            tableHTML += `<tr><td colspan="5" style="text-align:center; color:#64748b;">No topics match this filter.</td></tr>`;
+        }
+
+        displayData.forEach(item => {
             let dateValue = ""; 
             let dateClass = "date-badge";
             
@@ -328,14 +408,14 @@ function renderTables() {
                 <tr>
                     <td>${item.topic}</td>
                     <td>
-                        <select onchange="updateData('${subject}', ${index}, 'status', this.value)" class="${item.status === 'done' ? 'status-done' : item.status === 'doing' ? 'status-doing' : ''}">
+                        <select onchange="updateData('${subject}', '${item.id}', 'status', this.value)" class="${item.status === 'done' ? 'status-done' : item.status === 'doing' ? 'status-doing' : ''}">
                             <option value="not-started" ${item.status === 'not-started' ? 'selected' : ''}>Not Started</option>
                             <option value="doing" ${item.status === 'doing' ? 'selected' : ''}>In Progress</option>
                             <option value="done" ${item.status === 'done' ? 'selected' : ''}>Completed</option>
                         </select>
                     </td>
                     <td>
-                        <select onchange="updateData('${subject}', ${index}, 'mastery', this.value)" class="mastery-${item.mastery}">
+                        <select onchange="updateData('${subject}', '${item.id}', 'mastery', this.value)" class="mastery-${item.mastery}">
                             <option value="none" ${item.mastery === 'none' ? 'selected' : ''}>— Assess —</option>
                             <option value="weak" ${item.mastery === 'weak' ? 'selected' : ''}>🔴 Weak</option>
                             <option value="average" ${item.mastery === 'average' ? 'selected' : ''}>🟡 Average</option>
@@ -343,10 +423,10 @@ function renderTables() {
                         </select>
                     </td>
                     <td style="text-align:center;">
-                        <input type="number" min="0" max="99" value="${item.revision}" onchange="updateData('${subject}', ${index}, 'revision', this.value)" style="text-align:center;">
+                        <input type="number" min="0" max="99" value="${item.revision}" onchange="updateData('${subject}', '${item.id}', 'revision', this.value)" style="text-align:center;">
                     </td>
                     <td>
-                        <input type="date" class="${dateClass}" value="${dateValue}" onchange="updateData('${subject}', ${index}, 'lastRevised', this.value)">
+                        <input type="date" class="${dateClass}" value="${dateValue}" onchange="updateData('${subject}', '${item.id}', 'lastRevised', this.value)">
                     </td>
                 </tr>
             `;
@@ -359,10 +439,13 @@ function renderTables() {
     updateAnalytics();
 }
 
-function updateData(subject, index, field, value) {
+function updateData(subject, itemId, field, value) {
     const syncIndicator = document.getElementById('sync-indicator');
     syncIndicator.classList.add('syncing');
     syncIndicator.innerHTML = '<span class="sync-dot"></span> Saving...';
+
+    const index = syllabusData[subject].findIndex(i => i.id === itemId);
+    if (index === -1) return;
 
     if (field === 'revision') {
         const newRev = parseInt(value) || 0;
@@ -405,15 +488,16 @@ function updateAnalytics() {
     analysisGrid.innerHTML = ''; 
 
     for (const subject in syllabusData) {
-        if (subject === 'history') continue; // Skip history array
+        if (subject === 'history') continue; 
         
-        let subjTotal = 0, subjDone = 0, weakCount = 0, strongCount = 0, overdueCount = 0;
+        let subjTotal = 0, subjDone = 0, weakCount = 0, averageCount = 0, strongCount = 0, overdueCount = 0;
         
         syllabusData[subject].forEach(item => {
             total++; subjTotal++;
             if (item.status === 'done') { completed++; subjDone++; }
             if (item.status === 'doing') doing++;
             if (item.mastery === 'weak') weakCount++;
+            if (item.mastery === 'average') averageCount++;
             if (item.mastery === 'strong') strongCount++;
             totalRevs += item.revision;
 
@@ -433,9 +517,10 @@ function updateAnalytics() {
             <div class="mini-progress"><div class="mini-progress-fill" style="width: ${subjPercent}%;"></div></div>
             <div class="stat-badges">
                 ${weakCount > 0 ? `<span class="badge badge-weak">🔴 ${weakCount} Weak</span>` : ''}
+                ${averageCount > 0 ? `<span class="badge badge-average">🟡 ${averageCount} Average</span>` : ''}
                 ${strongCount > 0 ? `<span class="badge badge-strong">🟢 ${strongCount} Strong</span>` : ''}
                 ${overdueCount > 0 ? `<span class="badge badge-overdue">⚠️ ${overdueCount} Overdue</span>` : ''}
-                ${weakCount === 0 && strongCount === 0 && overdueCount === 0 ? `<span class="badge" style="opacity:0.6;">No data yet</span>` : ''}
+                ${weakCount === 0 && averageCount === 0 && strongCount === 0 && overdueCount === 0 ? `<span class="badge" style="opacity:0.6;">No data yet</span>` : ''}
             </div>
         `;
         analysisGrid.appendChild(card);
@@ -452,26 +537,20 @@ function updateAnalytics() {
     progressBar.style.width = percent + '%';
     progressBar.innerText = percent > 5 ? percent + '%' : '';
 
-    // NEW: Update History Array
     updateHistoryData(percent);
-
     updateRadarChart(subjectStats);
 }
 
-// NEW: Function to manage the 30-day history array
 function updateHistoryData(currentPercent) {
     if (!syllabusData.history) syllabusData.history = [];
     
-    // Get YYYY-MM-DD in local time
     const today = new Date().toLocaleDateString('en-CA'); 
     const lastIndex = syllabusData.history.length - 1;
 
-    // If today is already in the array, update it. Otherwise, add a new entry.
     if (lastIndex >= 0 && syllabusData.history[lastIndex].date === today) {
         syllabusData.history[lastIndex].percent = currentPercent;
     } else {
         syllabusData.history.push({ date: today, percent: currentPercent });
-        // Keep only the last 30 days
         if (syllabusData.history.length > 30) {
             syllabusData.history.shift();
         }
@@ -480,13 +559,10 @@ function updateHistoryData(currentPercent) {
     updateHistoryChart();
 }
 
-// NEW: Function to render/update the historical line chart
 function updateHistoryChart() {
     if (!syllabusData.history || syllabusData.history.length === 0) return;
 
     const ctx = document.getElementById('historyChart').getContext('2d');
-    
-    // Format dates for display (e.g., "27 Mar")
     const labels = syllabusData.history.map(item => {
         const d = new Date(item.date);
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
@@ -512,11 +588,11 @@ function updateHistoryChart() {
                 datasets: [{
                     label: 'Overall Completion (%)',
                     data: data,
-                    borderColor: '#10b981', // green success color
+                    borderColor: '#10b981', 
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     borderWidth: 2,
                     fill: true,
-                    tension: 0.3, // slight curve to the line
+                    tension: 0.3, 
                     pointBackgroundColor: '#10b981',
                     pointRadius: 4,
                     pointHoverRadius: 6
