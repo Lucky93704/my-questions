@@ -26,21 +26,9 @@ svg { flex-shrink: 0; }
 
 #main-content { display: none; }
 
-header { text-align: center; margin-bottom: 30px; }
+header { text-align: center; margin-bottom: 40px; }
 header h1 { color: var(--primary); font-size: 2.5rem; margin: 0; }
 header p { color: #64748b; font-size: 1.1rem; }
-
-/* Global Search Bar */
-.search-container { position: relative; max-width: 600px; margin: 0 auto 30px auto; }
-.search-icon-wrapper { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b; display: flex; align-items: center; }
-.search-bar { width: 100%; box-sizing: border-box; padding: 15px 20px 15px 45px; border-radius: 30px; border: 2px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 1.1rem; outline: none; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-.search-bar:focus { border-color: var(--primary); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15); }
-.search-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; margin-top: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; max-height: 300px; overflow-y: auto; display: none; animation: slideDown 0.2s ease-out; }
-.search-result-item { padding: 12px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
-.search-result-item:last-child { border-bottom: none; }
-.search-result-item:hover { background: var(--bg); border-left: 3px solid var(--primary); }
-.search-result-title { font-weight: 600; color: var(--text); }
-.search-result-badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: bold; background: var(--bg); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 4px; }
 
 /* At a Glance Widget */
 .glance-widget { display: flex; justify-content: center; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; }
@@ -137,14 +125,6 @@ header p { color: #64748b; font-size: 1.1rem; }
         <h1 id="greeting-text">Welcome, </h1>
         <p id="daily-quote" style="color: var(--secondary); font-style: italic; font-weight: 500; margin-top: 8px;">"Loading motivation..."</p>
     </header>
-
-    <div class="search-container">
-        <div class="search-icon-wrapper">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        </div>
-        <input type="text" id="global-search" class="search-bar" placeholder="Search study targets, doubts, subjects...">
-        <div id="search-results" class="search-results"></div>
-    </div>
 
     <div class="glance-widget">
         <div class="glance-card">
@@ -349,74 +329,6 @@ async function loadGlanceData() {
         document.getElementById('glance-streak').innerText = "Err";
     }
 }
-
-// --- GLOBAL SEARCH LOGIC ---
-const searchInput = document.getElementById('global-search');
-const searchResultsContainer = document.getElementById('search-results');
-let searchTimeout = null;
-
-const checkIconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-const pendingIconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
-const bookIconSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
-
-searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase().trim();
-    clearTimeout(searchTimeout);
-    
-    if (query.length < 2) {
-        searchResultsContainer.style.display = 'none';
-        return;
-    }
-
-    searchTimeout = setTimeout(async () => {
-        searchResultsContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #64748b; display: flex; justify-content: center; align-items: center; gap: 8px;"><span class="spinner" style="border-top-color: var(--primary);"></span> Searching...</div>';
-        searchResultsContainer.style.display = 'block';
-
-        try {
-            const snap = await db.collection("dailyTargets").orderBy("timestamp", "desc").limit(100).get();
-            let resultsHTML = '';
-            let matchCount = 0;
-
-            snap.forEach(doc => {
-                const data = doc.data();
-                if (data.task && data.task.toLowerCase().includes(query)) {
-                    matchCount++;
-                    const statusIcon = data.completed ? checkIconSvg : pendingIconSvg;
-                    resultsHTML += `
-                        <div class="search-result-item" onclick="window.location.href='studydashboard.html'">
-                            <div>
-                                <div class="search-result-title">${data.task}</div>
-                                <div style="font-size: 0.85rem; color: #64748b; margin-top: 6px; display: flex; align-items: center; gap: 6px;">
-                                    ${statusIcon} Date: ${data.date}
-                                </div>
-                            </div>
-                            <span class="search-result-badge">${bookIconSvg} ${data.subject}</span>
-                        </div>
-                    `;
-                }
-            });
-
-            if (matchCount === 0) {
-                searchResultsContainer.innerHTML = `
-                    <div style="padding: 20px; text-align: center; color: #64748b;">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; opacity: 0.5;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="9" y1="9" x2="13" y2="13"></line><line x1="13" y1="9" x2="9" y2="13"></line></svg>
-                        <br>No matching targets found.
-                    </div>`;
-            } else {
-                searchResultsContainer.innerHTML = resultsHTML;
-            }
-        } catch (err) {
-            console.error(err);
-            searchResultsContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: var(--error);">Search error. Check connection.</div>';
-        }
-    }, 400); 
-});
-
-document.addEventListener('click', (e) => {
-    if (e.target !== searchInput && !searchResultsContainer.contains(e.target)) {
-        searchResultsContainer.style.display = 'none';
-    }
-});
 
 
 // --- DYNAMIC GREETING & MOTIVATION ---
