@@ -391,6 +391,11 @@ svg { fill: currentColor; }
         </div>
 
         <div class="form-group">
+            <label>Class / Target Exam</label>
+            <input type="text" id="q-class" placeholder="Enter class (e.g., 10th, 12th, SSC CGL)...">
+        </div>
+
+        <div class="form-group">
             <label>Error Type</label>
             <div class="multiselect-wrapper" id="ms-wrapper">
                 <div class="multiselect-display" onclick="document.getElementById('ms-dropdown').classList.toggle('show')">
@@ -417,7 +422,7 @@ svg { fill: currentColor; }
         <div class="form-group">
             <label>Question / Context</label>
             <textarea id="q-text" placeholder="Type the question here..."></textarea>
-            <span class="math-hint">統 Tip: Format text using <strong>**bold**</strong>, <em>*italic*</em>, <u>__underline__</u>, or <mark>==highlight==</mark>. Use LaTeX for math! E.g. type \( \frac{1}{2} \)</span>
+            <span class="math-hint">💡 Tip: Format text using <strong>**bold**</strong>, <em>*italic*</em>, <u>__underline__</u>, or <mark>==highlight==</mark>. Use LaTeX for math! E.g. type \( \frac{1}{2} \)</span>
         </div>
         
         <div class="form-group">
@@ -426,10 +431,10 @@ svg { fill: currentColor; }
             <div id="file-edit-hint" class="file-hint">Leave blank to keep existing file.</div>
             
             <div id="existing-file-container" style="display: none; margin-top: 10px; align-items: center; gap: 10px;">
-                <span class="tag-badge" style="background: var(--bg); border: 1px solid var(--border); color: var(--primary); margin: 0;">梼 Attachment Present</span>
+                <span class="tag-badge" style="background: var(--bg); border: 1px solid var(--border); color: var(--primary); margin: 0;">📎 Attachment Present</span>
                 <button type="button" class="btn-cancel" style="padding: 4px 10px; font-size: 0.8rem; border-color: var(--error); color: var(--error);" onclick="flagFileRemoval()">Remove File</button>
             </div>
-            <div id="remove-file-msg" style="display: none; margin-top: 10px; font-size: 0.85rem; color: var(--error); font-weight: bold;">笞ｸFile marked for removal upon saving.</div>
+            <div id="remove-file-msg" style="display: none; margin-top: 10px; font-size: 0.85rem; color: var(--error); font-weight: bold;">🗑️ File marked for removal upon saving.</div>
 
             <div class="progress-container" id="upload-progress-container"><div class="progress-bar" id="upload-progress-bar"></div></div>
         </div>
@@ -437,13 +442,13 @@ svg { fill: currentColor; }
         <div class="form-group">
             <label>My Mistake</label>
             <textarea id="m-text" placeholder="What went wrong?"></textarea>
-            <span class="math-hint">統 LaTeX & Markdown supported here too!</span>
+            <span class="math-hint">💡 LaTeX & Markdown supported here too!</span>
         </div>
 
         <div class="form-group">
             <label>Smart Solution</label>
             <textarea id="s-text" placeholder="Write the trick or correct method..."></textarea>
-            <span class="math-hint">統 LaTeX & Markdown supported here too!</span>
+            <span class="math-hint">💡 LaTeX & Markdown supported here too!</span>
         </div>
 
         <div class="modal-actions">
@@ -679,10 +684,11 @@ function handleGlobalSearch() {
         let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
         let statusHTML = getStatusBadgeHTML(item.status);
+        let classBadge = item.studentClass ? `<span class="tag-badge" style="background:var(--border); color:var(--text); margin-left: 10px;">Class: ${item.studentClass}</span>` : '';
         let contextBadge = `<span class="tag-badge" style="background:var(--border); color:var(--text); margin-left: 10px;">${item.chapter} (${item.mode === 'mock' ? 'Mock Test' : 'Practice'})</span>`;
 
         div.innerHTML = `
-            <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom: 5px;">${tagHTML} ${statusHTML} ${contextBadge}</div>
+            <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom: 5px;">${tagHTML} ${statusHTML} ${classBadge} ${contextBadge}</div>
             <div class="question-header">
                 <div class="q-title-row" onclick="document.getElementById('q-search-${item.id}').classList.toggle('expanded')">
                     ${chevronIcon}
@@ -820,9 +826,10 @@ function renderQuestions() {
         let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (View attached file)</i>";
         let tagHTML = getTagHTML(item.tag);
         let statusHTML = getStatusBadgeHTML(item.status);
+        let classBadge = item.studentClass ? `<span class="tag-badge" style="background:var(--border); color:var(--text); margin-left: 5px;">Class: ${item.studentClass}</span>` : '';
 
         div.innerHTML = `
-            <div style="margin-bottom: 5px;">${tagHTML} ${statusHTML}</div>
+            <div style="margin-bottom: 5px;">${tagHTML} ${statusHTML} ${classBadge}</div>
             <div class="question-header">
                 <div class="q-title-row" onclick="toggleDetails('${item.id}')">
                     ${chevronIcon}
@@ -900,9 +907,10 @@ function renderFlashcard() {
     }
 
     let qTextHTML = item.q ? parseMarkdown(item.q) : "<i>No question text (Reveal to view attachment)</i>";
+    let classBadge = item.studentClass ? `<span class="tag-badge" style="background:var(--border); color:var(--text); margin-left: 5px;">Class: ${item.studentClass}</span>` : '';
 
     card.innerHTML = `
-        <div style="margin-bottom: 15px;">${getTagHTML(item.tag)} ${getStatusBadgeHTML(item.status)}</div>
+        <div style="margin-bottom: 15px;">${getTagHTML(item.tag)} ${getStatusBadgeHTML(item.status)} ${classBadge}</div>
         <div class="fc-question">${qTextHTML}</div>
         
         <button class="fc-reveal-btn btn-icon" onclick="revealFlashcard()">
@@ -976,6 +984,7 @@ function editQuestion(id) {
     }
 
     document.getElementById('q-status').value = item.status || 'Wrong';
+    document.getElementById('q-class').value = item.studentClass || '';
     document.getElementById('q-text').value = item.q || '';
     document.getElementById('m-text').value = item.m || '';
     document.getElementById('s-text').value = item.s || '';
@@ -1016,6 +1025,7 @@ function closeModal() {
 
 function clearForm() {
     document.getElementById('q-status').value = 'Wrong';
+    document.getElementById('q-class').value = '';
     document.getElementById('q-tag').selectedIndex = -1;
     
     const checkboxes = document.querySelectorAll('#ms-dropdown input[type="checkbox"]');
@@ -1050,6 +1060,7 @@ async function saveQuestion() {
     fileInput.classList.remove('input-error');
 
     const status = document.getElementById('q-status').value;
+    const studentClass = document.getElementById('q-class').value.trim();
     const selectElement = document.getElementById('q-tag');
     const tag = Array.from(selectElement.selectedOptions).map(opt => opt.value).filter(val => val !== "");
     
@@ -1074,7 +1085,7 @@ async function saveQuestion() {
     document.getElementById('cancel-btn').disabled = true;
     saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
 
-    const payload = { tag: tag, q: q, m: m, s: s, status: status };
+    const payload = { tag: tag, q: q, m: m, s: s, status: status, studentClass: studentClass };
 
     if (fileInput.files.length > 0) {
         let file = fileInput.files[0];
