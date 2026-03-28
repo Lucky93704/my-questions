@@ -64,6 +64,9 @@ svg { fill: currentColor; }
 .streak-badge { background: #ffedd5; color: #ea580c; padding: 6px 14px; border-radius: 20px; font-size: 1rem; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 [data-theme="dark"] .streak-badge { background: #431407; color: #fdba74; }
 
+.xp-badge { background: #dbeafe; color: #1e40af; padding: 6px 14px; border-radius: 20px; font-size: 1rem; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: default; }
+[data-theme="dark"] .xp-badge { background: #1e3a8a; color: #bfdbfe; }
+
 /* Date & Progress Card */
 .progress-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s, transform 0.3s;}
 .date-selector { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
@@ -178,7 +181,6 @@ svg { fill: currentColor; }
 [data-theme="dark"] .holiday-delete-btn { background: rgba(0, 0, 0, 0.3); }
 [data-theme="dark"] .holiday-delete-btn:hover { background: rgba(0, 0, 0, 0.5); }
 
-
 /* Icon Buttons */
 .icon-btn { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
 .icon-btn:hover { background: rgba(0,0,0,0.05); }
@@ -192,7 +194,7 @@ svg { fill: currentColor; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-6px); } }
 .input-error { border-color: var(--error) !important; animation: shake 0.4s ease-in-out; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
 
-/* Theme Toggle (Kept CSS class just in case you ever reuse it) */
+/* Theme Toggle */
 .theme-toggle { position: absolute; top: 30px; right: 30px; background: var(--card-bg); border: 2px solid var(--border); cursor: pointer; color: var(--text); padding: 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 1000;}
 .theme-toggle:hover { transform: translateY(-5px); border-color: var(--primary); color: var(--primary); }
 .theme-toggle svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
@@ -254,6 +256,26 @@ svg { fill: currentColor; }
 </style>
 </head>
 <body>
+
+<div id="weekly-recap-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-content custom-dialog-box" style="text-align: center; max-width: 450px;">
+        <h3 style="font-size: 1.8rem; margin-bottom: 10px; color: var(--target);">📅 Weekly Recap</h3>
+        <p style="font-size: 1.1rem; margin-bottom: 25px; color: var(--text);">Here is your performance from the past 7 days!</p>
+        
+        <div style="display: flex; justify-content: space-around; margin-bottom: 25px; gap: 15px;">
+            <div style="background: var(--bg); padding: 15px; border-radius: 10px; border: 1px solid var(--border); flex: 1;">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--success);" id="recap-completed">0</div>
+                <div style="font-size: 0.9rem; color: var(--text); font-weight: 500;">Tasks Completed<br>(out of <span id="recap-total">0</span>)</div>
+            </div>
+            <div style="background: var(--bg); padding: 15px; border-radius: 10px; border: 1px solid var(--border); flex: 1;">
+                <div style="font-size: 1.4rem; font-weight: bold; color: var(--error); margin-top: 5px; min-height: 33px; display: flex; align-items: center; justify-content: center;" id="recap-weakest">None</div>
+                <div style="font-size: 0.9rem; color: var(--text); font-weight: 500; margin-top: 5px;">Weakest Subject</div>
+            </div>
+        </div>
+        
+        <button class="custom-dialog-confirm" style="width: 100%; padding: 12px; font-size: 1.1rem;" onclick="document.getElementById('weekly-recap-modal').style.display='none'">Let's Conquer This Week!</button>
+    </div>
+</div>
 
 <div id="custom-dialog-overlay" class="modal-overlay">
     <div class="modal-content custom-dialog-box">
@@ -320,9 +342,15 @@ svg { fill: currentColor; }
                 <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Analytics
             </button>
         </div>
-        <h2>Study Dashboard <span id="streak-counter" class="streak-badge" title="Consecutive days with 100% completion">
-            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M11.71 1.63L12 1.93c.69 1.15 1.77 2.11 3.01 2.72 2.05 1 3.99 2.5 3.99 5.35 0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.85 1.94-4.35 3.99-5.35 1.24-.61 2.32-1.57 3.01-2.72l.29-.3z"/></svg>
-            0 Days</span>
+        <h2>Study Dashboard 
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 5px;">
+                <span id="streak-counter" class="streak-badge" title="Consecutive days with 100% completion">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M11.71 1.63L12 1.93c.69 1.15 1.77 2.11 3.01 2.72 2.05 1 3.99 2.5 3.99 5.35 0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.85 1.94-4.35 3.99-5.35 1.24-.61 2.32-1.57 3.01-2.72l.29-.3z"/></svg>
+                    0 Days</span>
+                <span id="xp-counter" class="xp-badge" title="Experience Points & Level">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    Lvl 1: Aspirant (0 XP)</span>
+            </div>
         </h2>
     </div>
 
@@ -395,6 +423,31 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 // ==========================================
+
+// --- XP SYSTEM INIT ---
+let currentXP = 0;
+const xpRef = db.collection("userStats").doc("global");
+
+xpRef.onSnapshot((doc) => {
+    if(doc.exists) {
+        currentXP = doc.data().xp || 0;
+    } else {
+        xpRef.set({ xp: 0 });
+    }
+    renderXP();
+});
+
+function renderXP() {
+    const level = Math.floor(currentXP / 100) + 1;
+    const titles = ["Aspirant", "Beginner", "Novice", "Scholar", "Achiever", "Expert", "Master", "Grandmaster", "Inspector"];
+    const title = titles[Math.min(level - 1, titles.length - 1)];
+    
+    const xpBadge = document.getElementById('xp-counter');
+    if(xpBadge) {
+        xpBadge.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> Lvl ${level}: ${title} (${currentXP} XP)`;
+    }
+}
+// ----------------------
 
 let targetsUnsubscribe = null;
 let editingTargetId = null;
@@ -669,6 +722,12 @@ function addTask() {
 
 function toggleTask(id, currentStatus) {
     db.collection("dailyTargets").doc(id).update({ completed: !currentStatus });
+    
+    // XP System Integration
+    const xpChange = !currentStatus ? 10 : -10;
+    db.collection("userStats").doc("global").set({ 
+        xp: firebase.firestore.FieldValue.increment(xpChange) 
+    }, { merge: true });
 }
 
 async function deleteTask(id) {
@@ -1104,6 +1163,71 @@ function renderChart() {
     }
 }
 
+// --- WEEKLY RECAP LOGIC ---
+async function checkWeeklyRecap() {
+    const today = new Date();
+    if (today.getDay() !== 1) return; // Only show on Monday
+
+    const todayStr = getLocalISOString(today);
+    const lastRecap = localStorage.getItem('lastRecapDate');
+    if (lastRecap === todayStr) return; // Already shown today
+
+    const startLimit = new Date();
+    startLimit.setDate(startLimit.getDate() - 7);
+    const startStr = getLocalISOString(startLimit);
+
+    try {
+        const snapshot = await db.collection("dailyTargets")
+            .where("date", ">=", startStr)
+            .where("date", "<", todayStr)
+            .get();
+
+        let total = 0;
+        let completed = 0;
+        let subjects = {};
+        let completedSubjects = {};
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) return;
+            
+            total++;
+            if (!subjects[data.subject]) subjects[data.subject] = 0;
+            if (!completedSubjects[data.subject]) completedSubjects[data.subject] = 0;
+            
+            subjects[data.subject]++;
+            if (data.completed) {
+                completed++;
+                completedSubjects[data.subject]++;
+            }
+        });
+
+        if (total === 0) return;
+
+        let weakest = "None";
+        let minCompletion = 101;
+        
+        for (let subj in subjects) {
+            let pct = (completedSubjects[subj] / subjects[subj]) * 100;
+            if (pct < minCompletion) {
+                minCompletion = pct;
+                weakest = subj;
+            }
+        }
+
+        document.getElementById('recap-completed').innerText = completed;
+        document.getElementById('recap-total').innerText = total;
+        document.getElementById('recap-weakest').innerText = weakest;
+        
+        document.getElementById('weekly-recap-modal').style.display = 'flex';
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        
+        localStorage.setItem('lastRecapDate', todayStr);
+    } catch (e) {
+        console.error("Error fetching recap:", e);
+    }
+}
+
 // --- APPLY GLOBAL THEME ---
 const body = document.body;
 if (localStorage.getItem('theme') === 'dark') {
@@ -1115,6 +1239,7 @@ if (localStorage.getItem('theme') === 'dark') {
 window.onload = () => {
     initDate();
     fetchTargets();
+    setTimeout(checkWeeklyRecap, 2000); // Check for recap slightly after load
 };
 </script>
 
