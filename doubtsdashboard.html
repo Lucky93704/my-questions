@@ -266,7 +266,13 @@ let statusChartInstance = null;
 let tagsChartInstance = null;
 let momentumChartInstance = null; // NEW
 
-const collections = ['mathsDoubts', 'englishDoubts', 'gkDoubts', 'reasoningDoubts'];
+const collectionsMap = {
+    'mathDoubts': 'maths',
+    'englishDoubts': 'english',
+    'gkDoubts': 'gk',
+    'reasoningDoubts': 'reasoning'
+};
+const collections = Object.keys(collectionsMap);
 let activeListeners = [];
 
 function fetchDashboardData(daysFilter = 'all') {
@@ -302,8 +308,8 @@ function fetchDashboardData(daysFilter = 'all') {
 
     let collectionsLoaded = 0;
 
-    collections.forEach(collectionName => {
-        const subject = collectionName.replace('Doubts', '');
+   collections.forEach(collectionName => {
+    const subject = collectionsMap[collectionName];
         let query = db.collection(collectionName);
         
         if (startDate) {
