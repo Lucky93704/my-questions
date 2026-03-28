@@ -169,6 +169,8 @@ select:focus, input:focus { border-color: var(--primary); }
     </div>
 
     <div class="filter-bar">
+        <input type="text" id="topic-search" placeholder="🔍 Search any topic..." onkeyup="handleSearch()" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); outline: none; flex-grow: 1; min-width: 200px; max-width: 300px; font-family: inherit; margin-right: 10px;">
+        
         <button class="filter-btn active filter-group-1" id="filter-all" onclick="setFilter('all')">
             <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/></svg> All
         </button>
@@ -285,9 +287,10 @@ let syllabusData = {};
 let radarChartInstance = null;
 let historyChartInstance = null;
 
-// Filter State
+// Filter & Search State
 let activeFilter = 'all';
 let activeSort = 'default';
+let searchQuery = '';
 
 // --- INITIALIZE & LOAD FROM FIREBASE ---
 async function loadSyllabusData() {
@@ -333,7 +336,7 @@ async function loadSyllabusData() {
     }
 }
 
-// --- FILTER CONTROLS ---
+// --- FILTER & SEARCH CONTROLS ---
 function setFilter(filterType) {
     activeFilter = filterType;
     document.querySelectorAll('.filter-group-1').forEach(el => el.classList.remove('active'));
@@ -350,6 +353,11 @@ function setSort(sortType) {
         document.querySelectorAll('.filter-group-2').forEach(el => el.classList.remove('active'));
         document.getElementById('sort-' + sortType).classList.add('active');
     }
+    renderTables();
+}
+
+function handleSearch() {
+    searchQuery = document.getElementById('topic-search').value.toLowerCase();
     renderTables();
 }
 
@@ -382,12 +390,17 @@ function renderTables() {
         if (activeFilter === 'doing') displayData = displayData.filter(i => i.status === 'doing');
         if (activeFilter === 'done') displayData = displayData.filter(i => i.status === 'done');
         
+        // Apply Search Filter
+        if (searchQuery) displayData = displayData.filter(i => i.topic.toLowerCase().includes(searchQuery));
+
         if (activeSort === 'least') displayData.sort((a,b) => a.revision - b.revision);
         if (activeSort === 'most') displayData.sort((a,b) => b.revision - a.revision);
 
         if (displayData.length === 0) {
             tableHTML += `<tr><td colspan="5" style="text-align:center; color:#64748b;">No topics match this filter.</td></tr>`;
         }
+
+        let currentCategory = "";
 
         displayData.forEach(item => {
             let dateValue = ""; 
@@ -406,9 +419,33 @@ function renderTables() {
                 }
             }
 
+            // --- UI Grouping Logic ---
+            let displayTopic = item.topic;
+            let isGrouped = false;
+
+            // Only group if we aren't actively sorting by revisions or searching
+            if (subject === 'gk' && activeSort === 'default' && !searchQuery) {
+                let catSplit = item.topic.split(':');
+                let itemCategory = catSplit.length > 1 ? catSplit[0].trim() : 'General Science & Others';
+
+                if (itemCategory !== currentCategory) {
+                    tableHTML += `
+                        <tr style="background-color: rgba(37, 99, 235, 0.05);">
+                            <td colspan="5" style="font-weight: bold; color: var(--primary); padding: 12px; border-top: 2px solid var(--border); font-size: 1.05rem;">
+                                📖 ${itemCategory}
+                            </td>
+                        </tr>`;
+                    currentCategory = itemCategory;
+                }
+                if (catSplit.length > 1) {
+                    displayTopic = catSplit[1].trim(); 
+                    isGrouped = true;
+                }
+            }
+
             tableHTML += `
                 <tr>
-                    <td>${item.topic}</td>
+                    <td style="${isGrouped ? 'padding-left: 30px; border-left: 3px solid var(--primary);' : ''}">${displayTopic}</td>
                     <td>
                         <select onchange="updateData('${subject}', '${item.id}', 'status', this.value)" class="${item.status === 'done' ? 'status-done' : item.status === 'doing' ? 'status-doing' : ''}">
                             <option value="not-started" ${item.status === 'not-started' ? 'selected' : ''}>Not Started</option>
