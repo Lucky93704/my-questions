@@ -214,38 +214,6 @@ svg { fill: currentColor; }
 .btn-submit:disabled { background: var(--border); color: #94a3b8; cursor: not-allowed; }
 
 /* Utilities */
-.theme-toggle { 
-    position: absolute; 
-    top: 30px; 
-    right: 30px; 
-    background: var(--card-bg); 
-    border: 2px solid var(--border); 
-    cursor: pointer; 
-    color: var(--text); 
-    padding: 12px; 
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    transition: 0.3s; 
-    z-index: 1000; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-}
-.theme-toggle:hover { 
-    transform: translateY(-5px); 
-    border-color: var(--primary); 
-    color: var(--primary); 
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}
-.theme-toggle svg { 
-    width: 26px; 
-    height: 26px; 
-    fill: none; 
-    stroke: currentColor; 
-    stroke-width: 2; 
-    transition: transform 0.5s; 
-}
-.rotate { transform: rotate(360deg); }
 .header-spacer { width: 80px; }
 
 /* Custom Multi-Select Dropdown */
@@ -283,10 +251,6 @@ svg { fill: currentColor; }
 </style>
 </head>
 <body>
-
-<button class="theme-toggle" id="theme-btn" title="Toggle Theme">
-    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
-</button>
 
 <div id="chapter-view" class="container">
     <div class="header">
@@ -471,6 +435,16 @@ svg { fill: currentColor; }
 </div>
 
 <script>
+// ==========================================
+// APPLY GLOBAL THEME
+// ==========================================
+const body = document.body;
+if (localStorage.getItem('theme') === 'dark') {
+    body.setAttribute('data-theme', 'dark');
+} else {
+    body.removeAttribute('data-theme'); 
+}
+
 // ==========================================
 // FIREBASE CONFIGURATION
 // ==========================================
@@ -1206,36 +1180,6 @@ function resetButtons() {
     const icon = `<svg viewBox="0 0 24 24" width="18" height="18"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3-3-1.34-3-3-3zm3-10H5V5h10v4z"/></svg>`;
     saveBtn.innerHTML = editingId ? `${icon} Update` : `${icon} Save`;
 }
-
-// Theme Logic
-const themeBtn = document.getElementById('theme-btn');
-const themeIcon = document.getElementById('theme-icon');
-const body = document.body;
-const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
-const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
-
-if (localStorage.getItem('theme') === 'dark') {
-    body.setAttribute('data-theme', 'dark');
-    themeIcon.innerHTML = `<path d="${moonPath}" />`;
-} else {
-    themeIcon.innerHTML = `<path d="${sunPath}" />`;
-}
-
-themeBtn.addEventListener('click', () => {
-    themeIcon.classList.add('rotate');
-    setTimeout(() => {
-        if (body.getAttribute('data-theme') === 'dark') {
-            body.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'light');
-            themeIcon.innerHTML = `<path d="${sunPath}" />`;
-        } else {
-            body.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            themeIcon.innerHTML = `<path d="${moonPath}" />`;
-        }
-    }, 250);
-    setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
-});
 
 // --- SECURE PDF VIEWER ---
 function viewPDF(id) {
