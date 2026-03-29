@@ -39,9 +39,11 @@ header p { color: #64748b; font-size: 1.1rem; }
 .glance-title { color: #64748b; font-size: 0.95rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 6px; }
 
 /* ==========================================
-   CALENDAR WIDGET STYLES
+   DASHBOARD ROW & CALENDAR/NOTEPAD STYLES
    ========================================== */
-.calendar-widget { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 40px; animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.15s; max-width: 450px; margin-left: auto; margin-right: auto; }
+.dashboard-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 40px; align-items: stretch; }
+
+.calendar-widget { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.15s; margin: 0; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: relative; }
 .calendar-header-center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
 .calendar-header h3 { margin: 0; color: var(--primary); font-size: 1.2rem; font-weight: 700; }
@@ -52,7 +54,7 @@ header p { color: #64748b; font-size: 1.1rem; }
 .calendar-nav { background: transparent; border: none; color: #64748b; cursor: pointer; padding: 5px; border-radius: 50%; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
 .calendar-nav:hover { color: var(--primary); background: var(--bg); transform: scale(1.1); }
 .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: 600; color: #64748b; font-size: 0.85rem; margin-bottom: 10px; }
-.calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px 6px; }
+.calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px 6px; flex-grow: 1;}
 
 .cal-day { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 1; border-radius: 50%; font-size: 0.95rem; cursor: pointer; font-weight: 500; color: var(--text); transition: transform 0.2s, box-shadow 0.2s; opacity: 0; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 .cal-day:hover:not(.empty) { box-shadow: 0 0 0 2px var(--primary); transform: translateY(-2px) scale(1.05); z-index: 10; }
@@ -74,6 +76,12 @@ header p { color: #64748b; font-size: 1.1rem; }
 .cal-day.completed-day.streak-next:not(.today) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
 .cal-day.completed-day.streak-next:not(.today)::before { content: ''; position: absolute; top: 0; bottom: 0; right: -6px; width: 6px; background: rgba(34, 197, 94, 0.15); z-index: -1; }
 .cal-day.completed-day.streak-prev:not(.today) { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+/* Notepad Styles */
+.notepad-widget { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.2s; display: flex; flex-direction: column; box-sizing: border-box; }
+.notepad-header { color: var(--primary); font-size: 1.2rem; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+.notepad-textarea { flex-grow: 1; width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; color: var(--text); font-family: inherit; font-size: 0.95rem; resize: none; outline: none; box-sizing: border-box; transition: 0.3s; min-height: 250px; line-height: 1.5; }
+.notepad-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
 /* Rich Peek Tooltip */
 .cal-tooltip { position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--card-bg); border: 1px solid var(--border); box-shadow: 0 10px 20px rgba(0,0,0,0.1); padding: 12px; border-radius: 10px; font-size: 0.85rem; width: max-content; max-width: 220px; z-index: 100; opacity: 0; visibility: hidden; transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; text-align: left; color: var(--text); font-weight: normal; line-height: 1.5; }
@@ -238,24 +246,34 @@ header p { color: #64748b; font-size: 1.1rem; }
         </div>
     </div>
 
-    <div class="calendar-widget">
-        <div class="calendar-header">
-            <button class="calendar-nav" id="prev-month">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            </button>
-            <div class="calendar-header-center">
-                <h3 id="calendar-month-year">Month Year</h3>
-                <button class="btn-today" id="btn-today" onclick="jumpToToday()">Back to Today</button>
+    <div class="dashboard-row">
+        <div class="calendar-widget">
+            <div class="calendar-header">
+                <button class="calendar-nav" id="prev-month">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <div class="calendar-header-center">
+                    <h3 id="calendar-month-year">Month Year</h3>
+                    <button class="btn-today" id="btn-today" onclick="jumpToToday()">Back to Today</button>
+                </div>
+                <button class="calendar-nav" id="next-month">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
             </div>
-            <button class="calendar-nav" id="next-month">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </button>
-        </div>
-        <div class="calendar-weekdays">
-            <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
-        </div>
-        <div class="calendar-days" id="calendar-days">
+            <div class="calendar-weekdays">
+                <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
             </div>
+            <div class="calendar-days" id="calendar-days">
+            </div>
+        </div>
+
+        <div class="notepad-widget">
+            <div class="notepad-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Quick Notes
+            </div>
+            <textarea id="quick-notepad" class="notepad-textarea" placeholder="Jot down formulas, ideas, or quick reminders..."></textarea>
+        </div>
     </div>
 
     <div id="home-screen">
@@ -399,10 +417,10 @@ async function loadGlanceData() {
             checkDate.setDate(checkDate.getDate() - 1);
         }
 
-        // --- NEW MAX STREAK LOGIC ---
+        // --- MAX STREAK LOGIC ---
         let maxStreak = 0; 
         let tempStreak = 0;
-        let iterDate = new Date(startLimit); // Start from 90 days ago
+        let iterDate = new Date(startLimit);
         
         for (let i = 0; i <= 90; i++) {
             const dStr = getLocalISOString(iterDate);
@@ -726,6 +744,20 @@ async function renderCalendar() {
 
 document.getElementById("prev-month").addEventListener("click", () => { currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} renderCalendar(); });
 document.getElementById("next-month").addEventListener("click", () => { currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} renderCalendar(); });
+
+// ==========================================
+// NOTEPAD LOGIC (LOCAL STORAGE SAVING)
+// ==========================================
+const quickNotepad = document.getElementById('quick-notepad');
+if (quickNotepad) {
+    // Load existing notes on startup
+    quickNotepad.value = localStorage.getItem('study_portal_quick_notes') || '';
+    
+    // Auto-save on typing
+    quickNotepad.addEventListener('input', () => {
+        localStorage.setItem('study_portal_quick_notes', quickNotepad.value);
+    });
+}
 
 // ==========================================
 // ON AUTH LOAD LOGIC
