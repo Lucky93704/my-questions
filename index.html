@@ -209,7 +209,7 @@ header p { color: #64748b; font-size: 1.1rem; }
                 <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M11.71 1.63L12 1.93c.69 1.15 1.77 2.11 3.01 2.72 2.05 1 3.99 2.5 3.99 5.35 0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.85 1.94-4.35 3.99-5.35 1.24-.61 2.32-1.57 3.01-2.72l.29-.3z"/></svg>
                 <span id="glance-streak"><span class="spinner" style="border-top-color: #ea580c;"></span></span>
             </div>
-            <div style="font-size: 0.85rem; color: #64748b;">Consecutive 100% days</div>
+            <div style="font-size: 0.85rem; color: #64748b;" id="glance-streak-subtext">Consecutive 100% days</div>
         </div>
     </div>
 
@@ -399,7 +399,31 @@ async function loadGlanceData() {
             checkDate.setDate(checkDate.getDate() - 1);
         }
 
+        // --- NEW MAX STREAK LOGIC ---
+        let maxStreak = 0; 
+        let tempStreak = 0;
+        let iterDate = new Date(startLimit); // Start from 90 days ago
+        
+        for (let i = 0; i <= 90; i++) {
+            const dStr = getLocalISOString(iterDate);
+            const isComplete = daysData[dStr] && daysData[dStr].total > 0 && daysData[dStr].completed === daysData[dStr].total;
+            
+            if (isComplete) { 
+                tempStreak++; 
+                if (tempStreak > maxStreak) {
+                    maxStreak = tempStreak;
+                }
+            } else { 
+                tempStreak = 0; 
+            }
+            iterDate.setDate(iterDate.getDate() + 1);
+        }
+        
+        maxStreak = Math.max(maxStreak, currentStreak);
+
         document.getElementById('glance-streak').innerText = `${currentStreak} Days`;
+        document.getElementById('glance-streak-subtext').innerHTML = `Personal Best: <strong>${maxStreak} Days</strong>`;
+
     } catch (e) { console.error("Failed to load glance data:", e); }
 }
 
