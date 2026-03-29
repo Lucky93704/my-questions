@@ -38,6 +38,56 @@ header p { color: #64748b; font-size: 1.1rem; }
 .glance-value { font-size: 2rem; font-weight: bold; color: var(--primary); margin: 10px 0; display: flex; justify-content: center; align-items: center; gap: 10px;}
 .glance-title { color: #64748b; font-size: 0.95rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 6px; }
 
+/* ==========================================
+   CALENDAR WIDGET STYLES
+   ========================================== */
+.calendar-widget { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 40px; animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.15s; max-width: 450px; margin-left: auto; margin-right: auto; }
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: relative; }
+.calendar-header-center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.calendar-header h3 { margin: 0; color: var(--primary); font-size: 1.2rem; font-weight: 700; }
+.btn-today { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: 0.2s; opacity: 0; pointer-events: none; transform: translateY(-5px); }
+.btn-today.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.btn-today:hover { border-color: var(--primary); color: var(--primary); background: var(--card-bg); }
+
+.calendar-nav { background: transparent; border: none; color: #64748b; cursor: pointer; padding: 5px; border-radius: 50%; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+.calendar-nav:hover { color: var(--primary); background: var(--bg); transform: scale(1.1); }
+.calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: 600; color: #64748b; font-size: 0.85rem; margin-bottom: 10px; }
+.calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px 6px; }
+
+.cal-day { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 1; border-radius: 50%; font-size: 0.95rem; cursor: pointer; font-weight: 500; color: var(--text); transition: transform 0.2s, box-shadow 0.2s; opacity: 0; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+.cal-day:hover:not(.empty) { box-shadow: 0 0 0 2px var(--primary); transform: translateY(-2px) scale(1.05); z-index: 10; }
+.cal-day.empty { visibility: hidden; }
+
+/* Status Styles */
+.cal-day.today { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); font-weight: bold; z-index: 5; }
+.cal-day.today:hover { background: var(--secondary); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); }
+
+.cal-day.completed-day:not(.today) { background: rgba(34, 197, 94, 0.15); color: var(--success); font-weight: bold; }
+.cal-day.completed-day::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: var(--success); border-radius: 50%; }
+
+.cal-day.incomplete-day::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: var(--error); border-radius: 50%; }
+
+.cal-day.holiday-day:not(.today) { background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px dashed #f59e0b; }
+[data-theme="dark"] .cal-day.holiday-day:not(.today) { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+/* Visual Streak Connector */
+.cal-day.completed-day.streak-next:not(.today) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.cal-day.completed-day.streak-next:not(.today)::before { content: ''; position: absolute; top: 0; bottom: 0; right: -6px; width: 6px; background: rgba(34, 197, 94, 0.15); z-index: -1; }
+.cal-day.completed-day.streak-prev:not(.today) { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+/* Rich Peek Tooltip */
+.cal-tooltip { position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--card-bg); border: 1px solid var(--border); box-shadow: 0 10px 20px rgba(0,0,0,0.1); padding: 12px; border-radius: 10px; font-size: 0.85rem; width: max-content; max-width: 220px; z-index: 100; opacity: 0; visibility: hidden; transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; text-align: left; color: var(--text); font-weight: normal; line-height: 1.5; }
+.cal-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: var(--card-bg) transparent transparent transparent; }
+.cal-day:hover .cal-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+.tooltip-title { font-weight: bold; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.tooltip-title.success { color: var(--success); }
+.tooltip-title.error { color: var(--error); }
+.tooltip-title.holiday { color: #d97706; }
+[data-theme="dark"] .tooltip-title.holiday { color: #fbbf24; }
+.tooltip-row { display: flex; align-items: flex-start; gap: 6px; margin-top: 4px; color: #64748b; }
+.tooltip-row span { font-weight: 500; color: var(--text); }
+.tooltip-hint { display: block; margin-top: 8px; font-size: 0.75rem; color: #94a3b8; font-style: italic; text-align: center; border-top: 1px solid var(--border); padding-top: 6px;}
+
 #home-screen { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
 .subject-card { background: var(--bg); padding: 30px 20px; text-align: center; border-radius: 12px; font-size: 1.3rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; border: 2px dashed var(--primary); cursor: pointer; font-family: inherit; width: 100%; box-sizing: border-box; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; animation-delay: 0.2s;}
 .subject-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 10px 15px rgba(37, 99, 235, 0.15); background: var(--primary); color: white; border-style: solid; }
@@ -151,6 +201,26 @@ header p { color: #64748b; font-size: 1.1rem; }
         </div>
     </div>
 
+    <div class="calendar-widget">
+        <div class="calendar-header">
+            <button class="calendar-nav" id="prev-month">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <div class="calendar-header-center">
+                <h3 id="calendar-month-year">Month Year</h3>
+                <button class="btn-today" id="btn-today" onclick="jumpToToday()">Back to Today</button>
+            </div>
+            <button class="calendar-nav" id="next-month">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+        </div>
+        <div class="calendar-weekdays">
+            <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+        </div>
+        <div class="calendar-days" id="calendar-days">
+            </div>
+    </div>
+
     <div id="home-screen">
         <button onclick="document.getElementById('dashboard-modal').style.display='flex'" class="subject-card">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
@@ -214,10 +284,7 @@ function showToast(message, type = 'info') {
     toast.innerHTML = `${iconSvg} <span>${message}</span>`;
     container.appendChild(toast);
     
-    // Auto remove after animation ends
-    setTimeout(() => {
-        if(toast.parentElement) toast.remove();
-    }, 3400);
+    setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3400);
 }
 
 // ==========================================
@@ -245,12 +312,8 @@ function getLocalISOString(date) {
 async function loadGlanceData() {
     try {
         const todayStr = getLocalISOString(new Date());
-        
-        // Load Today's Targets
         const targetSnap = await db.collection("dailyTargets").where("date", "==", todayStr).get();
-        let totalTasks = 0;
-        let completedTasks = 0;
-        let isHoliday = false;
+        let totalTasks = 0; let completedTasks = 0; let isHoliday = false;
 
         targetSnap.forEach(doc => {
             const data = doc.data();
@@ -266,30 +329,21 @@ async function loadGlanceData() {
         const targetSubEl = document.getElementById('glance-targets-subtext');
 
         if (isHoliday) {
-            targetEl.innerHTML = `🌴 Rest Day`;
-            targetSubEl.innerHTML = `Holiday mode active.`;
-            targetEl.style.color = '#f59e0b';
+            targetEl.innerHTML = `🌴 Rest Day`; targetSubEl.innerHTML = `Holiday mode active.`; targetEl.style.color = '#f59e0b';
         } else if (totalTasks === 0) {
-            targetEl.innerHTML = `0 / 0`;
-            targetSubEl.innerHTML = `No tasks scheduled yet.`;
+            targetEl.innerHTML = `0 / 0`; targetSubEl.innerHTML = `No tasks scheduled yet.`;
         } else {
             const pct = Math.round((completedTasks/totalTasks)*100);
-            targetEl.innerHTML = `${completedTasks} / ${totalTasks}`;
-            targetSubEl.innerHTML = `${pct}% Completion`;
+            targetEl.innerHTML = `${completedTasks} / ${totalTasks}`; targetSubEl.innerHTML = `${pct}% Completion`;
             if (pct === 100) targetEl.style.color = 'var(--success)';
         }
 
-        // Load Streak
-        const startLimit = new Date();
-        startLimit.setDate(startLimit.getDate() - 90);
+        const startLimit = new Date(); startLimit.setDate(startLimit.getDate() - 90);
         const startLimitStr = getLocalISOString(startLimit);
 
-        const streakSnap = await db.collection("dailyTargets")
-            .where("date", ">=", startLimitStr)
-            .where("date", "<=", todayStr)
-            .get();
-
+        const streakSnap = await db.collection("dailyTargets").where("date", ">=", startLimitStr).where("date", "<=", todayStr).get();
         const daysData = {};
+        
         streakSnap.forEach(doc => {
             const data = doc.data();
             if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
@@ -301,41 +355,25 @@ async function loadGlanceData() {
             }
         });
 
-        let currentStreak = 0;
-        let checkDate = new Date();
-        let checkingCurrent = true;
-
-        if (!(daysData[todayStr] && daysData[todayStr].total > 0 && daysData[todayStr].completed === daysData[todayStr].total)) {
-            checkDate.setDate(checkDate.getDate() - 1); 
-        }
+        let currentStreak = 0; let checkDate = new Date();
+        if (!(daysData[todayStr] && daysData[todayStr].total > 0 && daysData[todayStr].completed === daysData[todayStr].total)) { checkDate.setDate(checkDate.getDate() - 1); }
 
         for (let i = 0; i < 90; i++) {
             const dateStr = getLocalISOString(checkDate);
             const isComplete = daysData[dateStr] && daysData[dateStr].total > 0 && daysData[dateStr].completed === daysData[dateStr].total;
-
-            if (isComplete) {
-                currentStreak++;
-            } else {
-                break; 
-            }
+            if (isComplete) { currentStreak++; } else { break; }
             checkDate.setDate(checkDate.getDate() - 1);
         }
 
         document.getElementById('glance-streak').innerText = `${currentStreak} Days`;
-
-    } catch (e) {
-        console.error("Failed to load glance data:", e);
-        document.getElementById('glance-targets').innerText = "Err";
-        document.getElementById('glance-streak').innerText = "Err";
-    }
+    } catch (e) { console.error("Failed to load glance data:", e); }
 }
 
 
-// --- DYNAMIC GREETING & MOTIVATION ---
+// --- DYNAMIC GREETING ---
 function setGreetingAndQuote() {
     const greetingElement = document.getElementById('greeting-text');
     const quoteElement = document.getElementById('daily-quote');
-    
     const hour = new Date().getHours();
     let greeting = "Hello";
     if (hour >= 5 && hour < 12) greeting = "Good Morning";
@@ -344,132 +382,202 @@ function setGreetingAndQuote() {
     else greeting = "Late Night Study";
     
     greetingElement.innerText = `${greeting}`;
-
     const quotes = [
         "Discipline is choosing between what you want now and what you want most.",
         "Success is the sum of small efforts, repeated day in and day out.",
         "100% accuracy isn't a gift, it's a skill.",
-        "Don't stop when you're tired. Stop when you're done.",
-        "The secret of your future is hidden in your daily routine.",
-        "Every mistake tracked is a mark secured in the real exam.",
-        "Focus on the step in front of you, not the whole staircase."
+        "Don't stop when you're tired. Stop when you're done."
     ];
-
-    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    quoteElement.innerText = `"${randomQuote}"`;
+    quoteElement.innerText = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
 }
 
-// --- SESSION CHECK ---
-if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
-    document.getElementById('pin-screen').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
-    setGreetingAndQuote(); 
-    loadGlanceData(); 
-}
 
-// --- PIN LOGIC ---
+// --- PIN & SESSION LOGIC ---
 function getISTTimePin() {
-    const now = new Date();
     const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false };
-    let timeString = new Intl.DateTimeFormat('en-IN', options).format(now);
-    return timeString.replace(':', '');
+    return new Intl.DateTimeFormat('en-IN', options).format(new Date()).replace(':', '');
 }
 
 function attemptUnlock() {
-    const enteredPin = document.getElementById('pin-input').value;
-    const correctPin = getISTTimePin();
-    const unlockBtn = document.getElementById('unlock-btn');
-    const originalBtnHTML = unlockBtn.innerHTML;
-    
-    if (enteredPin === correctPin) {
-        unlockBtn.innerHTML = '<span class="spinner"></span> Unlocking...';
-        unlockBtn.disabled = true;
-        document.getElementById('pin-input').disabled = true;
+    if (document.getElementById('pin-input').value === getISTTimePin()) {
+        document.getElementById('unlock-btn').innerHTML = '<span class="spinner"></span> Unlocking...';
+        const rem = document.getElementById('remember-me').checked;
+        (rem ? localStorage : sessionStorage).setItem('isUnlocked', 'true');
+        showToast('Access Granted!', 'success');
         
-        const rememberMe = document.getElementById('remember-me').checked;
-        if (rememberMe) {
-            localStorage.setItem('isUnlocked', 'true');
-        } else {
-            sessionStorage.setItem('isUnlocked', 'true');
-        }
-        
-        showToast('Access Granted! Welcome back.', 'success');
-
         setTimeout(() => {
-            const pinScreen = document.getElementById('pin-screen');
-            const mainContent = document.getElementById('main-content');
-            
-            pinScreen.classList.remove('anim-fade-in');
-            pinScreen.classList.add('anim-fade-out');
-            
-            setTimeout(() => {
-                pinScreen.style.display = 'none';
-                mainContent.style.display = 'block';
-                mainContent.classList.remove('anim-fade-out');
-                
-                setGreetingAndQuote(); 
-                loadGlanceData(); 
-                
-                mainContent.classList.add('anim-fade-in');
-            }, 400);
+            document.getElementById('pin-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('main-content').classList.add('anim-fade-in');
+            setGreetingAndQuote(); loadGlanceData(); renderCalendar(); 
         }, 800);
-        
     } else {
-        showToast('Incorrect PIN. Please try again.', 'error');
+        showToast('Incorrect PIN.', 'error');
         document.getElementById('pin-input').value = '';
-        document.getElementById('pin-input').focus();
     }
 }
 
-// --- LOGOUT LOGIC ---
 function handleLogout() {
-    const logoutBtn = document.getElementById('logout-btn');
-    const originalBtnHTML = logoutBtn.innerHTML;
-    logoutBtn.innerHTML = '<span class="spinner" style="border-top-color: var(--error);"></span> Locking...';
-    logoutBtn.disabled = true;
-    
-    sessionStorage.removeItem('isUnlocked');
-    localStorage.removeItem('isUnlocked');
-    
+    document.getElementById('logout-btn').innerHTML = '<span class="spinner" style="border-top-color: var(--error);"></span> Locking...';
+    sessionStorage.removeItem('isUnlocked'); localStorage.removeItem('isUnlocked');
     showToast('Portal Locked Successfully.', 'info');
-
-    setTimeout(() => {
-        const pinScreen = document.getElementById('pin-screen');
-        const mainContent = document.getElementById('main-content');
-        
-        mainContent.classList.remove('anim-fade-in');
-        mainContent.classList.add('anim-fade-out');
-        
-        setTimeout(() => {
-            mainContent.style.display = 'none';
-            
-            const unlockBtn = document.getElementById('unlock-btn');
-            unlockBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> Unlock`;
-            unlockBtn.disabled = false;
-            
-            const pinInput = document.getElementById('pin-input');
-            pinInput.value = '';
-            pinInput.disabled = false;
-            
-            document.getElementById('remember-me').checked = false;
-            
-            pinScreen.classList.remove('anim-fade-out');
-            pinScreen.style.display = 'flex';
-            pinScreen.classList.add('anim-fade-in');
-            
-            logoutBtn.innerHTML = originalBtnHTML;
-            logoutBtn.disabled = false;
-            
-        }, 400);
-    }, 800);
+    setTimeout(() => { window.location.reload(); }, 800);
 }
 
-// Event Listeners
 document.getElementById('unlock-btn').addEventListener('click', attemptUnlock);
-document.getElementById('pin-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') { attemptUnlock(); }
-});
+document.getElementById('pin-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') attemptUnlock(); });
 document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+// ==========================================
+// UPGRADED ANIMATED CALENDAR WITH FIREBASE
+// ==========================================
+const currentDate = new Date();
+let currentMonth = currentDate.getMonth();
+let currentYear = currentDate.getFullYear();
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+function jumpToToday() {
+    currentMonth = currentDate.getMonth();
+    currentYear = currentDate.getFullYear();
+    renderCalendar();
+}
+
+async function renderCalendar() {
+    const daysContainer = document.getElementById("calendar-days");
+    const monthYearText = document.getElementById("calendar-month-year");
+    const btnToday = document.getElementById("btn-today");
+    
+    if (currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear()) {
+        btnToday.classList.remove("visible");
+    } else {
+        btnToday.classList.add("visible");
+    }
+    
+    daysContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;"><span class="spinner" style="border-top-color: var(--primary);"></span></div>';
+    
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    monthYearText.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+    
+    // Fetch Data
+    const startStr = getLocalISOString(new Date(currentYear, currentMonth, 1));
+    const endStr = getLocalISOString(new Date(currentYear, currentMonth + 1, 0));
+    const dayStatus = {};
+    
+    try {
+        const snapshot = await db.collection("dailyTargets").where("date", ">=", startStr).where("date", "<=", endStr).get();
+        snapshot.forEach(doc => {
+            const data = doc.data(); const dateStr = data.date;
+            
+            if (!dayStatus[dateStr]) {
+                dayStatus[dateStr] = { total: 0, completed: 0, isHoliday: false, reason: "", doneTasks: [], missedTasks: [] };
+            }
+            
+            if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
+                dayStatus[dateStr].isHoliday = true;
+                dayStatus[dateStr].reason = data.task ? data.task.replace("Holiday: ", "") : "Rest Day";
+            } else {
+                dayStatus[dateStr].total++;
+                if (data.completed) {
+                    dayStatus[dateStr].completed++;
+                    dayStatus[dateStr].doneTasks.push(data.subject);
+                } else {
+                    dayStatus[dateStr].missedTasks.push(data.subject);
+                }
+            }
+        });
+    } catch (e) { console.error("Error fetching calendar data:", e); }
+
+    daysContainer.innerHTML = ""; 
+    let animationDelay = 0;
+
+    for (let i = 0; i < firstDayOfMonth; i++) {
+        const emptyDiv = document.createElement("div");
+        emptyDiv.classList.add("cal-day", "empty");
+        daysContainer.appendChild(emptyDiv);
+    }
+    
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayDiv = document.createElement("div");
+        dayDiv.classList.add("cal-day");
+        dayDiv.innerText = i;
+        
+        const checkDate = new Date(currentYear, currentMonth, i);
+        const checkDateStr = getLocalISOString(checkDate);
+        const status = dayStatus[checkDateStr];
+        
+        // 1. Time Travel Shortcut
+        dayDiv.onclick = () => window.location.href = `studydashboard.html?date=${checkDateStr}`;
+        
+        // 2. Rich Tooltip Container
+        const tooltip = document.createElement('div');
+        tooltip.className = 'cal-tooltip';
+        
+        if (status) {
+            if (status.isHoliday) {
+                dayDiv.classList.add("holiday-day");
+                tooltip.innerHTML = `<div class="tooltip-title holiday">🌴 Holiday</div><div class="tooltip-row"><span>Reason:</span> ${status.reason}</div><div class="tooltip-hint">Click to jump to this date</div>`;
+            } else if (status.total > 0 && status.completed === status.total) {
+                dayDiv.classList.add("completed-day");
+                
+                // 3. Visual Streak Connector Logic
+                const tomorrow = new Date(checkDate); tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowStatus = dayStatus[getLocalISOString(tomorrow)];
+                // Don't connect Saturday to Sunday visually
+                if (checkDate.getDay() !== 6 && tomorrowStatus && tomorrowStatus.total > 0 && tomorrowStatus.completed === tomorrowStatus.total) {
+                    dayDiv.classList.add("streak-next");
+                }
+                
+                const yesterday = new Date(checkDate); yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStatus = dayStatus[getLocalISOString(yesterday)];
+                // Don't connect Sunday backwards to Saturday visually
+                if (checkDate.getDay() !== 0 && yesterdayStatus && yesterdayStatus.total > 0 && yesterdayStatus.completed === yesterdayStatus.total) {
+                    dayDiv.classList.add("streak-prev");
+                }
+                
+                // Set Tooltip
+                const uniqueDone = [...new Set(status.doneTasks)].join(', ');
+                tooltip.innerHTML = `<div class="tooltip-title success"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 100% Completed!</div>
+                                     <div class="tooltip-row"><span>Finished:</span> ${uniqueDone}</div>
+                                     <div class="tooltip-hint">Click to jump to this date</div>`;
+            } else if (status.total > 0) {
+                dayDiv.classList.add("incomplete-day");
+                
+                const uniqueDone = status.doneTasks.length > 0 ? [...new Set(status.doneTasks)].join(', ') : 'None';
+                const uniqueMissed = [...new Set(status.missedTasks)].join(', ');
+                
+                tooltip.innerHTML = `<div class="tooltip-title error"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> ${status.completed}/${status.total} Completed</div>
+                                     <div class="tooltip-row"><span>Done:</span> <span style="color:var(--success); font-weight:normal;">${uniqueDone}</span></div>
+                                     <div class="tooltip-row"><span>Missed:</span> <span style="color:var(--error); font-weight:normal;">${uniqueMissed}</span></div>
+                                     <div class="tooltip-hint">Click to jump to this date</div>`;
+            }
+        } else {
+            tooltip.innerHTML = `<div class="tooltip-title" style="color: #64748b;">📅 No Data</div>
+                                 <div class="tooltip-row" style="margin-top:0;">No targets were set for this day.</div>
+                                 <div class="tooltip-hint">Click to plan this day</div>`;
+        }
+        
+        dayDiv.appendChild(tooltip);
+        
+        dayDiv.style.animationDelay = `${animationDelay}s`;
+        animationDelay += 0.015;
+        
+        if (i === currentDate.getDate() && currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear()) {
+            dayDiv.classList.add("today");
+        }
+        
+        daysContainer.appendChild(dayDiv);
+    }
+}
+
+document.getElementById("prev-month").addEventListener("click", () => { currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} renderCalendar(); });
+document.getElementById("next-month").addEventListener("click", () => { currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} renderCalendar(); });
+
+// Load on Auth
+if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
+    document.getElementById('pin-screen').style.display = 'none'; document.getElementById('main-content').style.display = 'block';
+    setGreetingAndQuote(); loadGlanceData(); renderCalendar();
+}
 
 // --- THEME LOGIC ---
 const themeBtn = document.getElementById('theme-btn');
@@ -478,26 +586,18 @@ const body = document.body;
 const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
 const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
 
-if (localStorage.getItem('theme') === 'dark') {
-    body.setAttribute('data-theme', 'dark');
-    themeIcon.innerHTML = `<path d="${moonPath}" />`;
-} else {
-    themeIcon.innerHTML = `<path d="${sunPath}" />`;
-}
+if (localStorage.getItem('theme') === 'dark') { body.setAttribute('data-theme', 'dark'); themeIcon.innerHTML = `<path d="${moonPath}" />`; } 
+else { themeIcon.innerHTML = `<path d="${sunPath}" />`; }
 
 themeBtn.addEventListener('click', () => {
     themeIcon.classList.add('rotate');
     setTimeout(() => {
         if (body.getAttribute('data-theme') === 'dark') {
-            body.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'light');
-            themeIcon.innerHTML = `<path d="${sunPath}" />`;
-            showToast('Light mode activated', 'info');
+            body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light');
+            themeIcon.innerHTML = `<path d="${sunPath}" />`; showToast('Light mode activated', 'info');
         } else {
-            body.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            themeIcon.innerHTML = `<path d="${moonPath}" />`;
-            showToast('Dark mode activated', 'info');
+            body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark');
+            themeIcon.innerHTML = `<path d="${moonPath}" />`; showToast('Dark mode activated', 'info');
         }
     }, 250);
     setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
