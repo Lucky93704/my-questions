@@ -102,10 +102,15 @@ header p { color: #64748b; font-size: 1.1rem; }
 #unlock-btn { background: var(--primary); color: white; border: none; padding: 12px 25px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 140px;}
 #unlock-btn:hover:not(:disabled) { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 
-/* Logout Button Styles */
+/* Updated Logout Button Styles (Top-Left & Padlock Swap) */
 .logout-container { position: absolute; top: 20px; left: 20px; margin: 0; z-index: 1000; }
-#logout-btn { background: var(--card-bg); color: var(--error); border: 1px solid var(--border); padding: 10px 18px; font-size: 0.95rem; border-radius: 30px; cursor: pointer; transition: 0.3s; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); min-width: auto; }
+#logout-btn { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 10px 18px; font-size: 0.95rem; border-radius: 30px; cursor: pointer; transition: 0.3s; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); min-width: auto; }
 #logout-btn:hover:not(:disabled) { background: var(--error); color: white; border-color: var(--error); transform: translateY(-3px); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
+.icon-unlocked { display: block; }
+.icon-locked { display: none; }
+#logout-btn:hover:not(:disabled) .icon-unlocked { display: none; }
+#logout-btn:hover:not(:disabled) .icon-locked { display: block; }
+
 /* Modal Styles */
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeInOverlay 0.3s ease; }
 .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -170,6 +175,15 @@ header p { color: #64748b; font-size: 1.1rem; }
 </div>
 
 <div id="main-content">
+    
+    <div class="logout-container">
+        <button id="logout-btn" title="Lock Portal (Ctrl+L / Cmd+L)">
+            <svg class="icon-unlocked" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+            <svg class="icon-locked" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Lock Portal
+        </button>
+    </div>
+
     <header>
         <h1 id="greeting-text">Welcome, </h1>
         <p id="daily-quote" style="color: var(--secondary); font-style: italic; font-weight: 500; margin-top: 8px;">"Loading motivation..."</p>
@@ -200,6 +214,31 @@ header p { color: #64748b; font-size: 1.1rem; }
         </div>
     </div>
 
+    <div id="quick-add-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-content" style="max-width: 400px; text-align: left; padding: 25px;">
+            <h3 style="display: flex; align-items: center; gap: 10px; color: var(--target); margin-top: 0; margin-bottom: 10px; justify-content: flex-start;">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Quick Add Target
+            </h3>
+            <p id="quick-add-date-text" style="color: #64748b; font-size: 0.95rem; margin-top: 0; margin-bottom: 20px; font-weight: 500;">For: YYYY-MM-DD</p>
+            
+            <input type="text" id="quick-task-text" style="width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; margin-bottom: 15px; box-sizing: border-box; font-family: inherit;" placeholder="What do you want to accomplish?" autocomplete="off">
+            
+            <select id="quick-task-subject" style="width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; margin-bottom: 25px; box-sizing: border-box; cursor: pointer; font-family: inherit;">
+                <option value="Maths">Maths</option>
+                <option value="English">English</option>
+                <option value="GK">GK</option>
+                <option value="Reasoning">Reasoning</option>
+                <option value="Mock">Mock Test</option>
+            </select>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="document.getElementById('quick-add-modal').style.display='none'" style="background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;">Cancel</button>
+                <button id="quick-add-submit" onclick="submitQuickTask()" style="background: var(--target); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; min-width: 100px;">Add</button>
+            </div>
+        </div>
+    </div>
+
     <div class="calendar-widget">
         <div class="calendar-header">
             <button class="calendar-nav" id="prev-month">
@@ -224,13 +263,6 @@ header p { color: #64748b; font-size: 1.1rem; }
         <button onclick="document.getElementById('dashboard-modal').style.display='flex'" class="subject-card">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             Open Dashboards
-        </button>
-    </div>
-
-    <div class="logout-container">
-        <button id="logout-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Lock Portal
         </button>
     </div>
 </div>
@@ -368,7 +400,6 @@ async function loadGlanceData() {
     } catch (e) { console.error("Failed to load glance data:", e); }
 }
 
-
 // --- DYNAMIC GREETING ---
 function setGreetingAndQuote() {
     const greetingElement = document.getElementById('greeting-text');
@@ -390,8 +421,36 @@ function setGreetingAndQuote() {
     quoteElement.innerText = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
 }
 
+// ==========================================
+// PIN, AUTO-LOCK & SHORTCUT LOGIC
+// ==========================================
+let inactivityTimer;
+const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-// --- PIN & SESSION LOGIC ---
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
+        inactivityTimer = setTimeout(() => {
+            handleLogout('auto');
+        }, INACTIVITY_LIMIT);
+    }
+}
+
+// Listen for interactions to reset the 10-minute timer
+['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetInactivityTimer);
+});
+
+// Ctrl+L / Cmd+L Shortcut to Lock
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+        e.preventDefault(); // Prevent browser from selecting URL bar
+        if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
+            handleLogout('manual');
+        }
+    }
+});
+
 function getISTTimePin() {
     const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false };
     return new Intl.DateTimeFormat('en-IN', options).format(new Date()).replace(':', '');
@@ -404,6 +463,8 @@ function attemptUnlock() {
         (rem ? localStorage : sessionStorage).setItem('isUnlocked', 'true');
         showToast('Access Granted!', 'success');
         
+        resetInactivityTimer(); // Start the auto-lock countdown
+
         setTimeout(() => {
             document.getElementById('pin-screen').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
@@ -416,16 +477,75 @@ function attemptUnlock() {
     }
 }
 
-function handleLogout() {
+function handleLogout(type = 'manual') {
     document.getElementById('logout-btn').innerHTML = '<span class="spinner" style="border-top-color: var(--error);"></span> Locking...';
     sessionStorage.removeItem('isUnlocked'); localStorage.removeItem('isUnlocked');
-    showToast('Portal Locked Successfully.', 'info');
-    setTimeout(() => { window.location.reload(); }, 800);
+    clearTimeout(inactivityTimer);
+    
+    if (type === 'auto') {
+        showToast('Portal auto-locked due to 10m inactivity.', 'info');
+    } else {
+        showToast('Portal Locked Successfully.', 'info');
+    }
+    
+    setTimeout(() => { window.location.reload(); }, 1000); // 1s delay so you can read the toast
 }
 
 document.getElementById('unlock-btn').addEventListener('click', attemptUnlock);
 document.getElementById('pin-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') attemptUnlock(); });
-document.getElementById('logout-btn').addEventListener('click', handleLogout);
+document.getElementById('logout-btn').addEventListener('click', () => handleLogout('manual'));
+
+
+// ==========================================
+// QUICK ADD LOGIC
+// ==========================================
+let quickAddTargetDate = "";
+
+function openQuickAddModal(dateStr) {
+    quickAddTargetDate = dateStr;
+    const dateObj = new Date(dateStr);
+    const displayDate = dateObj.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    
+    document.getElementById('quick-add-date-text').innerText = `Planning for: ${displayDate}`;
+    document.getElementById('quick-task-text').value = "";
+    
+    const modal = document.getElementById('quick-add-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => document.getElementById('quick-task-text').focus(), 100);
+}
+
+document.getElementById('quick-task-text').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') submitQuickTask();
+});
+
+async function submitQuickTask() {
+    const taskText = document.getElementById('quick-task-text').value.trim();
+    const subject = document.getElementById('quick-task-subject').value;
+    const btn = document.getElementById('quick-add-submit');
+    
+    if (!taskText) {
+        document.getElementById('quick-task-text').style.borderColor = 'var(--error)';
+        setTimeout(() => document.getElementById('quick-task-text').style.borderColor = 'var(--border)', 1500);
+        return;
+    }
+    
+    btn.innerHTML = '<span class="spinner"></span>';
+    btn.disabled = true;
+    
+    try {
+        await db.collection("dailyTargets").add({
+            task: taskText, subject: subject, date: quickAddTargetDate, completed: false, isRecurring: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast("Task scheduled successfully!", "success");
+        document.getElementById('quick-add-modal').style.display = 'none';
+        
+        loadGlanceData(); renderCalendar(); 
+    } catch (error) {
+        console.error("Error adding task:", error); showToast("Failed to add task.", "error");
+    } finally {
+        btn.innerHTML = 'Add'; btn.disabled = false;
+    }
+}
 
 // ==========================================
 // UPGRADED ANIMATED CALENDAR WITH FIREBASE
@@ -458,7 +578,6 @@ async function renderCalendar() {
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     monthYearText.innerText = `${monthNames[currentMonth]} ${currentYear}`;
     
-    // Fetch Data
     const startStr = getLocalISOString(new Date(currentYear, currentMonth, 1));
     const endStr = getLocalISOString(new Date(currentYear, currentMonth + 1, 0));
     const dayStatus = {};
@@ -505,10 +624,20 @@ async function renderCalendar() {
         const checkDateStr = getLocalISOString(checkDate);
         const status = dayStatus[checkDateStr];
         
-        // 1. Time Travel Shortcut
-        dayDiv.onclick = () => window.location.href = `studydashboard.html?date=${checkDateStr}`;
+        let clickTimer = null;
+        dayDiv.addEventListener('click', (e) => {
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+                clickTimer = null;
+                openQuickAddModal(checkDateStr);
+            } else {
+                clickTimer = setTimeout(() => {
+                    clickTimer = null;
+                    window.location.href = `studydashboard.html?date=${checkDateStr}`;
+                }, 250);
+            }
+        });
         
-        // 2. Rich Tooltip Container
         const tooltip = document.createElement('div');
         tooltip.className = 'cal-tooltip';
         
@@ -519,22 +648,18 @@ async function renderCalendar() {
             } else if (status.total > 0 && status.completed === status.total) {
                 dayDiv.classList.add("completed-day");
                 
-                // 3. Visual Streak Connector Logic
                 const tomorrow = new Date(checkDate); tomorrow.setDate(tomorrow.getDate() + 1);
                 const tomorrowStatus = dayStatus[getLocalISOString(tomorrow)];
-                // Don't connect Saturday to Sunday visually
                 if (checkDate.getDay() !== 6 && tomorrowStatus && tomorrowStatus.total > 0 && tomorrowStatus.completed === tomorrowStatus.total) {
                     dayDiv.classList.add("streak-next");
                 }
                 
                 const yesterday = new Date(checkDate); yesterday.setDate(yesterday.getDate() - 1);
                 const yesterdayStatus = dayStatus[getLocalISOString(yesterday)];
-                // Don't connect Sunday backwards to Saturday visually
                 if (checkDate.getDay() !== 0 && yesterdayStatus && yesterdayStatus.total > 0 && yesterdayStatus.completed === yesterdayStatus.total) {
                     dayDiv.classList.add("streak-prev");
                 }
                 
-                // Set Tooltip
                 const uniqueDone = [...new Set(status.doneTasks)].join(', ');
                 tooltip.innerHTML = `<div class="tooltip-title success"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 100% Completed!</div>
                                      <div class="tooltip-row"><span>Finished:</span> ${uniqueDone}</div>
@@ -553,11 +678,10 @@ async function renderCalendar() {
         } else {
             tooltip.innerHTML = `<div class="tooltip-title" style="color: #64748b;">📅 No Data</div>
                                  <div class="tooltip-row" style="margin-top:0;">No targets were set for this day.</div>
-                                 <div class="tooltip-hint">Click to plan this day</div>`;
+                                 <div class="tooltip-hint">Double-click to quick add</div>`;
         }
         
         dayDiv.appendChild(tooltip);
-        
         dayDiv.style.animationDelay = `${animationDelay}s`;
         animationDelay += 0.015;
         
@@ -575,7 +699,7 @@ document.getElementById("next-month").addEventListener("click", () => { currentM
 // Load on Auth
 if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
     document.getElementById('pin-screen').style.display = 'none'; document.getElementById('main-content').style.display = 'block';
-    setGreetingAndQuote(); loadGlanceData(); renderCalendar();
+    setGreetingAndQuote(); loadGlanceData(); renderCalendar(); resetInactivityTimer();
 }
 
 // --- THEME LOGIC ---
