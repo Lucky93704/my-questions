@@ -103,10 +103,9 @@ header p { color: #64748b; font-size: 1.1rem; }
 #unlock-btn:hover:not(:disabled) { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 
 /* Logout Button Styles */
-.logout-container { text-align: center; margin-top: 40px; }
-#logout-btn { background: transparent; color: var(--error); border: 2px solid var(--error); padding: 10px 20px; font-size: 1rem; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 140px;}
-#logout-btn:hover:not(:disabled) { background: var(--error); color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
-
+.logout-container { position: absolute; top: 20px; left: 20px; margin: 0; z-index: 1000; }
+#logout-btn { background: var(--card-bg); color: var(--error); border: 1px solid var(--border); padding: 10px 18px; font-size: 0.95rem; border-radius: 30px; cursor: pointer; transition: 0.3s; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); min-width: auto; }
+#logout-btn:hover:not(:disabled) { background: var(--error); color: white; border-color: var(--error); transform: translateY(-3px); box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
 /* Modal Styles */
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeInOverlay 0.3s ease; }
 .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
