@@ -79,7 +79,15 @@ header p { color: #64748b; font-size: 1.1rem; }
 
 /* Notepad Styles */
 .notepad-widget { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.2s; display: flex; flex-direction: column; box-sizing: border-box; }
-.notepad-header { color: var(--primary); font-size: 1.2rem; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+.notepad-header { color: var(--primary); font-size: 1.2rem; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.notepad-title-group { display: flex; align-items: center; gap: 8px; }
+.notepad-actions { display: flex; gap: 8px; align-items: center; }
+.notepad-action-btn { background: transparent; border: 1px solid transparent; color: #64748b; cursor: pointer; padding: 6px; border-radius: 8px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+.notepad-action-btn:hover { background: var(--bg); color: var(--primary); border-color: var(--border); transform: translateY(-2px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.sync-status { display: flex; align-items: center; margin-right: 5px; color: #94a3b8; transition: 0.3s; font-size: 0.8rem; gap: 4px; font-weight: normal; }
+.sync-status.saving { color: #f59e0b; }
+.sync-status.saved { color: var(--success); }
+.sync-status.error { color: var(--error); }
 .notepad-textarea { flex-grow: 1; width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; color: var(--text); font-family: inherit; font-size: 0.95rem; resize: none; outline: none; box-sizing: border-box; transition: 0.3s; min-height: 250px; line-height: 1.5; }
 .notepad-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
@@ -269,8 +277,24 @@ header p { color: #64748b; font-size: 1.1rem; }
 
         <div class="notepad-widget">
             <div class="notepad-header">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                Quick Notes
+                <div class="notepad-title-group">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Quick Notes
+                </div>
+                <div class="notepad-actions">
+                    <span id="sync-status" class="sync-status" title="Sync Status">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="9 16 12 19 16 14"></polyline></svg>
+                    </span>
+                    <button class="notepad-action-btn" id="btn-timestamp" title="Insert Timestamp" onclick="insertTimestamp()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </button>
+                    <button class="notepad-action-btn" id="btn-copy-note" title="Copy All" onclick="copyNotepad()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                    <button class="notepad-action-btn" id="btn-clear-note" title="Clear Notes" onclick="clearNotepad()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
             </div>
             <textarea id="quick-notepad" class="notepad-textarea" placeholder="Jot down formulas, ideas, or quick reminders..."></textarea>
         </div>
@@ -518,7 +542,7 @@ function attemptUnlock() {
             document.getElementById('main-content').classList.add('anim-fade-in');
             document.getElementById('logout-wrapper').classList.add('anim-fade-in');
             
-            setGreetingAndQuote(); loadGlanceData(); renderCalendar(); 
+            setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad();
         }, 800);
     } else {
         showToast('Incorrect PIN.', 'error');
@@ -746,17 +770,102 @@ document.getElementById("prev-month").addEventListener("click", () => { currentM
 document.getElementById("next-month").addEventListener("click", () => { currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} renderCalendar(); });
 
 // ==========================================
-// NOTEPAD LOGIC (LOCAL STORAGE SAVING)
+// NOTEPAD LOGIC (FIREBASE SYNC & UTILITIES)
 // ==========================================
 const quickNotepad = document.getElementById('quick-notepad');
+const syncStatus = document.getElementById('sync-status');
+let noteSaveTimeout;
+
+const iconCloudCheck = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="9 16 12 19 16 14"></polyline></svg> Saved`;
+const iconCloudSync = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="8 14 12 18 16 14"></polyline><line x1="12" y1="18" x2="12" y2="10"></line></svg> Saving...`;
+const iconCloudError = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><line x1="12" y1="17" x2="12" y2="17.01"></line><line x1="12" y1="13" x2="12" y2="15"></line></svg> Error`;
+
+async function loadNotepad() {
+    try {
+        const doc = await db.collection('portalData').doc('quickNotes').get();
+        if (doc.exists) {
+            quickNotepad.value = doc.data().content || '';
+        } else {
+            quickNotepad.value = '';
+        }
+        syncStatus.innerHTML = iconCloudCheck;
+        syncStatus.className = 'sync-status saved';
+    } catch (e) {
+        console.error("Error loading notes:", e);
+        syncStatus.innerHTML = iconCloudError;
+        syncStatus.className = 'sync-status error';
+    }
+}
+
+async function saveNotepadToFirebase() {
+    try {
+        syncStatus.innerHTML = iconCloudSync;
+        syncStatus.className = 'sync-status saving';
+        
+        await db.collection('portalData').doc('quickNotes').set({
+            content: quickNotepad.value,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        syncStatus.innerHTML = iconCloudCheck;
+        syncStatus.className = 'sync-status saved';
+    } catch (e) {
+        console.error("Error saving notes:", e);
+        syncStatus.innerHTML = iconCloudError;
+        syncStatus.className = 'sync-status error';
+        showToast("Failed to sync notes to cloud.", "error");
+    }
+}
+
 if (quickNotepad) {
-    // Load existing notes on startup
-    quickNotepad.value = localStorage.getItem('study_portal_quick_notes') || '';
-    
-    // Auto-save on typing
     quickNotepad.addEventListener('input', () => {
-        localStorage.setItem('study_portal_quick_notes', quickNotepad.value);
+        syncStatus.innerHTML = `<span class="spinner" style="width:12px; height:12px; border-width: 2px; margin-right: 4px;"></span> Saving...`;
+        syncStatus.className = 'sync-status saving';
+        
+        clearTimeout(noteSaveTimeout);
+        // Debounce: Wait 1.5 seconds after typing stops before saving to Firebase
+        noteSaveTimeout = setTimeout(() => {
+            saveNotepadToFirebase();
+        }, 1500); 
     });
+}
+
+// Action Bar Utilities
+function insertTimestamp() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    const stamp = `\n[${dateStr} - ${timeStr}] `;
+    
+    quickNotepad.value += stamp;
+    quickNotepad.focus();
+    quickNotepad.selectionStart = quickNotepad.value.length;
+    quickNotepad.selectionEnd = quickNotepad.value.length;
+    
+    clearTimeout(noteSaveTimeout);
+    saveNotepadToFirebase();
+}
+
+function copyNotepad() {
+    if (!quickNotepad.value.trim()) {
+        showToast("Notepad is empty!", "info");
+        return;
+    }
+    navigator.clipboard.writeText(quickNotepad.value).then(() => {
+        showToast("Notes copied to clipboard!", "success");
+    }).catch(err => {
+        console.error("Copy failed", err);
+        showToast("Failed to copy notes.", "error");
+    });
+}
+
+function clearNotepad() {
+    if (confirm("Are you sure you want to clear your notes?")) {
+        quickNotepad.value = "";
+        clearTimeout(noteSaveTimeout);
+        saveNotepadToFirebase();
+        showToast("Notes cleared.", "success");
+    }
 }
 
 // ==========================================
@@ -767,7 +876,7 @@ if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isU
     document.getElementById('main-content').style.display = 'block';
     document.getElementById('logout-wrapper').style.display = 'block';
     
-    setGreetingAndQuote(); loadGlanceData(); renderCalendar(); resetInactivityTimer();
+    setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad(); resetInactivityTimer();
 }
 
 // ==========================================
