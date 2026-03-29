@@ -513,7 +513,17 @@ function getLocalISOString(date) {
 }
 
 function initDate() {
-    document.getElementById('target-date').value = getLocalISOString(new Date());
+    // Check if we time-traveled here from the home screen calendar
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
+    
+    if (dateParam) {
+        // If a date was passed in the URL, set the calendar to that date
+        document.getElementById('target-date').value = dateParam;
+    } else {
+        // Otherwise, default to today
+        document.getElementById('target-date').value = getLocalISOString(new Date());
+    }
 }
 
 function updateDateHeader(selectedDateStr) {
