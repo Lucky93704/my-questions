@@ -27,8 +27,8 @@ a { text-decoration: none; }
 .back-btn { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-weight: bold; transition: 0.2s; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
 .back-btn:hover { border-color: var(--primary); color: var(--primary); }
 
-header { text-align: center; margin-bottom: 40px; }
-header h1 { color: var(--primary); font-size: 2.2rem; margin: 0; }
+header { text-align: center; margin-bottom: 40px; display: flex; flex-direction: column; align-items: center;}
+header h1 { color: var(--primary); font-size: 2.2rem; margin: 0; display: inline-flex; align-items: center; gap: 10px; }
 header p { color: #64748b; font-size: 1.1rem; }
 
 /* Loading State */
@@ -55,8 +55,44 @@ header p { color: #64748b; font-size: 1.1rem; }
 .progress-bar-container { width: 100%; background-color: var(--border); border-radius: 8px; height: 20px; overflow: hidden; margin-bottom: 10px; }
 .progress-bar-fill { height: 100%; background-color: var(--success); width: 0%; transition: width 0.5s ease-in-out; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; font-weight: bold;}
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
-.stat-box { background: var(--bg); border: 1px solid var(--border); padding: 15px; border-radius: 8px; text-align: center; }
+.stat-box { background: var(--bg); border: 1px solid var(--border); padding: 15px; border-radius: 8px; text-align: center; transition: 0.2s;}
+.stat-box-label { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.9rem; color: #64748b; margin-bottom: 5px; }
+.stat-box-label svg { width: 16px; height: 16px; stroke-width: 2; }
 .stat-box span { display: block; font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+
+/* --- Tooltip Styles for In Progress Card --- */
+.tooltip-container { position: relative; cursor: pointer; }
+.tooltip-container:hover { border-color: var(--warning); background-color: rgba(245, 158, 11, 0.05); }
+.tooltip-content {
+    visibility: hidden;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    padding: 15px;
+    border-radius: 8px;
+    width: max-content;
+    max-width: 320px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 100;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    text-align: left;
+    opacity: 0;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+.tooltip-container:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+}
+.tooltip-content ul { margin: 0; padding-left: 18px; }
+.tooltip-content li { margin-bottom: 8px; font-weight: 500; color: var(--warning); }
+.tooltip-content .subject-label { font-size: 0.75rem; color: #64748b; font-weight: normal; display: block; margin-top: 2px; }
 
 /* Subject Analysis Grid */
 .subject-analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 30px; }
@@ -75,7 +111,8 @@ header p { color: #64748b; font-size: 1.1rem; }
 
 /* Subject Tabs & Filters */
 .subject-tabs { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-.tab-btn { background: var(--card-bg); border: 1px solid var(--border); padding: 10px 20px; border-radius: 8px; cursor: pointer; color: var(--text); font-weight: bold; transition: 0.2s; white-space: nowrap; }
+.tab-btn { background: var(--card-bg); border: 1px solid var(--border); padding: 10px 20px; border-radius: 8px; cursor: pointer; color: var(--text); font-weight: bold; transition: 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px;}
+.tab-btn svg { width: 18px; height: 18px; stroke-width: 2; stroke: currentColor; fill: none; }
 .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 .tab-btn:hover:not(.active) { border-color: var(--primary); }
 
@@ -92,7 +129,8 @@ header p { color: #64748b; font-size: 1.1rem; }
 /* Table Styles */
 table { width: 100%; border-collapse: collapse; margin-top: 5px; text-align: left; min-width: 600px;}
 th, td { padding: 12px; border-bottom: 1px solid var(--border); }
-th { color: #64748b; font-weight: 600; font-size: 0.95rem;}
+th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
+.th-content { display: inline-flex; align-items: center; gap: 6px; }
 
 select, input[type="number"], input[type="date"] { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px; border-radius: 4px; outline: none; width: 100%; font-family: inherit;}
 select:focus, input:focus { border-color: var(--primary); }
@@ -182,7 +220,10 @@ select:focus, input:focus { border-color: var(--primary); }
 </div>
 
 <header>
-    <h1>Syllabus Tracking Dashboard</h1>
+    <h1>
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+        Syllabus Tracking Dashboard
+    </h1>
     <p>Target weaknesses, balance subjects, and track retention</p>
 </header>
 
@@ -194,15 +235,47 @@ select:focus, input:focus { border-color: var(--primary); }
 <div id="dashboard-content">
     <div class="overview-wrapper">
         <div class="progress-overview">
-            <h3>Overall Completion <span class="sync-status" id="sync-indicator"><span class="sync-dot"></span> Saved to Cloud</span></h3>
+            <h3>
+                <span style="display:inline-flex; align-items:center; gap:8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"></path></svg>
+                    Overall Completion
+                </span>
+                <span class="sync-status" id="sync-indicator"><span class="sync-dot"></span> Saved to Cloud</span>
+            </h3>
             <div class="progress-bar-container">
                 <div class="progress-bar-fill" id="overall-progress">0%</div>
             </div>
             <div class="stats-grid">
-                <div class="stat-box">Total Topics<span id="total-topics">0</span></div>
-                <div class="stat-box">Completed<span id="completed-topics">0</span></div>
-                <div class="stat-box">In Progress<span id="doing-topics">0</span></div>
-                <div class="stat-box">Total Revisions<span id="total-revisions">0</span></div>
+                <div class="stat-box">
+                    <div class="stat-box-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="8 6 21 6"></polyline><polyline points="8 12 21 12"></polyline><polyline points="8 18 21 18"></polyline><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                        Total Topics
+                    </div>
+                    <span id="total-topics">0</span>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        Completed
+                    </div>
+                    <span id="completed-topics">0</span>
+                </div>
+                <div class="stat-box tooltip-container">
+                    <div class="stat-box-label" style="color: var(--warning);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        In Progress
+                    </div>
+                    <span id="doing-topics" style="color: var(--warning);">0</span>
+                    <div class="tooltip-content" id="doing-topics-list">
+                        </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        Revisions
+                    </div>
+                    <span id="total-revisions">0</span>
+                </div>
             </div>
         </div>
         <div class="chart-container">
@@ -213,7 +286,10 @@ select:focus, input:focus { border-color: var(--primary); }
     </div>
 
     <div class="history-chart-container">
-        <h3>📈 30-Day Completion History</h3>
+        <h3>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> 
+            30-Day Completion History
+        </h3>
         <div style="position: relative; height: 220px; width: 100%;">
             <canvas id="historyChart"></canvas>
         </div>
@@ -222,10 +298,18 @@ select:focus, input:focus { border-color: var(--primary); }
     <div class="subject-analysis-grid" id="subject-analysis-grid"></div>
 
     <div class="subject-tabs">
-        <button class="tab-btn active" onclick="switchTab('maths')">Maths</button>
-        <button class="tab-btn" onclick="switchTab('english')">English</button>
-        <button class="tab-btn" onclick="switchTab('gk')">General Knowledge</button>
-        <button class="tab-btn" onclick="switchTab('reasoning')">Reasoning</button>
+        <button class="tab-btn active" onclick="switchTab('maths')">
+            <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="8" y1="10" x2="16" y2="10"></line><line x1="8" y1="14" x2="12" y2="14"></line><line x1="8" y1="18" x2="12" y2="18"></line></svg> Maths
+        </button>
+        <button class="tab-btn" onclick="switchTab('english')">
+            <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg> English
+        </button>
+        <button class="tab-btn" onclick="switchTab('gk')">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> General Knowledge
+        </button>
+        <button class="tab-btn" onclick="switchTab('reasoning')">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg> Reasoning
+        </button>
     </div>
 
     <div class="filter-bar">
@@ -453,11 +537,11 @@ function renderTables() {
             <table>
                 <thead>
                     <tr>
-                        <th>Topic</th>
-                        <th style="width: 130px;">Status</th>
-                        <th style="width: 130px;">Mastery</th>
-                        <th style="width: 80px; text-align:center;">Revisions</th>
-                        <th style="width: 140px;">Last Revised</th>
+                        <th><span class="th-content"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Topic</span></th>
+                        <th style="width: 130px;"><span class="th-content"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Status</span></th>
+                        <th style="width: 130px;"><span class="th-content"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Mastery</span></th>
+                        <th style="width: 100px; text-align:center;"><span class="th-content" style="justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg> Revisions</span></th>
+                        <th style="width: 150px;"><span class="th-content"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Last Revised</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -480,7 +564,7 @@ function renderTables() {
         if (activeSort === 'most') displayData.sort((a,b) => b.revision - a.revision);
 
         if (displayData.length === 0) {
-            tableHTML += `<tr><td colspan="5" style="text-align:center; color:#64748b;">No topics match this filter.</td></tr>`;
+            tableHTML += `<tr><td colspan="5" style="text-align:center; color:#64748b; padding: 20px;">No topics match this filter.</td></tr>`;
         }
 
         let currentCategory = "";
@@ -609,6 +693,8 @@ function updateAnalytics() {
     const analysisGrid = document.getElementById('subject-analysis-grid');
     analysisGrid.innerHTML = ''; 
 
+    let doingTopicsHTML = ''; // To gather the tooltip data
+
     for (const subject in syllabusData) {
         if (subject === 'history') continue; 
         
@@ -617,7 +703,10 @@ function updateAnalytics() {
         syllabusData[subject].forEach(item => {
             total++; subjTotal++;
             if (item.status === 'done') { completed++; subjDone++; }
-            if (item.status === 'doing') doing++;
+            if (item.status === 'doing') { 
+                doing++; 
+                doingTopicsHTML += `<li>${item.topic} <span class="subject-label">${displayNames[subject]}</span></li>`;
+            }
             if (item.mastery === 'weak') weakCount++;
             if (item.mastery === 'average') averageCount++;
             if (item.mastery === 'strong') strongCount++;
@@ -655,6 +744,14 @@ function updateAnalytics() {
     document.getElementById('doing-topics').innerText = doing;
     document.getElementById('total-revisions').innerText = totalRevs;
     
+    // Update Tooltip content
+    const tooltipEl = document.getElementById('doing-topics-list');
+    if (doing === 0) {
+        tooltipEl.innerHTML = '<div style="color: #64748b; text-align:center;">No topics currently in progress.</div>';
+    } else {
+        tooltipEl.innerHTML = `<ul>${doingTopicsHTML}</ul>`;
+    }
+
     const progressBar = document.getElementById('overall-progress');
     progressBar.style.width = percent + '%';
     progressBar.innerText = percent > 5 ? percent + '%' : '';
@@ -801,7 +898,7 @@ function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     
     document.getElementById(tabId).classList.add('active');
-    event.target.classList.add('active');
+    event.currentTarget.classList.add('active');
 }
 
 // Initialize on load
