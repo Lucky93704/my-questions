@@ -363,7 +363,7 @@ header p { color: #64748b; font-size: 1.1rem; }
 
             <textarea id="quick-notepad" class="notepad-textarea" placeholder="Note down formulas, ideas, or quick reminders..." spellcheck="false"></textarea>
             
-            <div id="note-stats" style="font-size: 0.8rem; color: #64748b; text-align: right; margin-top: 8px; font-weight: 500;">0 words | 0 chars</div>
+            <div id="note-stats" style="font-size: 0.8rem; color: #64748b; text-align: right; margin-top: 8px; font-weight: 500;">0 words | 0 characters</div>
         </div>
     </div>
 
@@ -452,6 +452,17 @@ header p { color: #64748b; font-size: 1.1rem; }
 
 <script>
 // ==========================================
+// GUEST MODE PURGE (48-HOUR TIMEOUT)
+// ==========================================
+function checkGuestExpiry() {
+    const lastActive = parseInt(localStorage.getItem('guestLastActive') || '0');
+    if (lastActive && (Date.now() - lastActive > 48 * 60 * 60 * 1000)) {
+        ['guestTargets', 'guestNotes', 'guestHistory', 'guestXP', 'guestLastActive'].forEach(k => localStorage.removeItem(k));
+    }
+}
+checkGuestExpiry(); // Run immediately on script load
+
+// ==========================================
 // TOAST NOTIFICATION SYSTEM
 // ==========================================
 function showToast(message, type = 'info') {
@@ -475,7 +486,7 @@ function showToast(message, type = 'info') {
 }
 
 // ==========================================
-// CUSTOM CONFIRM MODAL LOGIC (REPLACES BROWSER ALERT/CONFIRM)
+// CUSTOM CONFIRM MODAL LOGIC
 // ==========================================
 function showCustomConfirm(message, title = "Confirm Action", isDanger = true) {
     return new Promise((resolve) => {
@@ -494,14 +505,13 @@ function showCustomConfirm(message, title = "Confirm Action", isDanger = true) {
             okBtn.innerText = 'Yes, Delete';
         } else {
             titleEl.style.color = 'var(--primary)';
-            okBtn.style.background = 'var(--primary)'; // Inline override for non-danger buttons
+            okBtn.style.background = 'var(--primary)';
             titleEl.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ${title}`;
             okBtn.innerText = 'Confirm';
         }
 
         modal.style.display = 'flex';
 
-        // Cleanup handlers
         const cleanup = () => {
             modal.style.display = 'none';
             okBtn.removeEventListener('click', handleOk);
@@ -537,7 +547,7 @@ function getLocalISOString(date) {
     return (new Date(date - offset)).toISOString().split('T')[0];
 }
 
-// Global state for Guest mode and Active Sessions
+// Global state
 let isGuestMode = sessionStorage.getItem('isGuest') === 'true';
 let currentSessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
 let activeSessionsArray = [];
@@ -570,7 +580,6 @@ function getDeviceName() {
 
 function initSession() {
     if (isGuestMode) return;
-    
     if (!currentSessionId) {
         currentSessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         if (localStorage.getItem('isUnlocked') === 'true') {
@@ -597,16 +606,10 @@ function listenToSessions() {
     db.collection('portalData').doc('activeSessions').onSnapshot((doc) => {
         if (doc.exists) {
             activeSessionsArray = doc.data().sessions || [];
-            
-            // Check if we were remotely logged out
             if (currentSessionId && !isLoggingOut) {
                 const stillActive = activeSessionsArray.find(s => s.id === currentSessionId);
-                if (!stillActive) {
-                    handleLogout('remote');
-                }
+                if (!stillActive) { handleLogout('remote'); }
             }
-            
-            // Update UI if modal is currently open
             if(document.getElementById('linked-devices-modal').style.display === 'flex') {
                 renderLinkedDevices();
             }
@@ -636,7 +639,6 @@ function renderLinkedDevices() {
         return;
     }
 
-    // Sort so current device is always at the top
     const sortedSessions = [...activeSessionsArray].sort((a, b) => {
         if(a.id === currentSessionId) return -1;
         if(b.id === currentSessionId) return 1;
@@ -678,7 +680,7 @@ const xpRef = db.collection("userStats").doc("global");
 
 function initXP() {
     if (isGuestMode) {
-        currentXP = 0;
+        currentXP = parseInt(localStorage.getItem('guestXP') || '0');
         renderXP();
         return;
     }
@@ -707,21 +709,29 @@ function renderXP() {
 
 // --- AT A GLANCE LOGIC ---
 async function loadGlanceData() {
-    if (isGuestMode) {
-        document.getElementById('glance-targets').innerHTML = `0 / 0`; 
-        document.getElementById('glance-targets-subtext').innerHTML = `No targets in Guest Mode`;
-        document.getElementById('glance-streak').innerText = `0 Days`;
-        document.getElementById('glance-streak-subtext').innerHTML = `Personal Best: <strong>0 Days</strong>`;
-        return;
-    }
-
     try {
         const todayStr = getLocalISOString(new Date());
-        const targetSnap = await db.collection("dailyTargets").where("date", "==", todayStr).get();
-        let totalTasks = 0; let completedTasks = 0; let isHoliday = false;
+        const startLimit = new Date(); startLimit.setDate(startLimit.getDate() - 90);
+        const startLimitStr = getLocalISOString(startLimit);
+        
+        let todayTargets = [];
+        let streakTargets = [];
 
-        targetSnap.forEach(doc => {
-            const data = doc.data();
+        if (isGuestMode) {
+            const allGuestTargets = JSON.parse(localStorage.getItem('guestTargets') || '[]');
+            todayTargets = allGuestTargets.filter(t => t.date === todayStr);
+            streakTargets = allGuestTargets.filter(t => t.date >= startLimitStr && t.date <= todayStr);
+        } else {
+            const todaySnap = await db.collection("dailyTargets").where("date", "==", todayStr).get();
+            todaySnap.forEach(doc => todayTargets.push(doc.data()));
+            
+            const streakSnap = await db.collection("dailyTargets").where("date", ">=", startLimitStr).where("date", "<=", todayStr).get();
+            streakSnap.forEach(doc => streakTargets.push(doc.data()));
+        }
+
+        let totalTasks = 0; let completedTasks = 0; let isHoliday = false;
+        
+        todayTargets.forEach(data => {
             if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
                 isHoliday = true;
             } else {
@@ -743,14 +753,8 @@ async function loadGlanceData() {
             if (pct === 100) targetEl.style.color = 'var(--success)';
         }
 
-        const startLimit = new Date(); startLimit.setDate(startLimit.getDate() - 90);
-        const startLimitStr = getLocalISOString(startLimit);
-
-        const streakSnap = await db.collection("dailyTargets").where("date", ">=", startLimitStr).where("date", "<=", todayStr).get();
         const daysData = {};
-        
-        streakSnap.forEach(doc => {
-            const data = doc.data();
+        streakTargets.forEach(data => {
             if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
                 if (!daysData[data.date]) daysData[data.date] = { total: 1, completed: 0 };
             } else {
@@ -781,9 +785,7 @@ async function loadGlanceData() {
             
             if (isComplete) { 
                 tempStreak++; 
-                if (tempStreak > maxStreak) {
-                    maxStreak = tempStreak;
-                }
+                if (tempStreak > maxStreak) { maxStreak = tempStreak; }
             } else { 
                 tempStreak = 0; 
             }
@@ -831,8 +833,11 @@ function resetInactivityTimer() {
     clearTimeout(inactivityTimer);
     if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true' || isGuestMode) {
         
-        // Track the last active time constantly while interacting with the page
-        localStorage.setItem('lastActiveTime', Date.now().toString());
+        if (isGuestMode) {
+            localStorage.setItem('guestLastActive', Date.now().toString());
+        } else {
+            localStorage.setItem('lastActiveTime', Date.now().toString());
+        }
         
         inactivityTimer = setTimeout(() => {
             handleLogout('auto');
@@ -848,7 +853,7 @@ function resetInactivityTimer() {
 // Ctrl+L / Cmd+L Shortcut to Lock
 document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
-        e.preventDefault(); // Prevent browser from selecting URL bar
+        e.preventDefault(); 
         if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true' || isGuestMode) {
             handleLogout('manual');
         }
@@ -875,7 +880,7 @@ function launchPortal() {
 }
 
 function attemptUnlock() {
-    if (document.getElementById('pin-input').value === "24122009") {
+    if (document.getElementById('pin-input').value === "24122008") {
         document.getElementById('unlock-btn').innerHTML = '<span class="spinner"></span> Unlocking...';
         const rem = document.getElementById('remember-me').checked;
         
@@ -896,6 +901,7 @@ function attemptUnlock() {
 document.getElementById('guest-btn').addEventListener('click', () => {
     isGuestMode = true;
     sessionStorage.setItem('isGuest', 'true');
+    localStorage.setItem('guestLastActive', Date.now().toString());
     showToast('Logged in as Guest', 'info');
     setTimeout(launchPortal, 300);
 });
@@ -904,7 +910,6 @@ function handleLogout(type = 'manual') {
     isLoggingOut = true;
     document.getElementById('logout-btn').innerHTML = '<span class="spinner" style="border-top-color: var(--error);"></span> Locking...';
     
-    // If not remote, remove the session from Firestore
     if (currentSessionId && !isGuestMode && type !== 'remote') {
         removeSession(currentSessionId);
     }
@@ -971,8 +976,14 @@ async function submitQuickTask() {
     }
 
     if (isGuestMode) {
-        showToast("Guest mode active: Cannot save targets.", "error");
+        const allGuestTargets = JSON.parse(localStorage.getItem('guestTargets') || '[]');
+        allGuestTargets.push({
+            task: taskText, subject: subject, date: quickAddTargetDate, completed: false, isRecurring: false, timestamp: Date.now()
+        });
+        localStorage.setItem('guestTargets', JSON.stringify(allGuestTargets));
+        showToast("Task scheduled locally (Guest)!", "success");
         document.getElementById('quick-add-modal').style.display = 'none';
+        loadGlanceData(); renderCalendar();
         return;
     }
     
@@ -1027,33 +1038,38 @@ async function renderCalendar() {
     
     const startStr = getLocalISOString(new Date(currentYear, currentMonth, 1));
     const endStr = getLocalISOString(new Date(currentYear, currentMonth + 1, 0));
-    const dayStatus = {};
     
-    if (!isGuestMode) {
+    let calendarTargets = [];
+    if (isGuestMode) {
+        const allGuestTargets = JSON.parse(localStorage.getItem('guestTargets') || '[]');
+        calendarTargets = allGuestTargets.filter(t => t.date >= startStr && t.date <= endStr);
+    } else {
         try {
             const snapshot = await db.collection("dailyTargets").where("date", ">=", startStr).where("date", "<=", endStr).get();
-            snapshot.forEach(doc => {
-                const data = doc.data(); const dateStr = data.date;
-                
-                if (!dayStatus[dateStr]) {
-                    dayStatus[dateStr] = { total: 0, completed: 0, isHoliday: false, reason: "", doneTasks: [], missedTasks: [] };
-                }
-                
-                if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
-                    dayStatus[dateStr].isHoliday = true;
-                    dayStatus[dateStr].reason = data.task ? data.task.replace("Holiday: ", "") : "Rest Day";
-                } else {
-                    dayStatus[dateStr].total++;
-                    if (data.completed) {
-                        dayStatus[dateStr].completed++;
-                        dayStatus[dateStr].doneTasks.push(data.subject);
-                    } else {
-                        dayStatus[dateStr].missedTasks.push(data.subject);
-                    }
-                }
-            });
+            snapshot.forEach(doc => calendarTargets.push(doc.data()));
         } catch (e) { console.error("Error fetching calendar data:", e); }
     }
+
+    const dayStatus = {};
+    calendarTargets.forEach(data => {
+        const dateStr = data.date;
+        if (!dayStatus[dateStr]) {
+            dayStatus[dateStr] = { total: 0, completed: 0, isHoliday: false, reason: "", doneTasks: [], missedTasks: [] };
+        }
+        
+        if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
+            dayStatus[dateStr].isHoliday = true;
+            dayStatus[dateStr].reason = data.task ? data.task.replace("Holiday: ", "") : "Rest Day";
+        } else {
+            dayStatus[dateStr].total++;
+            if (data.completed) {
+                dayStatus[dateStr].completed++;
+                dayStatus[dateStr].doneTasks.push(data.subject);
+            } else {
+                dayStatus[dateStr].missedTasks.push(data.subject);
+            }
+        }
+    });
 
     daysContainer.innerHTML = ""; 
     let animationDelay = 0;
@@ -1082,8 +1098,7 @@ async function renderCalendar() {
             } else {
                 clickTimer = setTimeout(() => {
                     clickTimer = null;
-                    if (!isGuestMode) window.location.href = `studydashboard.html?date=${checkDateStr}`;
-                    else showToast('Access denied in Guest mode.', 'error');
+                    window.location.href = `studydashboard.html?date=${checkDateStr}`;
                 }, 250);
             }
         });
@@ -1160,14 +1175,14 @@ const iconCloudError = `<svg width="16" height="16" viewBox="0 0 24 24" fill="no
 
 function updateNoteStats() {
     const text = quickNotepad.value;
-    const chars = text.length;
+    const characters = text.length;
     const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-    document.getElementById('note-stats').innerText = `${words} words | ${chars} chars`;
+    document.getElementById('note-stats').innerText = `${words} words | ${characters} characters`;
 }
 
 function loadHistory() {
     if (isGuestMode) {
-        deletedNotesHistory = [];
+        deletedNotesHistory = JSON.parse(localStorage.getItem('guestHistory') || '[]');
         return;
     }
     db.collection('portalData').doc('noteHistory').onSnapshot((doc) => {
@@ -1183,7 +1198,10 @@ async function saveHistory(noteContent) {
     deletedNotesHistory.unshift({ text: noteContent, time: timestamp });
     if(deletedNotesHistory.length > 5) deletedNotesHistory.pop();
     
-    if (isGuestMode) return; // Keep locally in array, but don't save to DB
+    if (isGuestMode) {
+        localStorage.setItem('guestHistory', JSON.stringify(deletedNotesHistory));
+        return; 
+    }
 
     try {
         await db.collection('portalData').doc('noteHistory').set({ history: deletedNotesHistory });
@@ -1192,9 +1210,9 @@ async function saveHistory(noteContent) {
 
 function loadNotepad() {
     if (isGuestMode) {
-        quickNotepad.value = '';
-        syncStatus.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg> Offline (Guest)`;
-        syncStatus.className = 'sync-status error';
+        quickNotepad.value = localStorage.getItem('guestNotes') || '';
+        syncStatus.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg> Saved Locally (Guest)`;
+        syncStatus.className = 'sync-status saved';
         updateNoteStats();
         loadHistory();
         return;
@@ -1230,7 +1248,9 @@ function loadNotepad() {
 
 async function saveNotepadToFirebase() {
     if (isGuestMode) {
-        syncStatus.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg> Offline (Guest)`;
+        localStorage.setItem('guestNotes', quickNotepad.value);
+        syncStatus.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg> Saved Locally (Guest)`;
+        syncStatus.className = 'sync-status saved';
         return; 
     }
 
@@ -1260,10 +1280,13 @@ if (quickNotepad) {
         if (!isGuestMode) {
             syncStatus.innerHTML = `<span class="spinner" style="width:12px; height:12px; border-width: 2px; margin-right: 4px;"></span> Saving...`;
             syncStatus.className = 'sync-status saving';
+        } else {
+            syncStatus.innerHTML = `<span class="spinner" style="width:12px; height:12px; border-width: 2px; margin-right: 4px;"></span> Saving locally...`;
+            syncStatus.className = 'sync-status saving';
         }
         
         clearTimeout(noteSaveTimeout);
-        // Debounce: Wait 1.5 seconds after typing stops before saving to Firebase
+        // Debounce: Wait 1.5 seconds after typing stops before saving
         noteSaveTimeout = setTimeout(() => {
             saveNotepadToFirebase();
         }, 1500); 
