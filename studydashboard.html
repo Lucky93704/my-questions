@@ -56,7 +56,7 @@ svg { fill: currentColor; }
 .add-task-form input[type="text"] { flex: 2; min-width: 250px; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s;}
 .add-task-form input[type="text"]:focus { border-color: var(--target); }
 .add-task-form select { flex: 1; min-width: 120px; padding: 12px; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 1rem; outline: none; cursor: pointer; }
-.add-btn { background: var(--target); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; white-space: nowrap;}
+.add-btn { background: var(--target); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px;}
 .add-btn:hover { background: var(--target-hover); transform: translateY(-2px); }
 .add-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
@@ -91,6 +91,12 @@ svg { fill: currentColor; }
 [data-theme="dark"] .subj-GK { background: #14532d; color: #bbf7d0; }
 [data-theme="dark"] .subj-Reasoning { background: #581c87; color: #e9d5ff; }
 [data-theme="dark"] .subj-Mock { background: #7f1d1d; color: #fecaca; }
+
+/* Reflection Box Styles */
+.reflection-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s; }
+.reflection-header { display: flex; justify-content: space-between; align-items: center; }
+.reflection-header h3 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; color: var(--target); }
+#reflection-content { padding: 12px 15px; background: var(--bg); border-radius: 8px; border: 1px dashed var(--border); }
 
 @keyframes holidayBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
 .holiday-banner { background: var(--holiday-bg); color: var(--holiday-text); padding: 30px 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); animation: holidayBreathe 3s ease-in-out infinite; display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -310,6 +316,25 @@ svg { fill: currentColor; }
     <div class="task-list" id="task-list">
         <div class="empty-state">Loading targets...</div>
     </div>
+
+    <div class="reflection-card" id="reflection-container" style="display: none;">
+        <div class="reflection-header">
+            <h3>
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/></svg> 
+                Daily Reflection
+            </h3>
+            <button class="icon-btn edit-btn" id="edit-reflection-btn" onclick="openReflectionDialog()" title="Edit Reflection" style="display: none;">
+                <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </button>
+        </div>
+        <div id="reflection-content">
+            <p class="empty-state" style="margin: 0; padding: 5px;">No reflection yet.</p>
+        </div>
+        <button class="add-btn" id="add-reflection-btn" onclick="openReflectionDialog()" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> 
+            Add Quick Note
+        </button>
+    </div>
 </div>
 
 <script>
@@ -327,6 +352,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let targetsUnsubscribe = null;
+let reflectionUnsubscribe = null;
+let currentReflection = "";
 let editingTargetId = null;
 let currentFilter = 'All';
 let previousPercentage = -1; 
@@ -353,7 +380,7 @@ window.addEventListener('click', function(event) {
     }
 });
 
-function showCustomDialog({ type = 'alert', title = 'Notice', message = '', placeholder = '' }) {
+function showCustomDialog({ type = 'alert', title = 'Notice', message = '', placeholder = '', defaultValue = '' }) {
     return new Promise((resolve) => {
         const overlay = document.getElementById('custom-dialog-overlay');
         const titleEl = document.getElementById('custom-dialog-title');
@@ -372,6 +399,7 @@ function showCustomDialog({ type = 'alert', title = 'Notice', message = '', plac
         if (type === 'prompt') {
             inputEl.style.display = 'block';
             inputEl.placeholder = placeholder;
+            inputEl.value = defaultValue;
             cancelBtn.style.display = 'inline-block';
         } else if (type === 'confirm') {
             cancelBtn.style.display = 'inline-block';
@@ -438,6 +466,59 @@ function setFilter(subject, btnElement) {
             task.classList.add('task-hidden');
         }
     });
+}
+
+function fetchReflection(date, isPastDate) {
+    const container = document.getElementById('reflection-container');
+    const content = document.getElementById('reflection-content');
+    const addBtn = document.getElementById('add-reflection-btn');
+    const editBtn = document.getElementById('edit-reflection-btn');
+
+    container.style.display = 'flex'; 
+
+    if (reflectionUnsubscribe) reflectionUnsubscribe();
+
+    reflectionUnsubscribe = db.collection("dailyReflections").doc(date)
+        .onSnapshot((doc) => {
+            if (doc.exists) {
+                currentReflection = doc.data().reflection;
+                content.innerHTML = `<p style="margin: 0; font-style: italic; color: var(--text); line-height: 1.5;">"${currentReflection}"</p>`;
+                addBtn.style.display = 'none';
+                editBtn.style.display = isPastDate ? 'none' : 'flex';
+            } else {
+                currentReflection = "";
+                content.innerHTML = isPastDate 
+                    ? `<p class="empty-state" style="margin:0; padding: 10px;">No reflection recorded for this day.</p>` 
+                    : `<p class="empty-state" style="margin:0; padding: 10px;">How did today go? Add a quick note.</p>`;
+                addBtn.style.display = isPastDate ? 'none' : 'flex';
+                editBtn.style.display = 'none';
+            }
+        }, (error) => {
+            console.error("Error fetching reflection:", error);
+        });
+}
+
+async function openReflectionDialog() {
+    const date = document.getElementById('target-date').value;
+    const text = await showCustomDialog({
+        type: 'prompt',
+        title: 'Daily Reflection',
+        message: 'How did today go? Log your thoughts, bottlenecks, or wins.',
+        placeholder: 'Type your reflection here...',
+        defaultValue: currentReflection
+    });
+
+    if (text !== null) { 
+        if (text.trim() === "") {
+            await db.collection("dailyReflections").doc(date).delete();
+        } else {
+            await db.collection("dailyReflections").doc(date).set({
+                reflection: text.trim(),
+                date: date,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+    }
 }
 
 function fetchTargets() {
@@ -513,6 +594,8 @@ function fetchTargets() {
             console.error("Error fetching targets:", error);
             listContainer.innerHTML = '<div class="empty-state" style="color:var(--error);">Failed to load targets. Please check connection.</div>';
         });
+
+    fetchReflection(selectedDate, isPastDate);
 }
 
 function renderTask(id, data, container, isPastDate) {
@@ -615,6 +698,7 @@ function addTask() {
             task: taskText, subject: subject, isRecurring: isRecurring 
         }).then(() => {
             input.value = ''; editingTargetId = null; btn.disabled = false; btn.innerText = "Add Target"; 
+            document.getElementById('add-task-btn').innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Target`;
         });
     } else {
         btn.innerText = "Adding...";
@@ -622,6 +706,7 @@ function addTask() {
             task: taskText, subject: subject, date: date, completed: false, isRecurring: isRecurring, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             input.value = ''; btn.disabled = false; btn.innerText = "Add Target";
+            document.getElementById('add-task-btn').innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Target`;
         });
     }
 }
