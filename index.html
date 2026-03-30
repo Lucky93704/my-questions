@@ -363,7 +363,7 @@ header p { color: #64748b; font-size: 1.1rem; }
 
             <textarea id="quick-notepad" class="notepad-textarea" placeholder="Note down formulas, ideas, or quick reminders..." spellcheck="false"></textarea>
             
-            <div id="note-stats" style="font-size: 0.8rem; color: #64748b; text-align: right; margin-top: 8px; font-weight: 500;">0 words | 0 characters</div>
+            <div id="note-stats" style="font-size: 0.8rem; color: #64748b; text-align: right; margin-top: 8px; font-weight: 500;">0 words | 0 character</div>
         </div>
     </div>
 
@@ -610,7 +610,9 @@ function listenToSessions() {
                 const stillActive = activeSessionsArray.find(s => s.id === currentSessionId);
                 if (!stillActive) { handleLogout('remote'); }
             }
-            if(document.getElementById('linked-devices-modal').style.display === 'flex') {
+            
+            const modal = document.getElementById('linked-devices-modal');
+            if(modal && modal.style.display === 'flex') {
                 renderLinkedDevices();
             }
         } else {
@@ -621,13 +623,27 @@ function listenToSessions() {
 
 async function removeSession(idToRemove) {
     try {
-        const doc = await db.collection('portalData').doc('activeSessions').get();
-        if(doc.exists) {
-            const sessions = doc.data().sessions || [];
-            const updated = sessions.filter(s => s.id !== idToRemove);
-            await db.collection('portalData').doc('activeSessions').set({ sessions: updated });
+        const sessionObj = activeSessionsArray.find(s => s.id === idToRemove);
+        
+        if (sessionObj) {
+            // Optimistic UI update (instant visual feedback)
+            activeSessionsArray = activeSessionsArray.filter(s => s.id !== idToRemove);
+            const modal = document.getElementById('linked-devices-modal');
+            if (modal && modal.style.display === 'flex') {
+                renderLinkedDevices(); 
+            }
+            
+            // Safely remove from Firestore
+            await db.collection('portalData').doc('activeSessions').set({
+                sessions: firebase.firestore.FieldValue.arrayRemove(sessionObj)
+            }, { merge: true });
+            
+            showToast("Device logged out successfully.", "success");
         }
-    } catch(e) { console.error("Error removing session", e); }
+    } catch(e) { 
+        console.error("Error removing session", e); 
+        showToast("Failed to remove device.", "error");
+    }
 }
 
 function renderLinkedDevices() {
@@ -1175,9 +1191,9 @@ const iconCloudError = `<svg width="16" height="16" viewBox="0 0 24 24" fill="no
 
 function updateNoteStats() {
     const text = quickNotepad.value;
-    const characters = text.length;
+    const character = text.length;
     const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-    document.getElementById('note-stats').innerText = `${words} words | ${characters} characters`;
+    document.getElementById('note-stats').innerText = `${words} words | ${character} character`;
 }
 
 function loadHistory() {
