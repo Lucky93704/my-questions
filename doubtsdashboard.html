@@ -69,10 +69,52 @@ body {
 }
 
 .back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
-.add-btn { background: var(--target); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
-.add-btn:hover { background: var(--target-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15);}
-
 svg { fill: currentColor; }
+
+/* Dropdown Styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: var(--card-bg);
+    min-width: 180px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+    z-index: 1000;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    top: 100%;
+    right: 0; /* Align to the right side of the button */
+    margin-top: 8px;
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.dropdown-content a {
+    color: var(--text);
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.dropdown-content a:hover {
+    background-color: var(--bg);
+    color: var(--primary);
+}
+
+.dropdown-active {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+}
 
 /* Stat Cards */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
@@ -114,6 +156,7 @@ svg { fill: currentColor; }
     .header-actions { justify-content: center; width: 100%; }
     .back-btn, .add-btn, .date-filter { flex: 1; justify-content: center; }
     .charts-grid { grid-template-columns: 1fr; }
+    .dropdown-content { right: auto; left: 50%; transform: translateX(-50%); }
 }
 </style>
 </head>
@@ -139,10 +182,17 @@ svg { fill: currentColor; }
                 <option value="7">Last 7 Days</option>
                 <option value="30">Last 30 Days</option>
             </select>
-            <button class="add-btn" onclick="triggerMockAction()">
-                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                Study Dashboard
-            </button>
+            
+            <div class="dropdown">
+                <button class="back-btn" onclick="toggleDropdown(event)" style="background: transparent; border: 1px solid var(--border); color: var(--text); padding: 10px; display: flex; align-items: center; justify-content: center;" title="Go to Dashboard">
+                    <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+                </button>
+                <div id="gotoDropdown" class="dropdown-content">
+                    <a href="studydashboard.html">Study Dashboard</a>
+                    <a href="syllabusdashboard.html">Syllabus Dashboard</a>
+                    <a href="mockdashboard.html">Mock Dashboard</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -212,6 +262,29 @@ if (localStorage.getItem('theme') === 'dark') {
 }
 
 // ==========================================
+// DROPDOWN LOGIC
+// ==========================================
+function toggleDropdown(event) {
+    event.stopPropagation();
+    document.getElementById("gotoDropdown").classList.toggle("show");
+    event.currentTarget.classList.toggle("dropdown-active");
+}
+
+window.addEventListener('click', function(event) {
+    if (!event.target.closest('.dropdown')) {
+        const dropdowns = document.getElementsByClassName("dropdown-content");
+        const buttons = document.querySelectorAll(".dropdown .back-btn");
+        
+        for (let i = 0; i < dropdowns.length; i++) {
+            if (dropdowns[i].classList.contains('show')) {
+                dropdowns[i].classList.remove('show');
+            }
+        }
+        buttons.forEach(btn => btn.classList.remove('dropdown-active'));
+    }
+});
+
+// ==========================================
 // FIREBASE CONFIGURATION
 // ==========================================
 const firebaseConfig = {
@@ -240,13 +313,6 @@ function showToast(message, type = 'success') {
         toast.classList.add('fade-out');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
-}
-
-function triggerMockAction() {
-    showToast("Redirecting to Study Dashboard...", "success");
-    setTimeout(() => {
-        window.location.href = 'studydashboard.html';
-    }, 800);
 }
 
 let dashboardData = {
