@@ -53,6 +53,7 @@ body {
 
 /* Header & Navigation */
 .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
+.header-left { display: flex; gap: 10px; align-items: center; }
 .header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; }
 .header-actions { display: flex; gap: 15px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
 
@@ -88,7 +89,7 @@ svg { fill: currentColor; }
     border: 1px solid var(--border);
     overflow: hidden;
     top: 100%;
-    right: 0; /* Align to the right side of the button */
+    left: 0; /* Align to the left side since it's on the left of the screen */
     margin-top: 8px;
 }
 
@@ -152,9 +153,10 @@ svg { fill: currentColor; }
 /* Mobile Responsiveness */
 @media (max-width: 700px) {
     .header { flex-direction: column; align-items: stretch; gap: 15px; }
+    .header-left { justify-content: center; width: 100%; }
     .header h2 { font-size: 1.5rem; order: -1; margin-bottom: 10px; }
     .header-actions { justify-content: center; width: 100%; }
-    .back-btn, .add-btn, .date-filter { flex: 1; justify-content: center; }
+    .back-btn, .date-filter { flex: 1; justify-content: center; }
     .charts-grid { grid-template-columns: 1fr; }
     .dropdown-content { right: auto; left: 50%; transform: translateX(-50%); }
 }
@@ -171,20 +173,14 @@ svg { fill: currentColor; }
 
 <div class="container">
     <div class="header">
-        <button class="back-btn" onclick="window.location.href='index.html'">
-            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-            Home
-        </button>
-        <h2>Doubts Dashboard</h2>
-        <div class="header-actions">
-            <select class="date-filter" id="date-range-filter" onchange="applyDateFilter()">
-                <option value="all">All Time</option>
-                <option value="7">Last 7 Days</option>
-                <option value="30">Last 30 Days</option>
-            </select>
+        <div class="header-left">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                Home
+            </button>
             
             <div class="dropdown">
-                <button class="back-btn" onclick="toggleDropdown(event)" style="background: transparent; border: 1px solid var(--border); color: var(--text); padding: 10px; display: flex; align-items: center; justify-content: center;" title="Go to Dashboard">
+                <button class="back-btn" onclick="toggleDropdown(event)" style="background: transparent; border: 1px solid var(--border); color: var(--text); padding: 10px; display: flex; align-items: center; justify-content: center; height: 100%;" title="Go to Dashboard">
                     <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
                 </button>
                 <div id="gotoDropdown" class="dropdown-content">
@@ -193,6 +189,16 @@ svg { fill: currentColor; }
                     <a href="mockdashboard.html">Mock Dashboard</a>
                 </div>
             </div>
+        </div>
+
+        <h2>Doubts Dashboard</h2>
+        
+        <div class="header-actions">
+            <select class="date-filter" id="date-range-filter" onchange="applyDateFilter()">
+                <option value="all">All Time</option>
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+            </select>
         </div>
     </div>
 
