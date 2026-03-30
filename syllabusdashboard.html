@@ -695,8 +695,10 @@ function updateAnalytics() {
 
     let doingTopicsHTML = ''; // To gather the tooltip data
 
-    for (const subject in syllabusData) {
-        if (subject === 'history') continue; 
+    const orderedSubjects = ['maths', 'english', 'gk', 'reasoning'];
+    
+    orderedSubjects.forEach(subject => {
+        if (!syllabusData[subject]) return;
         
         let subjTotal = 0, subjDone = 0, weakCount = 0, averageCount = 0, strongCount = 0, overdueCount = 0;
         
@@ -735,7 +737,7 @@ function updateAnalytics() {
             </div>
         `;
         analysisGrid.appendChild(card);
-    }
+    });
     
     const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
     
