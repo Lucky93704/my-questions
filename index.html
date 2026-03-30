@@ -172,6 +172,13 @@ header p { color: #64748b; font-size: 1.1rem; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .anim-fade-out { animation: fadeOutUp 0.4s ease forwards; }
 .anim-fade-in { animation: fadeIn 0.5s ease forwards; }
+
+/* New History Styles */
+.history-item { background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 0.85rem; color: var(--text); position: relative; margin-bottom: 8px; }
+.history-item-time { font-size: 0.75rem; color: #64748b; margin-bottom: 6px; font-weight: bold; }
+.history-item-text { white-space: pre-wrap; word-break: break-word; max-height: 60px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.history-restore-btn { position: absolute; top: 10px; right: 10px; background: var(--card-bg); border: 1px solid var(--border); color: var(--primary); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.2s;}
+.history-restore-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
 </style>
 </head>
 <body>
@@ -301,8 +308,14 @@ header p { color: #64748b; font-size: 1.1rem; }
                     <span id="sync-status" class="sync-status" title="Sync Status">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="9 16 12 19 16 14"></polyline></svg>
                     </span>
-                    <button class="notepad-action-btn" id="btn-timestamp" title="Insert Timestamp" onclick="insertTimestamp()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <button class="notepad-action-btn" id="btn-spellcheck" title="Toggle Spell Check & Grammar" onclick="toggleSpellCheck()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><polyline points="10 10 12 12 15 9"></polyline></svg>
+                    </button>
+                    <button class="notepad-action-btn" id="btn-search-replace" title="Search & Replace" onclick="toggleSearchReplace()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </button>
+                    <button class="notepad-action-btn" id="btn-history" title="Version History" onclick="showHistoryModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><polyline points="12 7 12 12 15 15"></polyline></svg>
                     </button>
                     <button class="notepad-action-btn" id="btn-copy-note" title="Copy All" onclick="copyNotepad()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -312,7 +325,16 @@ header p { color: #64748b; font-size: 1.1rem; }
                     </button>
                 </div>
             </div>
-            <textarea id="quick-notepad" class="notepad-textarea" placeholder="Note down formulas, ideas, or quick reminders..."></textarea>
+            
+            <div id="search-replace-ui" style="display: none; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="search-input" placeholder="Find..." style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none;">
+                <input type="text" id="replace-input" placeholder="Replace with..." style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none;">
+                <button onclick="performReplace()" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Replace All</button>
+            </div>
+
+            <textarea id="quick-notepad" class="notepad-textarea" placeholder="Note down formulas, ideas, or quick reminders..." spellcheck="false"></textarea>
+            
+            <div id="note-stats" style="font-size: 0.8rem; color: #64748b; text-align: right; margin-top: 8px; font-weight: 500;">0 words | 0 chars</div>
         </div>
     </div>
 
@@ -365,6 +387,21 @@ header p { color: #64748b; font-size: 1.1rem; }
         <div class="confirm-btn-group">
             <button id="confirm-cancel-btn" class="btn-confirm-cancel">Cancel</button>
             <button id="confirm-ok-btn" class="btn-confirm-danger">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="history-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'" style="z-index: 2500;">
+    <div class="modal-content" style="max-width: 500px; text-align: left; padding: 25px;">
+        <h3 style="color: var(--primary); margin-top: 0; display: flex; align-items: center; justify-content: flex-start; gap: 8px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><polyline points="12 7 12 12 15 15"></polyline></svg>
+            Version History
+        </h3>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 15px;">Last 5 removed/cleared notes</p>
+        <div id="history-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto;">
+            </div>
+        <div style="text-align: right; margin-top: 20px;">
+            <button onclick="document.getElementById('history-modal').style.display='none'" style="background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
         </div>
     </div>
 </div>
@@ -876,10 +913,38 @@ document.getElementById("next-month").addEventListener("click", () => { currentM
 const quickNotepad = document.getElementById('quick-notepad');
 const syncStatus = document.getElementById('sync-status');
 let noteSaveTimeout;
+let deletedNotesHistory = [];
 
 const iconCloudCheck = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="9 16 12 19 16 14"></polyline></svg> Saved`;
 const iconCloudSync = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="8 14 12 18 16 14"></polyline><line x1="12" y1="18" x2="12" y2="10"></line></svg> Saving...`;
 const iconCloudError = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><line x1="12" y1="17" x2="12" y2="17.01"></line><line x1="12" y1="13" x2="12" y2="15"></line></svg> Error`;
+
+function updateNoteStats() {
+    const text = quickNotepad.value;
+    const chars = text.length;
+    const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+    document.getElementById('note-stats').innerText = `${words} words | ${chars} chars`;
+}
+
+async function loadHistory() {
+    try {
+        const doc = await db.collection('portalData').doc('noteHistory').get();
+        if (doc.exists) {
+            deletedNotesHistory = doc.data().history || [];
+        }
+    } catch(e) { console.error("History load error", e); }
+}
+
+async function saveHistory(noteContent) {
+    if(!noteContent.trim()) return;
+    const timestamp = new Date().toLocaleString('en-IN');
+    deletedNotesHistory.unshift({ text: noteContent, time: timestamp });
+    if(deletedNotesHistory.length > 5) deletedNotesHistory.pop();
+    
+    try {
+        await db.collection('portalData').doc('noteHistory').set({ history: deletedNotesHistory });
+    } catch(e) { console.error("History save error", e); }
+}
 
 async function loadNotepad() {
     try {
@@ -891,6 +956,8 @@ async function loadNotepad() {
         }
         syncStatus.innerHTML = iconCloudCheck;
         syncStatus.className = 'sync-status saved';
+        updateNoteStats();
+        loadHistory();
     } catch (e) {
         console.error("Error loading notes:", e);
         syncStatus.innerHTML = iconCloudError;
@@ -920,6 +987,7 @@ async function saveNotepadToFirebase() {
 
 if (quickNotepad) {
     quickNotepad.addEventListener('input', () => {
+        updateNoteStats();
         syncStatus.innerHTML = `<span class="spinner" style="width:12px; height:12px; border-width: 2px; margin-right: 4px;"></span> Saving...`;
         syncStatus.className = 'sync-status saving';
         
@@ -932,19 +1000,43 @@ if (quickNotepad) {
 }
 
 // Action Bar Utilities
-function insertTimestamp() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-    const stamp = `\n[${dateStr} - ${timeStr}] `;
+let spellCheckActive = false;
+function toggleSpellCheck() {
+    spellCheckActive = !spellCheckActive;
+    quickNotepad.setAttribute('spellcheck', spellCheckActive.toString());
+    const btn = document.getElementById('btn-spellcheck');
+    if(spellCheckActive) {
+        btn.style.color = 'var(--primary)';
+        showToast("Spell check & grammar suggestions enabled.", "success");
+    } else {
+        btn.style.color = '#64748b';
+        showToast("Spell check disabled.", "info");
+    }
+}
+
+function toggleSearchReplace() {
+    const ui = document.getElementById('search-replace-ui');
+    ui.style.display = ui.style.display === 'none' ? 'flex' : 'none';
+    if(ui.style.display === 'flex') document.getElementById('search-input').focus();
+}
+
+function performReplace() {
+    const searchStr = document.getElementById('search-input').value;
+    const replaceStr = document.getElementById('replace-input').value;
+    if (!searchStr) return;
     
-    quickNotepad.value += stamp;
-    quickNotepad.focus();
-    quickNotepad.selectionStart = quickNotepad.value.length;
-    quickNotepad.selectionEnd = quickNotepad.value.length;
+    const originalText = quickNotepad.value;
+    const newText = originalText.split(searchStr).join(replaceStr);
     
-    clearTimeout(noteSaveTimeout);
-    saveNotepadToFirebase();
+    if (originalText !== newText) {
+        quickNotepad.value = newText;
+        updateNoteStats();
+        clearTimeout(noteSaveTimeout);
+        saveNotepadToFirebase();
+        showToast("Text replaced successfully.", "success");
+    } else {
+        showToast("Text not found.", "info");
+    }
 }
 
 function copyNotepad() {
@@ -960,15 +1052,57 @@ function copyNotepad() {
     });
 }
 
-// Rewritten with Custom Animated Modal instead of native confirm()
 async function clearNotepad() {
+    if (!quickNotepad.value.trim()) {
+        showToast("Notepad is already empty.", "info");
+        return;
+    }
     const confirmed = await showCustomConfirm("Are you sure you want to clear your notes? This action cannot be undone.", "Clear Notes");
     if (confirmed) {
+        await saveHistory(quickNotepad.value);
         quickNotepad.value = "";
+        updateNoteStats();
         clearTimeout(noteSaveTimeout);
         saveNotepadToFirebase();
-        showToast("Notes cleared.", "success");
+        showToast("Notes cleared and saved to history.", "success");
     }
+}
+
+function showHistoryModal() {
+    const list = document.getElementById('history-list');
+    list.innerHTML = '';
+    if(deletedNotesHistory.length === 0) {
+        list.innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">No removed notes history yet.</p>';
+    } else {
+        deletedNotesHistory.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            
+            // Sanitize to prevent basic XSS
+            const safeText = item.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            div.innerHTML = `
+                <div class="history-item-time">${item.time}</div>
+                <div class="history-item-text">${safeText}</div>
+                <button class="history-restore-btn" onclick="restoreHistory(${index})">Restore</button>
+            `;
+            list.appendChild(div);
+        });
+    }
+    document.getElementById('history-modal').style.display = 'flex';
+}
+
+function restoreHistory(index) {
+    const item = deletedNotesHistory[index];
+    if(quickNotepad.value.trim() !== "") {
+        saveHistory(quickNotepad.value);
+    }
+    quickNotepad.value = item.text;
+    updateNoteStats();
+    clearTimeout(noteSaveTimeout);
+    saveNotepadToFirebase();
+    document.getElementById('history-modal').style.display = 'none';
+    showToast("Note restored successfully.", "success");
 }
 
 // ==========================================
