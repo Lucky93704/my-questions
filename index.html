@@ -938,13 +938,12 @@ function updateNoteStats() {
     document.getElementById('note-stats').innerText = `${words} words | ${chars} chars`;
 }
 
-async function loadHistory() {
-    try {
-        const doc = await db.collection('portalData').doc('noteHistory').get();
+function loadHistory() {
+    db.collection('portalData').doc('noteHistory').onSnapshot((doc) => {
         if (doc.exists) {
             deletedNotesHistory = doc.data().history || [];
         }
-    } catch(e) { console.error("History load error", e); }
+    }, (e) => { console.error("History sync error", e); });
 }
 
 async function saveHistory(noteContent) {
@@ -958,23 +957,33 @@ async function saveHistory(noteContent) {
     } catch(e) { console.error("History save error", e); }
 }
 
-async function loadNotepad() {
-    try {
-        const doc = await db.collection('portalData').doc('quickNotes').get();
-        if (doc.exists) {
-            quickNotepad.value = doc.data().content || '';
-        } else {
-            quickNotepad.value = '';
+function loadNotepad() {
+    db.collection('portalData').doc('quickNotes').onSnapshot((doc) => {
+        const serverText = doc.exists ? (doc.data().content || '') : '';
+        
+        // Only update the value if it differs from what's currently in the textarea
+        if (quickNotepad.value !== serverText) {
+            const start = quickNotepad.selectionStart;
+            const end = quickNotepad.selectionEnd;
+            
+            quickNotepad.value = serverText;
+            
+            // Restore cursor position if the user was actively typing
+            if (document.activeElement === quickNotepad) {
+                quickNotepad.setSelectionRange(start, end);
+            }
+            updateNoteStats();
         }
+        
         syncStatus.innerHTML = iconCloudCheck;
         syncStatus.className = 'sync-status saved';
-        updateNoteStats();
-        loadHistory();
-    } catch (e) {
-        console.error("Error loading notes:", e);
+    }, (error) => {
+        console.error("Error syncing notes:", error);
         syncStatus.innerHTML = iconCloudError;
         syncStatus.className = 'sync-status error';
-    }
+    });
+    
+    loadHistory();
 }
 
 async function saveNotepadToFirebase() {
