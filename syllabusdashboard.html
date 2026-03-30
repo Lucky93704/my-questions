@@ -96,7 +96,7 @@ header p { color: #64748b; font-size: 1.1rem; }
 
 /* Subject Analysis Grid */
 .subject-analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 30px; }
-.subject-stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: transform 0.2s;}
+.subject-stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: transform 0.2s; cursor: pointer;}
 .subject-stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); border-color: var(--primary);}
 .subject-stat-card h4 { margin: 0 0 12px 0; color: var(--primary); font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center;}
 .subject-stat-card .percent { font-size: 1.2rem; font-weight: bold; color: var(--text); }
@@ -723,8 +723,9 @@ function updateAnalytics() {
         const subjPercent = subjTotal === 0 ? 0 : Math.round((subjDone / subjTotal) * 100);
         subjectStats[subject] = subjPercent;
 
-        const card = document.createElement('div');
+       const card = document.createElement('div');
         card.className = 'subject-stat-card';
+        card.onclick = () => switchTab(subject); /* <-- THIS IS THE NEW LINE */
         card.innerHTML = `
             <h4>${displayNames[subject]} <span class="percent">${subjPercent}%</span></h4>
             <div class="mini-progress"><div class="mini-progress-fill" style="width: ${subjPercent}%;"></div></div>
@@ -896,11 +897,22 @@ function updateRadarChart(stats) {
 
 // --- TAB SWITCHING ---
 function switchTab(tabId) {
+    // 1. Hide all content panels
     document.querySelectorAll('.subject-content').forEach(el => el.classList.remove('active'));
+    // 2. Remove active state from all tab buttons
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     
+    // 3. Show the selected content
     document.getElementById(tabId).classList.add('active');
-    event.currentTarget.classList.add('active');
+    
+    // 4. Find the matching tab button and make it active
+    const targetBtn = document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`);
+    if (targetBtn) {
+        targetBtn.classList.add('active');
+    }
+
+    // 5. Smooth scroll down to the tabs/table area
+    document.querySelector('.subject-tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Initialize on load
