@@ -637,6 +637,10 @@ const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutes in milliseconds
 function resetInactivityTimer() {
     clearTimeout(inactivityTimer);
     if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
+        
+        // Track the last active time constantly while interacting with the page
+        localStorage.setItem('lastActiveTime', Date.now().toString());
+        
         inactivityTimer = setTimeout(() => {
             handleLogout('auto');
         }, INACTIVITY_LIMIT);
@@ -667,7 +671,10 @@ function attemptUnlock() {
     if (document.getElementById('pin-input').value === getISTTimePin()) {
         document.getElementById('unlock-btn').innerHTML = '<span class="spinner"></span> Unlocking...';
         const rem = document.getElementById('remember-me').checked;
+        
         (rem ? localStorage : sessionStorage).setItem('isUnlocked', 'true');
+        localStorage.setItem('lastActiveTime', Date.now().toString()); // Set initial active time
+        
         showToast('Access Granted!', 'success');
         
         resetInactivityTimer(); // Start the auto-lock countdown
@@ -690,7 +697,12 @@ function attemptUnlock() {
 
 function handleLogout(type = 'manual') {
     document.getElementById('logout-btn').innerHTML = '<span class="spinner" style="border-top-color: var(--error);"></span> Locking...';
-    sessionStorage.removeItem('isUnlocked'); localStorage.removeItem('isUnlocked');
+    
+    // Clear ALL auth state
+    sessionStorage.removeItem('isUnlocked'); 
+    localStorage.removeItem('isUnlocked');
+    localStorage.removeItem('lastActiveTime');
+    
     clearTimeout(inactivityTimer);
     
     if (type === 'auto') {
@@ -1108,12 +1120,30 @@ function restoreHistory(index) {
 // ==========================================
 // ON AUTH LOAD LOGIC
 // ==========================================
-if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true') {
-    document.getElementById('pin-screen').style.display = 'none'; 
-    document.getElementById('main-content').style.display = 'block';
-    document.getElementById('logout-wrapper').style.display = 'block';
+const isSessionUnlocked = sessionStorage.getItem('isUnlocked') === 'true';
+const isLocalUnlocked = localStorage.getItem('isUnlocked') === 'true';
+
+if (isSessionUnlocked || isLocalUnlocked) {
+    const lastActive = parseInt(localStorage.getItem('lastActiveTime') || '0');
+    const now = Date.now();
     
-    setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad(); resetInactivityTimer(); initXP();
+    // Check if the user was remembered, but they have been gone for more than 10 minutes
+    if (isLocalUnlocked && (now - lastActive > INACTIVITY_LIMIT)) {
+        localStorage.removeItem('isUnlocked');
+        localStorage.removeItem('lastActiveTime');
+        
+        // Let the normal PIN screen show
+        setTimeout(() => showToast('Session expired due to inactivity. Please enter PIN.', 'info'), 500);
+    } else {
+        // Session is still valid, let them in!
+        localStorage.setItem('lastActiveTime', now.toString()); // Update the timer immediately
+        
+        document.getElementById('pin-screen').style.display = 'none'; 
+        document.getElementById('main-content').style.display = 'block';
+        document.getElementById('logout-wrapper').style.display = 'block';
+        
+        setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad(); resetInactivityTimer(); initXP();
+    }
 }
 
 // ==========================================
