@@ -886,17 +886,25 @@ saveNotepadToFirebase();
 
 // Action Bar Utilities
 let spellCheckActive = false;
+let spellCheckActive = false;
 function toggleSpellCheck() {
-spellCheckActive = !spellCheckActive;
-quickNotepad.setAttribute('spellcheck', spellCheckActive.toString());
-const btn = document.getElementById('btn-spellcheck');
-if(spellCheckActive) {
-btn.style.color = 'var(--primary)';
-showToast("Spell check & grammar suggestions enabled.", "success");
-} else {
-btn.style.color = '#64748b';
-showToast("Spell check disabled.", "info");
-}
+    spellCheckActive = !spellCheckActive;
+    quickNotepad.setAttribute('spellcheck', spellCheckActive.toString());
+    
+    // Force the browser to re-scan existing text for spelling errors
+    const currentText = quickNotepad.value;
+    quickNotepad.value = '';
+    quickNotepad.value = currentText;
+
+    const btn = document.getElementById('btn-spellcheck');
+    if(spellCheckActive) {
+        btn.style.color = 'var(--primary)';
+        showToast("Spell check & grammar suggestions enabled.", "success");
+        quickNotepad.focus(); 
+    } else {
+        btn.style.color = '#64748b';
+        showToast("Spell check disabled.", "info");
+    }
 }
 
 function toggleSearchReplace() {
