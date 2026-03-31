@@ -172,7 +172,23 @@ header p { color: #64748b; font-size: 1.1rem; }
 .toast.error { border-left-color: var(--error); }
 .toast.success { border-left-color: var(--success); }
 .toast svg { flex-shrink: 0; }
+/* Error Shake Animation */
+@keyframes shakeError {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
 
+.error-shake {
+    animation: shakeError 0.4s ease-in-out !important;
+    border-color: var(--error) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+    color: var(--error) !important;
+}
+
+#toggle-pin-btn:hover {
+    color: var(--primary) !important;
+}
 /* Animations */
 @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); visibility: hidden; } }
@@ -223,7 +239,12 @@ header p { color: #64748b; font-size: 1.1rem; }
     </h2>
     <p>Please enter the dynamic PIN</p>
     <div class="pin-input-group">
-        <input type="password" id="pin-input" maxlength="8" placeholder="••••••••" inputmode="numeric" autocomplete="off">
+        <div class="pin-wrapper" style="position: relative; display: inline-flex; align-items: center;">
+            <input type="password" id="pin-input" maxlength="8" placeholder="••••••••" inputmode="numeric" autocomplete="off" style="padding-right: 40px; width: 200px;">
+            <button type="button" id="toggle-pin-btn" title="Toggle PIN Visibility" style="position: absolute; right: 12px; background: transparent; border: none; color: #64748b; cursor: pointer; display: flex; padding: 0; outline: none; transition: 0.2s;">
+                <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+        </div>
         <div style="display: flex; gap: 10px; justify-content: center;">
             <button id="unlock-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
@@ -916,23 +937,44 @@ async function launchPortal() {
 }
 
 function attemptUnlock() {
-    if (document.getElementById('pin-input').value === "24122009") {
+    const pinInput = document.getElementById('pin-input');
+    
+    if (pinInput.value === "24122009") {
         document.getElementById('unlock-btn').innerHTML = '<span class="spinner"></span> Unlocking...';
-        
-        // Set the keys in localStorage so they survive a browser close
         localStorage.setItem('isUnlocked', 'true');
         localStorage.setItem('lastActionTimestamp', Date.now().toString());
-        
         isGuestMode = false;
         showToast('Access Granted!', 'success');
         resetInactivityTimer(); 
-
         setTimeout(launchPortal, 800);
     } else {
+        // Trigger shake animation and error toast
         showToast('Incorrect PIN.', 'error');
-        document.getElementById('pin-input').value = '';
+        pinInput.classList.add('error-shake');
+        
+        // Remove the shake class and clear the input after animation finishes (400ms)
+        setTimeout(() => {
+            pinInput.classList.remove('error-shake');
+            pinInput.value = '';
+        }, 400);
     }
 }
+
+// Show/Hide PIN Logic
+document.getElementById('toggle-pin-btn').addEventListener('click', function() {
+    const pinInput = document.getElementById('pin-input');
+    const eyeIcon = document.getElementById('eye-icon');
+    
+    if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        // Switch to eye-off SVG
+        eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    } else {
+        pinInput.type = 'password';
+        // Switch to eye SVG
+        eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    }
+});
 
 document.getElementById('guest-btn').addEventListener('click', () => {
     isGuestMode = true;
