@@ -235,11 +235,7 @@ header p { color: #64748b; font-size: 1.1rem; }
             </button>
         </div>
     </div>
-    <div style="margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <input type="checkbox" id="remember-me" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--primary);">
-        <label for="remember-me" style="cursor: pointer; font-size: 0.95rem; color: var(--text);">Remember this device</label>
     </div>
-</div>
 
 <div id="main-content">
     <header>
@@ -779,8 +775,6 @@ async function loadGlanceData() {
         let checkDate = new Date();
 
         // THE FIX: Grace period for today!
-        // If you have tasks today but 0 are completed so far, don't break the streak yet.
-        // Step back and start calculating from yesterday.
         if (daysData[todayStr] && daysData[todayStr].total > 0 && daysData[todayStr].completed === 0) {
             checkDate.setDate(checkDate.getDate() - 1);
         }
@@ -791,15 +785,13 @@ async function loadGlanceData() {
             
             // It ONLY breaks if it's a Holiday, or if tasks are scheduled but 0 are completed.
             if (day && day.isHoliday) {
-                break; // Broken by holiday
+                break; 
             } else if (day && day.total > 0) {
                 if (day.completed === 0) {
-                    break; // Broken by 0 completed tasks
+                    break; 
                 } else {
-                    currentStreak++; // Active day, keeps streak and increments!
+                    currentStreak++; 
                 }
-            } else {
-                // It is an EMPTY day. Streak is NOT broken, but counter doesn't increment.
             }
             checkDate.setDate(checkDate.getDate() - 1);
         }
@@ -823,7 +815,6 @@ async function loadGlanceData() {
                     if (tempStreak > maxStreak) { maxStreak = tempStreak; }
                 }
             }
-            // Empty days do not reset tempStreak!
             iterDate.setDate(iterDate.getDate() + 1);
         }
         
@@ -859,27 +850,32 @@ function setGreetingAndQuote() {
 }
 
 // ==========================================
-// PIN, AUTO-LOCK & SHORTCUT LOGIC
+// PERSISTENT 15-MINUTE INACTIVITY TIMER
 // ==========================================
 let inactivityTimer;
-const INACTIVITY_LIMIT = 15 * 60 * 1000; 
+const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 Minutes
 
 function resetInactivityTimer() {
     clearTimeout(inactivityTimer);
-    if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true' || isGuestMode) {
+    
+    // Check if we are currently unlocked
+    if (localStorage.getItem('isUnlocked') === 'true' || isGuestMode) {
         
         if (isGuestMode) {
             localStorage.setItem('guestLastActive', Date.now().toString());
         } else {
-            localStorage.setItem('lastActiveTime', Date.now().toString());
+            // Update the "Last Action" timestamp in permanent storage
+            localStorage.setItem('lastActionTimestamp', Date.now().toString());
         }
         
+        // Set the timer to lock if no more actions happen
         inactivityTimer = setTimeout(() => {
             handleLogout('auto');
         }, INACTIVITY_LIMIT);
     }
 }
 
+// Reset the clock on any interaction
 ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
     document.addEventListener(evt, resetInactivityTimer);
 });
@@ -887,7 +883,7 @@ function resetInactivityTimer() {
 document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
         e.preventDefault(); 
-        if (sessionStorage.getItem('isUnlocked') === 'true' || localStorage.getItem('isUnlocked') === 'true' || isGuestMode) {
+        if (localStorage.getItem('isUnlocked') === 'true' || isGuestMode) {
             handleLogout('manual');
         }
     }
@@ -915,12 +911,12 @@ function launchPortal() {
 function attemptUnlock() {
     if (document.getElementById('pin-input').value === "24122009") {
         document.getElementById('unlock-btn').innerHTML = '<span class="spinner"></span> Unlocking...';
-        const rem = document.getElementById('remember-me').checked;
         
-        (rem ? localStorage : sessionStorage).setItem('isUnlocked', 'true');
-        localStorage.setItem('lastActiveTime', Date.now().toString()); 
+        // Set the keys in localStorage so they survive a browser close
+        localStorage.setItem('isUnlocked', 'true');
+        localStorage.setItem('lastActionTimestamp', Date.now().toString());
+        
         isGuestMode = false;
-        
         showToast('Access Granted!', 'success');
         resetInactivityTimer(); 
 
@@ -947,11 +943,10 @@ function handleLogout(type = 'manual') {
         removeSession(currentSessionId);
     }
     
-    sessionStorage.removeItem('isUnlocked'); 
     sessionStorage.removeItem('isGuest'); 
     sessionStorage.removeItem('sessionId'); 
     localStorage.removeItem('isUnlocked');
-    localStorage.removeItem('lastActiveTime');
+    localStorage.removeItem('lastActionTimestamp');
     localStorage.removeItem('sessionId');
     
     isGuestMode = false;
@@ -961,7 +956,7 @@ function handleLogout(type = 'manual') {
     if (type === 'remote') {
         showToast('Logged out remotely from another device.', 'error');
     } else if (type === 'auto') {
-        showToast('Portal auto-locked due to 10m inactivity.', 'info');
+        showToast('Portal auto-locked due to 15m inactivity.', 'info');
     } else {
         showToast('Portal Locked Successfully.', 'info');
     }
@@ -1146,7 +1141,6 @@ async function renderCalendar() {
                 tooltip.innerHTML = `<div class="tooltip-title holiday">🌴 Holiday</div><div class="tooltip-row"><span>Reason:</span> ${status.reason}</div><div class="tooltip-hint">Click to jump to this date</div>`;
             } else if (status.total > 0 && status.completed > 0) {
                 
-                // If any tasks were completed, we grant the green "completed-day" background to keep the streak visually alive
                 dayDiv.classList.add("completed-day");
                 
                 const uniqueDone = status.doneTasks.length > 0 ? [...new Set(status.doneTasks)].join(', ') : 'None';
@@ -1157,7 +1151,6 @@ async function renderCalendar() {
                                          <div class="tooltip-row"><span>Finished:</span> ${uniqueDone}</div>
                                          <div class="tooltip-hint">Click to jump to this date</div>`;
                 } else {
-                    // Partial completion! Add the incomplete-day class so it ALSO gets the red dot visually.
                     dayDiv.classList.add("incomplete-day");
                     tooltip.innerHTML = `<div class="tooltip-title error"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> ${status.completed}/${status.total} Completed</div>
                                          <div class="tooltip-row"><span>Done:</span> <span style="color:var(--success); font-weight:normal;">${uniqueDone}</span></div>
@@ -1165,7 +1158,6 @@ async function renderCalendar() {
                                          <div class="tooltip-hint">Click to jump to this date</div>`;
                 }
 
-                // Streak connection CSS
                 const tomorrow = new Date(checkDate); tomorrow.setDate(tomorrow.getDate() + 1);
                 const tomorrowStatus = dayStatus[getLocalISOString(tomorrow)];
                 if (checkDate.getDay() !== 6 && isStreakActiveDay(tomorrowStatus)) {
@@ -1179,7 +1171,6 @@ async function renderCalendar() {
                 }
 
             } else if (status.total > 0 && status.completed === 0) {
-                // 0 Tasks completed. Streak explicitly breaks here.
                 dayDiv.classList.add("incomplete-day");
                 
                 const uniqueMissed = [...new Set(status.missedTasks)].join(', ');
@@ -1188,7 +1179,6 @@ async function renderCalendar() {
                                      <div class="tooltip-hint">Click to jump to this date</div>`;
             }
         } else {
-            // Empty day. Streak doesn't break.
             tooltip.innerHTML = `<div class="tooltip-title" style="color: #64748b;">📅 No Data</div>
                                  <div class="tooltip-row" style="margin-top:0;">No targets were set for this day.</div>
                                  <div class="tooltip-hint">Double-click to quick add</div>`;
@@ -1444,29 +1434,36 @@ function restoreHistory(index) {
 }
 
 // ==========================================
-// ON AUTH LOAD LOGIC
+// ON PAGE LOAD: CHECK IF SESSION IS VALID
 // ==========================================
-const isSessionUnlocked = sessionStorage.getItem('isUnlocked') === 'true';
-const isLocalUnlocked = localStorage.getItem('isUnlocked') === 'true';
-const isGuestSession = sessionStorage.getItem('isGuest') === 'true';
+function checkSessionValidity() {
+    const isLocalUnlocked = localStorage.getItem('isUnlocked') === 'true';
+    const isGuestSession = sessionStorage.getItem('isGuest') === 'true';
 
-if (isSessionUnlocked || isLocalUnlocked || isGuestSession) {
-    if (isGuestSession) {
-        launchPortal();
-    } else {
-        const lastActive = parseInt(localStorage.getItem('lastActiveTime') || '0');
-        const now = Date.now();
-        
-        if (isLocalUnlocked && (now - lastActive > INACTIVITY_LIMIT)) {
-            localStorage.removeItem('isUnlocked');
-            localStorage.removeItem('lastActiveTime');
-            setTimeout(() => showToast('Session expired due to inactivity. Please log in again.', 'info'), 500);
-        } else {
-            localStorage.setItem('lastActiveTime', now.toString()); 
+    if (isLocalUnlocked || isGuestSession) {
+        if (isGuestSession) {
             launchPortal();
+        } else {
+            const lastActive = parseInt(localStorage.getItem('lastActionTimestamp') || '0');
+            const now = Date.now();
+            
+            // Check if 15 minutes have passed since the last tracked action
+            if (now - lastActive > INACTIVITY_LIMIT) {
+                localStorage.removeItem('isUnlocked');
+                localStorage.removeItem('lastActionTimestamp');
+                setTimeout(() => showToast('Session expired due to inactivity. Please log in again.', 'info'), 500);
+            } else {
+                // Update timestamp for safety on a fresh page load
+                localStorage.setItem('lastActionTimestamp', now.toString()); 
+                launchPortal();
+                resetInactivityTimer();
+            }
         }
     }
 }
+
+// Run the session check immediately on script load
+checkSessionValidity();
 
 // ==========================================
 // THEME LOGIC
