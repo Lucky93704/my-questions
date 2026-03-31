@@ -886,7 +886,6 @@ saveNotepadToFirebase();
 
 // Action Bar Utilities
 let spellCheckActive = false;
-let spellCheckActive = false;
 function toggleSpellCheck() {
     spellCheckActive = !spellCheckActive;
     quickNotepad.setAttribute('spellcheck', spellCheckActive.toString());
