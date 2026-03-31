@@ -615,24 +615,29 @@ function listenToSessions() {
 
 async function removeSession(idToRemove) {
     try {
-        const sessionObj = activeSessionsArray.find(s => s.id === idToRemove);
+        // Fetch directly from Firebase to get the exact session object
+        const docRef = db.collection('portalData').doc('activeSessions');
+        const docSnap = await docRef.get();
         
-        if (sessionObj) {
-            activeSessionsArray = activeSessionsArray.filter(s => s.id !== idToRemove);
-            const modal = document.getElementById('linked-devices-modal');
-            if (modal && modal.style.display === 'flex') {
-                renderLinkedDevices(); 
+        if (docSnap.exists) {
+            const sessions = docSnap.data().sessions || [];
+            const sessionObj = sessions.find(s => s.id === idToRemove);
+            
+            if (sessionObj) {
+                await docRef.update({
+                    sessions: firebase.firestore.FieldValue.arrayRemove(sessionObj)
+                });
+                
+                // Update local UI array
+                activeSessionsArray = activeSessionsArray.filter(s => s.id !== idToRemove);
+                const modal = document.getElementById('linked-devices-modal');
+                if (modal && modal.style.display === 'flex') {
+                    renderLinkedDevices(); 
+                }
             }
-            
-            await db.collection('portalData').doc('activeSessions').set({
-                sessions: firebase.firestore.FieldValue.arrayRemove(sessionObj)
-            }, { merge: true });
-            
-            showToast("Device logged out successfully.", "success");
         }
-    } catch(e) { 
-         console.error("Error removing session", e); 
-         showToast("Failed to remove device.", "error");
+    } catch(e) {
+        console.error("Error removing session", e);
     }
 }
 
@@ -937,24 +942,25 @@ document.getElementById('guest-btn').addEventListener('click', () => {
     setTimeout(launchPortal, 300);
 });
 
-function handleLogout(type = 'manual') {
+async function handleLogout(type = 'manual') {
     isLoggingOut = true;
     document.getElementById('logout-btn').innerHTML = '<span class="spinner" style="border-top-color: var(--error);"></span> Locking...';
-    
+        
     if (currentSessionId && !isGuestMode && type !== 'remote') {
-        removeSession(currentSessionId);
+        // We added 'await' here so it waits for Firebase to delete the session
+        await removeSession(currentSessionId);
     }
-    
+        
     sessionStorage.removeItem('isGuest'); 
     sessionStorage.removeItem('sessionId'); 
     localStorage.removeItem('isUnlocked');
     localStorage.removeItem('lastActionTimestamp');
     localStorage.removeItem('sessionId');
-    
+        
     isGuestMode = false;
     currentSessionId = null;
     clearTimeout(inactivityTimer);
-    
+        
     if (type === 'remote') {
         showToast('Logged out remotely from another device.', 'error');
     } else if (type === 'auto') {
@@ -962,8 +968,8 @@ function handleLogout(type = 'manual') {
     } else {
         showToast('Portal Locked Successfully.', 'info');
     }
-    
-    setTimeout(() => { window.location.reload(); }, 1200); 
+        
+    setTimeout(() => { window.location.reload(); }, 800); 
 }
 
 document.getElementById('unlock-btn').addEventListener('click', attemptUnlock);
@@ -1438,7 +1444,7 @@ function restoreHistory(index) {
 // ==========================================
 // ON PAGE LOAD: CHECK IF SESSION IS VALID
 // ==========================================
-function checkSessionValidity() {
+async function checkSessionValidity() {
     const isLocalUnlocked = localStorage.getItem('isUnlocked') === 'true';
     const isGuestSession = sessionStorage.getItem('isGuest') === 'true';
 
@@ -1448,14 +1454,20 @@ function checkSessionValidity() {
         } else {
             const lastActive = parseInt(localStorage.getItem('lastActionTimestamp') || '0');
             const now = Date.now();
-            
-            // Check if 15 minutes have passed since the last tracked action
+            const savedSessionId = localStorage.getItem('sessionId');
+
+            // Check if 15 minutes have passed
             if (now - lastActive > INACTIVITY_LIMIT) {
+                // Delete the ghost session from Firebase
+                if (savedSessionId) {
+                    await removeSession(savedSessionId);
+                }
+                
                 localStorage.removeItem('isUnlocked');
                 localStorage.removeItem('lastActionTimestamp');
+                localStorage.removeItem('sessionId');
                 setTimeout(() => showToast('Session expired due to inactivity. Please log in again.', 'info'), 500);
             } else {
-                // Update timestamp for safety on a fresh page load
                 localStorage.setItem('lastActionTimestamp', now.toString()); 
                 launchPortal();
                 resetInactivityTimer();
