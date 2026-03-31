@@ -569,7 +569,7 @@ function getDeviceName() {
     return `${browser} on ${os}`;
 }
 
-function initSession() {
+async function initSession() {
     if (isGuestMode) return;
     if (!currentSessionId) {
         currentSessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -578,14 +578,15 @@ function initSession() {
         } else {
             sessionStorage.setItem('sessionId', currentSessionId);
         }
-        
+                
         const newSession = {
             id: currentSessionId,
             name: getDeviceName(),
             time: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
         };
-        
-        db.collection('portalData').doc('activeSessions').set({
+                
+        // We added 'await' here so it waits for the database
+        await db.collection('portalData').doc('activeSessions').set({
             sessions: firebase.firestore.FieldValue.arrayUnion(newSession)
         }, { merge: true });
     }
@@ -889,19 +890,20 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-function launchPortal() {
+async function launchPortal() {
     document.getElementById('pin-screen').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
     document.getElementById('action-buttons-wrapper').style.display = 'flex';
-    
+        
     document.getElementById('main-content').classList.add('anim-fade-in');
     document.getElementById('action-buttons-wrapper').classList.add('anim-fade-in');
-    
+        
     setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad(); initXP();
-    
+        
     if (!isGuestMode) {
         document.getElementById('linked-devices-btn').style.display = 'inline-flex';
-        initSession();
+        // We added 'await' here so it finishes logging you in before checking for remote logouts
+        await initSession();
         listenToSessions();
     } else {
         document.getElementById('linked-devices-btn').style.display = 'none';
