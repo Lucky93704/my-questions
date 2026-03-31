@@ -79,11 +79,11 @@ header p { color: #64748b; font-size: 1.1rem; }
 
 /* 3D FLIP CONTAINER STYLES (Notepad & Calculator) */
 .flip-wrapper { perspective: 1000px; width: 100%; display: flex; flex-direction: column; animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.2s; box-sizing: border-box; }
-.widget-flipper { position: relative; width: 100%; height: 100%; transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; display: flex; flex-direction: column; flex-grow: 1; }
+.widget-flipper { position: relative; width: 100%; height: 100%; transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; display: grid; flex-grow: 1; }
 .widget-flipper.is-flipped { transform: rotateY(180deg); }
 
 /* Notepad Styles (Front Face) */
-.notepad-widget { backface-visibility: hidden; background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; box-sizing: border-box; flex-grow: 1; position: relative; }
+.notepad-widget { grid-area: 1 / 1; backface-visibility: hidden; transform: rotateY(0deg); background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; box-sizing: border-box; }
 .notepad-header { color: var(--primary); font-size: 1.2rem; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .notepad-title-group { display: flex; align-items: center; gap: 8px; }
 .notepad-actions { display: flex; gap: 8px; align-items: center; }
@@ -97,13 +97,11 @@ header p { color: #64748b; font-size: 1.1rem; }
 .notepad-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
 
 /* Calculator Styles (Back Face) */
-.calculator-widget { backface-visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; box-sizing: border-box; transform: rotateY(180deg); z-index: 10; }
-.calc-display-container { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: right; display: flex; flex-direction: column; }
-.calc-history { font-size: 0.85rem; color: #64748b; min-height: 60px; max-height: 60px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; margin-bottom: 5px; overflow-y: auto; text-align: right; font-family: monospace;}
-.calc-history-item { opacity: 0.8; }
-.calc-main { font-size: 1.8rem; font-weight: bold; color: var(--text); overflow-x: auto; white-space: nowrap; }
+.calculator-widget { grid-area: 1 / 1; backface-visibility: hidden; background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; box-sizing: border-box; transform: rotateY(180deg); }
+.calc-display-container { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 25px 15px; margin-bottom: 15px; text-align: right; display: flex; flex-direction: column; justify-content: flex-end; }
+.calc-main { font-size: 2.2rem; font-weight: bold; color: var(--text); overflow-x: auto; white-space: nowrap; }
 .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; flex-grow: 1; }
-.calc-btn { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; font-size: 1.2rem; font-weight: 600; color: var(--text); cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+.calc-btn { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; font-size: 1.2rem; font-weight: 600; color: var(--text); cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; padding: 12px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
 .calc-btn:hover { background: var(--card-bg); border-color: var(--primary); color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
 .calc-btn:active { transform: translateY(0); }
 .calc-btn.op { color: var(--primary); background: rgba(37, 99, 235, 0.05); }
@@ -390,6 +388,9 @@ header p { color: #64748b; font-size: 1.1rem; }
                             Calculator
                         </div>
                         <div class="notepad-actions">
+                            <button class="notepad-action-btn" title="Calculation History" onclick="showCalcHistoryModal()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><polyline points="12 7 12 12 15 15"></polyline></svg>
+                            </button>
                             <button class="notepad-action-btn" title="Back to Notepad" onclick="toggleCalculator()">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                             </button>
@@ -397,7 +398,6 @@ header p { color: #64748b; font-size: 1.1rem; }
                     </div>
                     
                     <div class="calc-display-container">
-                        <div class="calc-history" id="calc-history"></div>
                         <div class="calc-main" id="calc-main">0</div>
                     </div>
 
@@ -513,6 +513,22 @@ header p { color: #64748b; font-size: 1.1rem; }
         </div>
         <div style="text-align: right; margin-top: 20px;">
             <button onclick="document.getElementById('history-modal').style.display='none'" style="background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
+        </div>
+    </div>
+</div>
+
+<div id="calc-history-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'" style="z-index: 2500;">
+    <div class="modal-content" style="max-width: 400px; text-align: left; padding: 25px;">
+        <h3 style="color: var(--primary); margin-top: 0; display: flex; align-items: center; justify-content: flex-start; gap: 8px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><polyline points="12 7 12 12 15 15"></polyline></svg>
+            Calculation History
+        </h3>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 15px;">Your recent calculations</p>
+        <div id="calc-history-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto;">
+        </div>
+        <div style="text-align: right; margin-top: 20px; display: flex; justify-content: space-between;">
+            <button onclick="clearCalcHistory()" style="background: transparent; border: 1px solid var(--error); color: var(--error); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">Clear History</button>
+            <button onclick="document.getElementById('calc-history-modal').style.display='none'" style="background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
         </div>
     </div>
 </div>
@@ -974,7 +990,7 @@ function launchPortal() {
     document.getElementById('action-buttons-wrapper').classList.add('anim-fade-in');
     
     setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad(); initXP();
-    updateCalcDisplay(); // initialize calculator
+    updateCalcDisplay(); 
     
     if (!isGuestMode) {
         document.getElementById('linked-devices-btn').style.display = 'inline-flex';
@@ -1288,18 +1304,41 @@ function toggleCalculator() {
 
 function updateCalcDisplay() {
     const mainEl = document.getElementById('calc-main');
-    const histEl = document.getElementById('calc-history');
-    
     mainEl.innerText = calcInput || "0";
-    histEl.innerHTML = "";
+}
+
+function showCalcHistoryModal() {
+    const list = document.getElementById('calc-history-list');
+    list.innerHTML = '';
     
-    calcHistoryArr.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'calc-history-item';
-        div.innerText = item;
-        histEl.appendChild(div);
-    });
-    histEl.scrollTop = histEl.scrollHeight;
+    if(calcHistoryArr.length === 0) {
+        list.innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">No calculations yet.</p>';
+    } else {
+        [...calcHistoryArr].reverse().forEach((item) => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.style.display = 'flex';
+            div.style.justifyContent = 'space-between';
+            div.style.alignItems = 'center';
+            div.style.fontSize = '1.05rem';
+            div.style.fontFamily = 'monospace';
+            
+            const parts = item.split(' = ');
+            div.innerHTML = `
+                <span style="color: #64748b;">${parts[0]}</span>
+                <span style="font-weight: bold; color: var(--primary);">= ${parts[1]}</span>
+            `;
+            list.appendChild(div);
+        });
+    }
+    document.getElementById('calc-history-modal').style.display = 'flex';
+}
+
+function clearCalcHistory() {
+    calcHistoryArr = [];
+    localStorage.removeItem('calcHistory');
+    showCalcHistoryModal();
+    showToast("Calculation history cleared", "info");
 }
 
 function calcAction(val) {
@@ -1321,7 +1360,6 @@ function calcAction(val) {
             let histStr = `${calcInput} = ${result}`;
             calcHistoryArr.push(histStr);
             
-            // Keep strictly last 5
             if (calcHistoryArr.length > 5) calcHistoryArr.shift();
             
             localStorage.setItem('calcHistory', JSON.stringify(calcHistoryArr));
