@@ -113,11 +113,13 @@ svg { fill: currentColor; }
 .subj-GK { background: #dcfce3; color: #166534; }
 .subj-Reasoning { background: #f3e8ff; color: #6b21a8; }
 .subj-Mock { background: #fee2e2; color: #991b1b; }
+.subj-Other { background: #f1f5f9; color: #475569; }
 [data-theme="dark"] .subj-Maths { background: #1e3a8a; color: #bfdbfe; }
 [data-theme="dark"] .subj-English { background: #78350f; color: #fde68a; }
 [data-theme="dark"] .subj-GK { background: #14532d; color: #bbf7d0; }
 [data-theme="dark"] .subj-Reasoning { background: #581c87; color: #e9d5ff; }
 [data-theme="dark"] .subj-Mock { background: #7f1d1d; color: #fecaca; }
+[data-theme="dark"] .subj-Other { background: #334155; color: #cbd5e1; }
 
 /* Reflection Box Styles */
 .reflection-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s; }
@@ -327,6 +329,7 @@ svg { fill: currentColor; }
             <option value="GK">GK</option>
             <option value="Reasoning">Reasoning</option>
             <option value="Mock">Mock Test</option>
+            <option value="Other">Other</option>
         </select>
         <button class="add-btn" id="add-task-btn" onclick="addTask()">Add Target</button>
     </div>
@@ -338,6 +341,7 @@ svg { fill: currentColor; }
         <button class="filter-btn" onclick="setFilter('GK', this)">GK</button>
         <button class="filter-btn" onclick="setFilter('Reasoning', this)">Reasoning</button>
         <button class="filter-btn" onclick="setFilter('Mock', this)">Mock Test</button>
+        <button class="filter-btn" onclick="setFilter('Other', this)">Other</button>
     </div>
 
     <div class="task-list" id="task-list">
@@ -976,7 +980,8 @@ async function fetchAnalyticsData() {
             English: { total: 0, completed: 0 },
             GK: { total: 0, completed: 0 },
             Reasoning: { total: 0, completed: 0 },
-            Mock: { total: 0, completed: 0 }
+            Mock: { total: 0, completed: 0 },
+            Other: { total: 0, completed: 0 }
         };
         
         snapshot.forEach(doc => {
@@ -1085,7 +1090,7 @@ function renderChart() {
                 datasets: [{
                     label: 'Tasks Completed',
                     data: subjData,
-                    backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#a855f7', '#ef4444'],
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#a855f7', '#ef4444', '#64748b'],
                     borderWidth: 1, borderColor: cardBg, borderRadius: 4
                 }]
             },
