@@ -427,7 +427,8 @@ header p { color: #64748b; font-size: 1.1rem; }
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 15px;">Manage devices securely logged into your portal.</p>
         <div id="devices-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto;">
         </div>
-        <div style="text-align: right; margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+            <button id="remove-all-others-btn" class="device-logout-btn" onclick="confirmRemoveAllOthers()" style="display: none; padding: 8px 16px; font-size: 0.95rem;">Log Out All Others</button>
             <button onclick="document.getElementById('linked-devices-modal').style.display='none'" style="background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
         </div>
     </div>
@@ -637,38 +638,42 @@ function listenToSessions() {
     });
 }
 
-async function removeSession(idToRemove) {
-    try {
-        // Fetch directly from Firebase to get the exact session object
-        const docRef = db.collection('portalData').doc('activeSessions');
-        const docSnap = await docRef.get();
-        
-        if (docSnap.exists) {
-            const sessions = docSnap.data().sessions || [];
-            const sessionObj = sessions.find(s => s.id === idToRemove);
+async function confirmRemoveAllOthers() {
+    // Uses your existing custom confirm modal!
+    const confirmed = await showCustomConfirm("Are you sure you want to log out all other devices? They will be immediately disconnected.", "Log Out All Others", true);
+    
+    if (confirmed) {
+        try {
+            const docRef = db.collection('portalData').doc('activeSessions');
+            const docSnap = await docRef.get();
             
-            if (sessionObj) {
-                await docRef.update({
-                    sessions: firebase.firestore.FieldValue.arrayRemove(sessionObj)
-                });
+            if (docSnap.exists) {
+                const sessions = docSnap.data().sessions || [];
+                // Find ONLY the current session
+                const currentSession = sessions.find(s => s.id === currentSessionId);
                 
-                // Update local UI array
-                activeSessionsArray = activeSessionsArray.filter(s => s.id !== idToRemove);
-                const modal = document.getElementById('linked-devices-modal');
-                if (modal && modal.style.display === 'flex') {
-                    renderLinkedDevices(); 
+                if (currentSession) {
+                    // Overwrite Firebase with an array containing ONLY the current device
+                    await docRef.update({
+                        sessions: [currentSession] 
+                    });
+                    
+                    // Update local UI
+                    activeSessionsArray = [currentSession];
+                    renderLinkedDevices();
+                    showToast("All other devices logged out successfully.", "success");
                 }
             }
+        } catch(e) {
+            console.error("Error removing other sessions", e);
+            showToast("Failed to log out other devices.", "error");
         }
-    } catch(e) {
-        console.error("Error removing session", e);
     }
 }
-
 function renderLinkedDevices() {
     const list = document.getElementById('devices-list');
     list.innerHTML = '';
-    
+        
     if (activeSessionsArray.length === 0) {
         list.innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">No active sessions found.</p>';
         return;
@@ -684,10 +689,10 @@ function renderLinkedDevices() {
         const isCurrent = session.id === currentSessionId;
         const div = document.createElement('div');
         div.className = 'device-item';
-        
+                
         const isMobile = session.name.includes("Android") || session.name.includes("iOS");
         const iconSvg = isMobile 
-            ? `<svg class="device-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`
+             ? `<svg class="device-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`
             : `<svg class="device-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`;
 
         div.innerHTML = `
@@ -696,7 +701,7 @@ function renderLinkedDevices() {
                 <div class="device-details">
                     <div class="device-name">
                         ${session.name} 
-                        ${isCurrent ? '<span class="device-current-badge">Current</span>' : ''}
+                         ${isCurrent ? '<span class="device-current-badge">Current</span>' : ''}
                     </div>
                     <div class="device-time">Logged in: ${session.time}</div>
                 </div>
@@ -705,6 +710,17 @@ function renderLinkedDevices() {
         `;
         list.appendChild(div);
     });
+
+    // --- THIS IS THE NEW STEP 3 CODE ---
+    // It checks how many devices are logged in and shows/hides the button
+    const removeAllBtn = document.getElementById('remove-all-others-btn');
+    if (removeAllBtn) {
+        if (activeSessionsArray.length > 1) {
+            removeAllBtn.style.display = 'block'; // Show button
+        } else {
+            removeAllBtn.style.display = 'none';  // Hide button
+        }
+    }
 }
 
 // ==========================================
