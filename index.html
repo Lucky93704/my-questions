@@ -876,37 +876,6 @@ function setGreetingAndQuote() {
     quoteElement.innerText = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
 }
 
-// ==========================================
-// PERSISTENT 15-MINUTE INACTIVITY TIMER
-// ==========================================
-let inactivityTimer;
-const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 Minutes
-
-function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    
-    // Check if we are currently unlocked
-    if (localStorage.getItem('isUnlocked') === 'true' || isGuestMode) {
-        
-        if (isGuestMode) {
-            localStorage.setItem('guestLastActive', Date.now().toString());
-        } else {
-            // Update the "Last Action" timestamp in permanent storage
-            localStorage.setItem('lastActionTimestamp', Date.now().toString());
-        }
-        
-        // Set the timer to lock if no more actions happen
-        inactivityTimer = setTimeout(() => {
-            handleLogout('auto');
-        }, INACTIVITY_LIMIT);
-    }
-}
-
-// Reset the clock on any interaction
-['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
-    document.addEventListener(evt, resetInactivityTimer);
-});
-
 document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
         e.preventDefault(); 
@@ -942,10 +911,10 @@ function attemptUnlock() {
     if (pinInput.value === "24122009") {
         document.getElementById('unlock-btn').innerHTML = '<span class="spinner"></span> Unlocking...';
         localStorage.setItem('isUnlocked', 'true');
-        localStorage.setItem('lastActionTimestamp', Date.now().toString());
+    
         isGuestMode = false;
         showToast('Access Granted!', 'success');
-        resetInactivityTimer(); 
+         
         setTimeout(launchPortal, 800);
     } else {
         // Trigger shake animation and error toast
@@ -996,12 +965,10 @@ async function handleLogout(type = 'manual') {
     sessionStorage.removeItem('isGuest'); 
     sessionStorage.removeItem('sessionId'); 
     localStorage.removeItem('isUnlocked');
-    localStorage.removeItem('lastActionTimestamp');
     localStorage.removeItem('sessionId');
         
     isGuestMode = false;
     currentSessionId = null;
-    clearTimeout(inactivityTimer);
         
     if (type === 'remote') {
         showToast('Logged out remotely from another device.', 'error');
@@ -1486,35 +1453,15 @@ function restoreHistory(index) {
 // ==========================================
 // ON PAGE LOAD: CHECK IF SESSION IS VALID
 // ==========================================
+// ==========================================
+// ON PAGE LOAD: CHECK IF SESSION IS VALID
+// ==========================================
 async function checkSessionValidity() {
     const isLocalUnlocked = localStorage.getItem('isUnlocked') === 'true';
     const isGuestSession = sessionStorage.getItem('isGuest') === 'true';
 
     if (isLocalUnlocked || isGuestSession) {
-        if (isGuestSession) {
-            launchPortal();
-        } else {
-            const lastActive = parseInt(localStorage.getItem('lastActionTimestamp') || '0');
-            const now = Date.now();
-            const savedSessionId = localStorage.getItem('sessionId');
-
-            // Check if 15 minutes have passed
-            if (now - lastActive > INACTIVITY_LIMIT) {
-                // Delete the ghost session from Firebase
-                if (savedSessionId) {
-                    await removeSession(savedSessionId);
-                }
-                
-                localStorage.removeItem('isUnlocked');
-                localStorage.removeItem('lastActionTimestamp');
-                localStorage.removeItem('sessionId');
-                setTimeout(() => showToast('Session expired due to inactivity. Please log in again.', 'info'), 500);
-            } else {
-                localStorage.setItem('lastActionTimestamp', now.toString()); 
-                launchPortal();
-                resetInactivityTimer();
-            }
-        }
+        launchPortal();
     }
 }
 
