@@ -611,21 +611,23 @@ async function initSession() {
             sessionStorage.setItem('sessionId', currentSessionId);
         }
                 
-        // Fetch custom name from Firebase registry if it exists
+        // Fetch custom name STRICTLY from Firebase device registry
         let finalName = getDeviceName();
         try {
             const registrySnap = await db.collection('portalData').doc('deviceRegistry').get();
             if (registrySnap.exists) {
                 const registry = registrySnap.data();
                 if (registry[persistentDeviceId]) {
-                    finalName = registry[persistentDeviceId];
+                    finalName = registry[persistentDeviceId]; // Use saved cloud name
                 }
             }
-        } catch(e) { console.error("Error fetching device registry", e); }
+        } catch(e) { 
+            console.error("Error fetching device registry from Firebase", e); 
+        }
 
         const newSession = {
             id: currentSessionId,
-            deviceId: persistentDeviceId, // Link the persistent ID to the session
+            deviceId: persistentDeviceId, 
             name: finalName,
             time: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
         };
@@ -657,7 +659,7 @@ async function saveDeviceName(sessionId, deviceId) {
         return;
     }
 
-    // Update locally first for a snappy UI
+    // Update active UI state immediately
     const sessionIndex = activeSessionsArray.findIndex(s => s.id === sessionId);
     if (sessionIndex > -1) {
         activeSessionsArray[sessionIndex].name = newName;
@@ -666,22 +668,23 @@ async function saveDeviceName(sessionId, deviceId) {
     renderLinkedDevices();
 
     try {
-        // 1. Update the active session name so connected devices see the change immediately
+        // 1. Update the active session in Firebase
         await db.collection('portalData').doc('activeSessions').update({
             sessions: activeSessionsArray
         });
 
-        // 2. Save it to the permanent registry so it survives logouts
-        if (deviceId) {
-            await db.collection('portalData').doc('deviceRegistry').set({
-                [deviceId]: newName
-            }, { merge: true });
-        }
+        // Ensure we have a deviceId to register to the cloud
+        const targetDeviceId = deviceId || getOrCreateDeviceId();
 
-        showToast('Device renamed successfully!', 'success');
+        // 2. Save permanently to Firebase device registry so it survives logouts
+        await db.collection('portalData').doc('deviceRegistry').set({
+            [targetDeviceId]: newName
+        }, { merge: true });
+
+        showToast('Device renamed and saved to cloud!', 'success');
     } catch (e) {
-        console.error("Error renaming device", e);
-        showToast('Failed to save device name.', 'error');
+        console.error("Error renaming device in Firebase", e);
+        showToast('Failed to save device name to cloud.', 'error');
     }
 }
 
