@@ -141,6 +141,13 @@ header p { color: #64748b; font-size: 1.1rem; }
 .device-logout-btn { background: transparent; border: 1px solid var(--error); color: var(--error); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.2s; }
 .device-logout-btn:hover { background: var(--error); color: white; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3); }
 
+/* Device Renaming Styles */
+.device-name-edit-btn { background: transparent; border: none; cursor: pointer; color: #94a3b8; padding: 2px; margin-left: 6px; display: inline-flex; align-items: center; transition: 0.2s; outline: none; }
+.device-name-edit-btn:hover { color: var(--primary); transform: scale(1.1); }
+.device-edit-action-btn { background: transparent; border: none; cursor: pointer; padding: 4px; display: inline-flex; align-items: center; transition: 0.2s; border-radius: 4px; }
+.device-edit-action-btn.save:hover { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+.device-edit-action-btn.cancel:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
 /* Modal Styles */
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeInOverlay 0.3s ease; }
 .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -552,6 +559,7 @@ let isGuestMode = sessionStorage.getItem('isGuest') === 'true';
 let currentSessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
 let activeSessionsArray = [];
 let isLoggingOut = false;
+let editingSessionId = null; // New global var for renaming
 
 // ==========================================
 // SESSION MANAGEMENT (LINKED DEVICES)
@@ -581,8 +589,20 @@ function getDeviceName() {
     return `${browser} on ${os}`;
 }
 
+function getOrCreateDeviceId() {
+    let did = localStorage.getItem('persistentDeviceId');
+    if (!did) {
+        did = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('persistentDeviceId', did);
+    }
+    return did;
+}
+
 async function initSession() {
     if (isGuestMode) return;
+    
+    const persistentDeviceId = getOrCreateDeviceId();
+
     if (!currentSessionId) {
         currentSessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         if (localStorage.getItem('isUnlocked') === 'true') {
@@ -591,15 +611,77 @@ async function initSession() {
             sessionStorage.setItem('sessionId', currentSessionId);
         }
                 
+        // Fetch custom name from Firebase registry if it exists
+        let finalName = getDeviceName();
+        try {
+            const registrySnap = await db.collection('portalData').doc('deviceRegistry').get();
+            if (registrySnap.exists) {
+                const registry = registrySnap.data();
+                if (registry[persistentDeviceId]) {
+                    finalName = registry[persistentDeviceId];
+                }
+            }
+        } catch(e) { console.error("Error fetching device registry", e); }
+
         const newSession = {
             id: currentSessionId,
-            name: getDeviceName(),
+            deviceId: persistentDeviceId, // Link the persistent ID to the session
+            name: finalName,
             time: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
         };
                 
         await db.collection('portalData').doc('activeSessions').set({
             sessions: firebase.firestore.FieldValue.arrayUnion(newSession)
         }, { merge: true });
+    }
+}
+
+// --- DEVICE RENAMING LOGIC ---
+function editDeviceName(sessionId) {
+    editingSessionId = sessionId;
+    renderLinkedDevices();
+}
+
+function cancelEditDeviceName() {
+    editingSessionId = null;
+    renderLinkedDevices();
+}
+
+async function saveDeviceName(sessionId, deviceId) {
+    const inputEl = document.getElementById(`edit-name-${sessionId}`);
+    if (!inputEl) return;
+    
+    const newName = inputEl.value.trim();
+    if (!newName) {
+        showToast('Device name cannot be empty.', 'error');
+        return;
+    }
+
+    // Update locally first for a snappy UI
+    const sessionIndex = activeSessionsArray.findIndex(s => s.id === sessionId);
+    if (sessionIndex > -1) {
+        activeSessionsArray[sessionIndex].name = newName;
+    }
+    editingSessionId = null;
+    renderLinkedDevices();
+
+    try {
+        // 1. Update the active session name so connected devices see the change immediately
+        await db.collection('portalData').doc('activeSessions').update({
+            sessions: activeSessionsArray
+        });
+
+        // 2. Save it to the permanent registry so it survives logouts
+        if (deviceId) {
+            await db.collection('portalData').doc('deviceRegistry').set({
+                [deviceId]: newName
+            }, { merge: true });
+        }
+
+        showToast('Device renamed successfully!', 'success');
+    } catch (e) {
+        console.error("Error renaming device", e);
+        showToast('Failed to save device name.', 'error');
     }
 }
 
@@ -687,6 +769,7 @@ function renderLinkedDevices() {
 
     sortedSessions.forEach(session => {
         const isCurrent = session.id === currentSessionId;
+        const isEditing = session.id === editingSessionId;
         const div = document.createElement('div');
         div.className = 'device-item';
                 
@@ -695,14 +778,36 @@ function renderLinkedDevices() {
              ? `<svg class="device-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`
             : `<svg class="device-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`;
 
+        let nameHtml = '';
+        if (isEditing) {
+            nameHtml = `
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                    <input type="text" id="edit-name-${session.id}" value="${session.name}" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--primary); background: var(--bg); color: var(--text); font-size: 0.9rem; outline: none; width: 140px; font-family: inherit;">
+                    <button class="device-edit-action-btn save" style="color: var(--success);" onclick="saveDeviceName('${session.id}', '${session.deviceId || ''}')" title="Save">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    </button>
+                    <button class="device-edit-action-btn cancel" style="color: var(--error);" onclick="cancelEditDeviceName()" title="Cancel">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            `;
+        } else {
+            nameHtml = `
+                <div class="device-name">
+                    ${session.name} 
+                    ${isCurrent ? '<span class="device-current-badge">Current</span>' : ''}
+                    <button class="device-name-edit-btn" onclick="editDeviceName('${session.id}')" title="Rename Device">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                </div>
+            `;
+        }
+
         div.innerHTML = `
             <div class="device-info">
                 ${iconSvg}
                 <div class="device-details">
-                    <div class="device-name">
-                        ${session.name} 
-                         ${isCurrent ? '<span class="device-current-badge">Current</span>' : ''}
-                    </div>
+                    ${nameHtml}
                     <div class="device-time">Logged in: ${session.time}</div>
                 </div>
             </div>
