@@ -42,10 +42,6 @@ header { text-align: center; margin-bottom: 40px; }
 header h1 { color: var(--primary); font-size: 2.5rem; margin: 0; }
 header p { color: #64748b; font-size: 1.1rem; }
 
-/* XP Badge Styles */
-.xp-badge { background: #dbeafe; color: #1e40af; padding: 6px 14px; border-radius: 20px; font-size: 1rem; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: default; margin-top: 15px; animation: popIn 0.5s ease; }
-[data-theme="dark"] .xp-badge { background: #1e3a8a; color: #bfdbfe; }
-
 /* At a Glance Widget */
 .glance-widget { display: flex; justify-content: center; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; }
 .glance-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); min-width: 200px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; max-width: 300px; transition: transform 0.3s; animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); }
@@ -256,10 +252,6 @@ header p { color: #64748b; font-size: 1.1rem; }
     <header>
         <h1 id="greeting-text">Welcome, </h1>
         <p id="daily-quote" style="color: var(--secondary); font-style: italic; font-weight: 500; margin-top: 8px;">"Loading motivation..."</p>
-        <div id="xp-counter" class="xp-badge" title="Experience Points & Level" style="display: none;">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-            Lvl 1: Aspirant (0 XP)
-        </div>
     </header>
 
     <div class="glance-widget">
@@ -464,7 +456,7 @@ header p { color: #64748b; font-size: 1.1rem; }
 function checkGuestExpiry() {
     const lastActive = parseInt(localStorage.getItem('guestLastActive') || '0');
     if (lastActive && (Date.now() - lastActive > 48 * 60 * 60 * 1000)) {
-        ['guestTargets', 'guestNotes', 'guestHistory', 'guestXP', 'guestLastActive'].forEach(k => localStorage.removeItem(k));
+        ['guestTargets', 'guestNotes', 'guestHistory', 'guestLastActive'].forEach(k => localStorage.removeItem(k));
     }
 }
 checkGuestExpiry();
@@ -830,41 +822,6 @@ function renderLinkedDevices() {
 }
 
 // ==========================================
-// XP SYSTEM INIT 
-// ==========================================
-let currentXP = 0;
-const xpRef = db.collection("userStats").doc("global");
-
-function initXP() {
-    if (isGuestMode) {
-        currentXP = parseInt(localStorage.getItem('guestXP') || '0');
-        renderXP();
-        return;
-    }
-    
-    xpRef.onSnapshot((doc) => {
-        if(doc.exists) {
-            currentXP = doc.data().xp || 0;
-        } else {
-            xpRef.set({ xp: 0 });
-        }
-        renderXP();
-    });
-}
-
-function renderXP() {
-    const level = Math.floor(currentXP / 100) + 1;
-    const titles = ["Aspirant", "Beginner", "Novice", "Scholar", "Achiever", "Expert", "Master", "Grandmaster", "Inspector"];
-    const title = titles[Math.min(level - 1, titles.length - 1)];
-    
-    const xpBadge = document.getElementById('xp-counter');
-    if(xpBadge) {
-        xpBadge.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> Lvl ${level}: ${title} (${currentXP} XP)`;
-        xpBadge.style.display = "inline-flex";
-    }
-}
-
-// ==========================================
 // AT A GLANCE LOGIC
 // ==========================================
 async function loadGlanceData() {
@@ -1030,7 +987,7 @@ async function launchPortal() {
         
     document.getElementById('main-content').classList.add('anim-fade-in');
         
-    setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad(); initXP();
+    setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad();
         
     if (!isGuestMode) {
         document.getElementById('linked-devices-btn').style.display = 'flex';
