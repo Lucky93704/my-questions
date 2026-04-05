@@ -1051,61 +1051,64 @@ function renderChart() {
         chartContainer.innerHTML = '<canvas id="weeklyChart"></canvas>';
     }
 
-    const ctx = document.getElementById('weeklyChart').getContext('2d');
-    const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
-    const cardBg = getComputedStyle(document.body).getPropertyValue('--card-bg').trim();
+    const weeklyCanvas = document.getElementById('weeklyChart');
+    if (weeklyCanvas) {
+        const ctx = weeklyCanvas.getContext('2d');
+        const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
+        const cardBg = getComputedStyle(document.body).getPropertyValue('--card-bg').trim();
 
-    if (weeklyChartInstance) { weeklyChartInstance.destroy(); }
+        if (weeklyChartInstance) { weeklyChartInstance.destroy(); }
 
-    if (currentChartTab === 'completion') {
-        const completedPct = Math.round((data.completed / data.total) * 100);
-        const incompletePct = 100 - completedPct;
-        
-        weeklyChartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Completed', 'Incomplete'],
-                datasets: [{
-                    data: [completedPct, incompletePct],
-                    backgroundColor: ['#22c55e', '#ef4444'],
-                    borderWidth: 2, borderColor: cardBg
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: textColor, font: { family: "'Segoe UI', sans-serif", size: 14 } } },
-                    tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.raw + '%'; } } }
-                }
-            }
-        });
-    } else if (currentChartTab === 'subjects') {
-        const subjLabels = Object.keys(data.subjectStats);
-        const subjData = Object.values(data.subjectStats).map(s => s.completed);
-
-        weeklyChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: subjLabels,
-                datasets: [{
-                    label: 'Tasks Completed',
-                    data: subjData,
-                    backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#a855f7', '#ef4444', '#64748b'],
-                    borderWidth: 1, borderColor: cardBg, borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1, precision: 0 }, grid: { color: 'rgba(100, 116, 139, 0.1)' } },
-                    x: { ticks: { color: textColor }, grid: { display: false } }
+        if (currentChartTab === 'completion') {
+            const completedPct = Math.round((data.completed / data.total) * 100);
+            const incompletePct = 100 - completedPct;
+            
+            weeklyChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Incomplete'],
+                    datasets: [{
+                        data: [completedPct, incompletePct],
+                        backgroundColor: ['#22c55e', '#ef4444'],
+                        borderWidth: 2, borderColor: cardBg
+                    }]
                 },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { label: function(c) { return ' ' + c.raw + ' tasks'; } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: textColor, font: { family: "'Segoe UI', sans-serif", size: 14 } } },
+                        tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.raw + '%'; } } }
+                    }
                 }
-            }
-        });
+            });
+        } else if (currentChartTab === 'subjects') {
+            const subjLabels = Object.keys(data.subjectStats);
+            const subjData = Object.values(data.subjectStats).map(s => s.completed);
+
+            weeklyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: subjLabels,
+                    datasets: [{
+                        label: 'Tasks Completed',
+                        data: subjData,
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#a855f7', '#ef4444', '#64748b'],
+                        borderWidth: 1, borderColor: cardBg, borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1, precision: 0 }, grid: { color: 'rgba(100, 116, 139, 0.1)' } },
+                        x: { ticks: { color: textColor }, grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(c) { return ' ' + c.raw + ' tasks'; } } }
+                    }
+                }
+            });
+        }
     }
 }
 
