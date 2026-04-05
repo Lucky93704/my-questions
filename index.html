@@ -6,6 +6,7 @@
 <title>Study Portal - Global Hub</title>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 <style>
 :root { --primary: #2563eb; --secondary: #1e40af; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0; --error: #ef4444; --success: #22c55e; --target: #8b5cf6;}
 [data-theme="dark"] { --primary: #60a5fa; --secondary: #93c5fd; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --border: #334155; --error: #f87171; --success: #4ade80; --target: #a78bfa;}
@@ -113,17 +114,22 @@ header p { color: #64748b; font-size: 1.1rem; }
 .subject-card { background: var(--bg); padding: 30px 20px; text-align: center; border-radius: 12px; font-size: 1.3rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; border: 2px dashed var(--primary); cursor: pointer; font-family: inherit; width: 100%; box-sizing: border-box; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; animation-delay: 0.2s;}
 .subject-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 10px 15px rgba(37, 99, 235, 0.15); background: var(--primary); color: white; border-style: solid; }
 
-/* PIN Screen Styles */
+/* Login/Auth Screen Styles */
 #pin-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10vh; text-align: center;}
 #pin-screen h2 { color: var(--primary); margin-bottom: 10px; font-size: 2rem; display: flex; align-items: center; gap: 10px; justify-content: center;}
 #pin-screen p { color: #64748b; margin-bottom: 20px; font-size: 0.95rem; }
 .pin-input-group { display: flex; flex-direction: column; align-items: center; gap: 15px; }
-#pin-input { font-size: 1.5rem; letter-spacing: 5px; text-align: center; padding: 12px; width: 180px; border-radius: 8px; border: 2px solid var(--border); background: var(--card-bg); color: var(--text); outline: none; transition: 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
-#pin-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); }
-#unlock-btn { background: var(--primary); color: white; border: none; padding: 12px 25px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 140px;}
+
+.auth-input { font-size: 1.1rem; text-align: left; padding: 12px 15px; width: 240px; border-radius: 8px; border: 2px solid var(--border); background: var(--card-bg); color: var(--text); outline: none; transition: 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); font-family: inherit; }
+.auth-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); }
+
+#unlock-btn { background: var(--primary); color: white; border: none; padding: 12px 25px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 120px;}
 #unlock-btn:hover:not(:disabled) { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
-#guest-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 12px 25px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 140px;}
+#guest-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 12px 25px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 120px;}
 #guest-btn:hover { background: var(--card-bg); border-color: var(--primary); color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+#signup-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 12px 20px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; min-width: 120px;}
+#signup-btn:hover { background: var(--card-bg); border-color: var(--primary); color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
 
 /* Linked Devices Styles */
 .device-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; transition: 0.2s; }
@@ -227,18 +233,24 @@ header p { color: #64748b; font-size: 1.1rem; }
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
         Access Portal
     </h2>
-    <p>Please enter the dynamic PIN</p>
+    <p>Please log in to continue</p>
     <div class="pin-input-group">
+        <input type="email" id="email-input" class="auth-input" placeholder="Email Address" autocomplete="email">
+        
         <div class="pin-wrapper" style="position: relative; display: inline-flex; align-items: center;">
-            <input type="password" id="pin-input" maxlength="8" placeholder="••••••••" inputmode="numeric" autocomplete="off" style="padding-right: 40px; width: 200px;">
-            <button type="button" id="toggle-pin-btn" title="Toggle PIN Visibility" style="position: absolute; right: 12px; background: transparent; border: none; color: #64748b; cursor: pointer; display: flex; padding: 0; outline: none; transition: 0.2s;">
+            <input type="password" id="password-input" class="auth-input" placeholder="Password" autocomplete="current-password" style="padding-right: 40px;">
+            <button type="button" id="toggle-pin-btn" title="Toggle Password Visibility" style="position: absolute; right: 12px; background: transparent; border: none; color: #64748b; cursor: pointer; display: flex; padding: 0; outline: none; transition: 0.2s;">
                 <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
         </div>
-        <div style="display: flex; gap: 10px; justify-content: center;">
+        
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
             <button id="unlock-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
-                Unlock
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                Login
+            </button>
+            <button id="signup-btn">
+                Sign Up
             </button>
             <button id="guest-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -540,18 +552,41 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth(); // NEW: Initialize Auth
+
+// Global state
+let isGuestMode = sessionStorage.getItem('isGuest') === 'true';
+let currentUserUid = null; // NEW: Track user ID
+let currentSessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
+let activeSessionsArray = [];
+let isLoggingOut = false;
+let editingSessionId = null;
+
+// ==========================================
+// AUTHENTICATION OBSERVER
+// ==========================================
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        // User is signed in
+        currentUserUid = user.uid;
+        if (localStorage.getItem('isUnlocked') === 'true') {
+            launchPortal();
+        }
+    } else {
+        // User is signed out
+        currentUserUid = null;
+        if (!isGuestMode) {
+            document.getElementById('pin-screen').style.display = 'flex';
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('profile-container').style.display = 'none';
+        }
+    }
+});
 
 function getLocalISOString(date) {
     const offset = date.getTimezoneOffset() * 60000;
     return (new Date(date - offset)).toISOString().split('T')[0];
 }
-
-// Global state
-let isGuestMode = sessionStorage.getItem('isGuest') === 'true';
-let currentSessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
-let activeSessionsArray = [];
-let isLoggingOut = false;
-let editingSessionId = null; // New global var for renaming
 
 // ==========================================
 // SESSION MANAGEMENT (LINKED DEVICES)
@@ -591,7 +626,7 @@ function getOrCreateDeviceId() {
 }
 
 async function initSession() {
-    if (isGuestMode) return;
+    if (isGuestMode || !currentUserUid) return;
     
     const persistentDeviceId = getOrCreateDeviceId();
 
@@ -603,18 +638,18 @@ async function initSession() {
             sessionStorage.setItem('sessionId', currentSessionId);
         }
                 
-        // Fetch custom name STRICTLY from Firebase device registry
+        // Fetch custom name from User's Private Registry
         let finalName = getDeviceName();
         try {
-            const registrySnap = await db.collection('portalData').doc('deviceRegistry').get();
+            const registrySnap = await db.collection('users').doc(currentUserUid).collection('portalData').doc('deviceRegistry').get();
             if (registrySnap.exists) {
                 const registry = registrySnap.data();
                 if (registry[persistentDeviceId]) {
-                    finalName = registry[persistentDeviceId]; // Use saved cloud name
+                    finalName = registry[persistentDeviceId];
                 }
             }
         } catch(e) { 
-            console.error("Error fetching device registry from Firebase", e); 
+            console.error("Error fetching device registry", e); 
         }
 
         const newSession = {
@@ -624,7 +659,7 @@ async function initSession() {
             time: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
         };
                 
-        await db.collection('portalData').doc('activeSessions').set({
+        await db.collection('users').doc(currentUserUid).collection('portalData').doc('activeSessions').set({
             sessions: firebase.firestore.FieldValue.arrayUnion(newSession)
         }, { merge: true });
     }
@@ -651,7 +686,6 @@ async function saveDeviceName(sessionId, deviceId) {
         return;
     }
 
-    // Update active UI state immediately
     const sessionIndex = activeSessionsArray.findIndex(s => s.id === sessionId);
     if (sessionIndex > -1) {
         activeSessionsArray[sessionIndex].name = newName;
@@ -660,30 +694,26 @@ async function saveDeviceName(sessionId, deviceId) {
     renderLinkedDevices();
 
     try {
-        // 1. Update the active session in Firebase
-        await db.collection('portalData').doc('activeSessions').update({
+        await db.collection('users').doc(currentUserUid).collection('portalData').doc('activeSessions').update({
             sessions: activeSessionsArray
         });
 
-        // Ensure we have a deviceId to register to the cloud
         const targetDeviceId = deviceId || getOrCreateDeviceId();
-
-        // 2. Save permanently to Firebase device registry so it survives logouts
-        await db.collection('portalData').doc('deviceRegistry').set({
+        await db.collection('users').doc(currentUserUid).collection('portalData').doc('deviceRegistry').set({
             [targetDeviceId]: newName
         }, { merge: true });
 
         showToast('Device renamed and saved to cloud!', 'success');
     } catch (e) {
-        console.error("Error renaming device in Firebase", e);
+        console.error("Error renaming device", e);
         showToast('Failed to save device name to cloud.', 'error');
     }
 }
 
 function listenToSessions() {
-    if (isGuestMode) return;
+    if (isGuestMode || !currentUserUid) return;
     
-    db.collection('portalData').doc('activeSessions').onSnapshot((doc) => {
+    db.collection('users').doc(currentUserUid).collection('portalData').doc('activeSessions').onSnapshot((doc) => {
         if (doc.exists) {
             activeSessionsArray = doc.data().sessions || [];
             if (currentSessionId && !isLoggingOut) {
@@ -696,7 +726,7 @@ function listenToSessions() {
                 renderLinkedDevices();
             }
         } else {
-            db.collection('portalData').doc('activeSessions').set({ sessions: [] });
+            db.collection('users').doc(currentUserUid).collection('portalData').doc('activeSessions').set({ sessions: [] });
         }
     });
 }
@@ -704,9 +734,9 @@ function listenToSessions() {
 async function confirmRemoveAllOthers() {
     const confirmed = await showCustomConfirm("Are you sure you want to log out all other devices? They will be immediately disconnected.", "Log Out All Others", true);
     
-    if (confirmed) {
+    if (confirmed && currentUserUid) {
         try {
-            const docRef = db.collection('portalData').doc('activeSessions');
+            const docRef = db.collection('users').doc(currentUserUid).collection('portalData').doc('activeSessions');
             const docSnap = await docRef.get();
             
             if (docSnap.exists) {
@@ -731,9 +761,9 @@ async function confirmRemoveAllOthers() {
 }
 
 async function removeSession(sessionId) {
-    if (isGuestMode) return;
+    if (isGuestMode || !currentUserUid) return;
     try {
-        const docRef = db.collection('portalData').doc('activeSessions');
+        const docRef = db.collection('users').doc(currentUserUid).collection('portalData').doc('activeSessions');
         const docSnap = await docRef.get();
         if (docSnap.exists) {
             const sessions = docSnap.data().sessions || [];
@@ -837,11 +867,11 @@ async function loadGlanceData() {
             const allGuestTargets = JSON.parse(localStorage.getItem('guestTargets') || '[]');
             todayTargets = allGuestTargets.filter(t => t.date === todayStr);
             streakTargets = allGuestTargets.filter(t => t.date >= startLimitStr && t.date <= todayStr);
-        } else {
-            const todaySnap = await db.collection("dailyTargets").where("date", "==", todayStr).get();
+        } else if (currentUserUid) {
+            const todaySnap = await db.collection("users").doc(currentUserUid).collection("dailyTargets").where("date", "==", todayStr).get();
             todaySnap.forEach(doc => todayTargets.push(doc.data()));
             
-            const streakSnap = await db.collection("dailyTargets").where("date", ">=", startLimitStr).where("date", "<=", todayStr).get();
+            const streakSnap = await db.collection("users").doc(currentUserUid).collection("dailyTargets").where("date", ">=", startLimitStr).where("date", "<=", todayStr).get();
             streakSnap.forEach(doc => streakTargets.push(doc.data()));
         }
 
@@ -964,7 +994,7 @@ function setGreetingAndQuote() {
 }
 
 // ==========================================
-// PORTAL ACCESS LOGIC
+// PORTAL ACCESS LOGIC (EMAIL/PASSWORD)
 // ==========================================
 document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
@@ -998,37 +1028,63 @@ async function launchPortal() {
     }
 }
 
-function attemptUnlock() {
-    const pinInput = document.getElementById('pin-input');
+async function attemptUnlock() {
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    const btn = document.getElementById('unlock-btn');
     
-    if (pinInput.value === "24122009") {
-        document.getElementById('unlock-btn').innerHTML = '<span class="spinner"></span> Unlocking...';
+    if (!emailInput.value || !passwordInput.value) {
+        showToast('Please enter both email and password.', 'error');
+        return;
+    }
+
+    btn.innerHTML = '<span class="spinner"></span> Logging in...';
+    btn.disabled = true;
+
+    try {
+        await auth.signInWithEmailAndPassword(emailInput.value.trim(), passwordInput.value);
+        
         localStorage.setItem('isUnlocked', 'true');
-    
         isGuestMode = false;
         showToast('Access Granted!', 'success');
-         
         setTimeout(launchPortal, 800);
-    } else {
-        showToast('Incorrect PIN.', 'error');
-        pinInput.classList.add('error-shake');
-        
-        setTimeout(() => {
-            pinInput.classList.remove('error-shake');
-            pinInput.value = '';
-        }, 400);
+    } catch (error) {
+        showToast(error.message.replace('Firebase: ', ''), 'error');
+        passwordInput.classList.add('error-shake');
+        setTimeout(() => passwordInput.classList.remove('error-shake'), 400);
+    } finally {
+        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg> Login';
+        btn.disabled = false;
     }
 }
 
+document.getElementById('signup-btn').addEventListener('click', async () => {
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    
+    if (!emailInput.value || !passwordInput.value) {
+        showToast('Enter an email and password to sign up.', 'error');
+        return;
+    }
+
+    try {
+        await auth.createUserWithEmailAndPassword(emailInput.value.trim(), passwordInput.value);
+        showToast('Account created successfully! Logging in...', 'success');
+        attemptUnlock(); 
+    } catch (error) {
+        showToast(error.message.replace('Firebase: ', ''), 'error');
+    }
+});
+
 document.getElementById('toggle-pin-btn').addEventListener('click', function() {
-    const pinInput = document.getElementById('pin-input');
+    const passwordInput = document.getElementById('password-input');
     const eyeIcon = document.getElementById('eye-icon');
     
-    if (pinInput.type === 'password') {
-        pinInput.type = 'text';
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
         eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
     } else {
-        pinInput.type = 'password';
+        passwordInput.type = 'password';
         eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
     }
 });
@@ -1048,6 +1104,8 @@ async function handleLogout(type = 'manual') {
     if (currentSessionId && !isGuestMode && type !== 'remote') {
         await removeSession(currentSessionId);
     }
+    
+    await auth.signOut(); // Sign out of Firebase
         
     sessionStorage.removeItem('isGuest'); 
     sessionStorage.removeItem('sessionId'); 
@@ -1069,7 +1127,7 @@ async function handleLogout(type = 'manual') {
 }
 
 document.getElementById('unlock-btn').addEventListener('click', attemptUnlock);
-document.getElementById('pin-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') attemptUnlock(); });
+document.getElementById('password-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') attemptUnlock(); });
 document.getElementById('logout-btn').addEventListener('click', () => handleLogout('manual'));
 
 // ==========================================
@@ -1121,7 +1179,7 @@ async function submitQuickTask() {
     btn.disabled = true;
     
     try {
-        await db.collection("dailyTargets").add({
+        await db.collection("users").doc(currentUserUid).collection("dailyTargets").add({
             task: taskText, subject: subject, date: quickAddTargetDate, completed: false, isRecurring: false, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         showToast("Task scheduled successfully!", "success");
@@ -1173,9 +1231,9 @@ async function renderCalendar() {
     if (isGuestMode) {
         const allGuestTargets = JSON.parse(localStorage.getItem('guestTargets') || '[]');
         calendarTargets = allGuestTargets.filter(t => t.date >= startStr && t.date <= endStr);
-    } else {
+    } else if (currentUserUid) {
         try {
-            const snapshot = await db.collection("dailyTargets").where("date", ">=", startStr).where("date", "<=", endStr).get();
+            const snapshot = await db.collection("users").doc(currentUserUid).collection("dailyTargets").where("date", ">=", startStr).where("date", "<=", endStr).get();
             snapshot.forEach(doc => calendarTargets.push(doc.data()));
         } catch (e) { console.error("Error fetching calendar data:", e); }
     }
@@ -1326,7 +1384,9 @@ function loadHistory() {
         deletedNotesHistory = JSON.parse(localStorage.getItem('guestHistory') || '[]');
         return;
     }
-    db.collection('portalData').doc('noteHistory').onSnapshot((doc) => {
+    if(!currentUserUid) return;
+    
+    db.collection('users').doc(currentUserUid).collection('portalData').doc('noteHistory').onSnapshot((doc) => {
         if (doc.exists) {
             deletedNotesHistory = doc.data().history || [];
         }
@@ -1345,7 +1405,7 @@ async function saveHistory(noteContent) {
     }
 
     try {
-        await db.collection('portalData').doc('noteHistory').set({ history: deletedNotesHistory });
+        await db.collection('users').doc(currentUserUid).collection('portalData').doc('noteHistory').set({ history: deletedNotesHistory });
     } catch(e) { console.error("History save error", e); }
 }
 
@@ -1358,8 +1418,9 @@ function loadNotepad() {
         loadHistory();
         return;
     }
+    if(!currentUserUid) return;
 
-    db.collection('portalData').doc('quickNotes').onSnapshot((doc) => {
+    db.collection('users').doc(currentUserUid).collection('portalData').doc('quickNotes').onSnapshot((doc) => {
         const serverText = doc.exists ? (doc.data().content || '') : '';
         
         if (quickNotepad.value !== serverText) {
@@ -1397,7 +1458,7 @@ async function saveNotepadToFirebase() {
         syncStatus.innerHTML = iconCloudSync;
         syncStatus.className = 'sync-status saving';
         
-        await db.collection('portalData').doc('quickNotes').set({
+        await db.collection('users').doc(currentUserUid).collection('portalData').doc('quickNotes').set({
             content: quickNotepad.value,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
@@ -1537,18 +1598,12 @@ function restoreHistory(index) {
 }
 
 // ==========================================
-// ON PAGE LOAD: CHECK IF SESSION IS VALID
+// HANDLE GUEST MODE ON LOAD
 // ==========================================
-async function checkSessionValidity() {
-    const isLocalUnlocked = localStorage.getItem('isUnlocked') === 'true';
-    const isGuestSession = sessionStorage.getItem('isGuest') === 'true';
-
-    if (isLocalUnlocked || isGuestSession) {
-        launchPortal();
-    }
+if (sessionStorage.getItem('isGuest') === 'true') {
+    isGuestMode = true;
+    launchPortal();
 }
-
-checkSessionValidity();
 
 // ==========================================
 // THEME LOGIC
