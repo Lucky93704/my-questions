@@ -781,7 +781,10 @@ function updateHistoryData(currentPercent) {
 function updateHistoryChart() {
     if (!syllabusData.history || syllabusData.history.length === 0) return;
 
-    const ctx = document.getElementById('historyChart').getContext('2d');
+    const historyCanvas = document.getElementById('historyChart');
+    if (!historyCanvas) return; // Fail-safe added
+
+    const ctx = historyCanvas.getContext('2d');
     const labels = syllabusData.history.map(item => {
         const d = new Date(item.date);
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
@@ -848,7 +851,10 @@ function updateHistoryChart() {
 }
 
 function updateRadarChart(stats) {
-    const ctx = document.getElementById('radarChart').getContext('2d');
+    const radarCanvas = document.getElementById('radarChart');
+    if (!radarCanvas) return; // Fail-safe added
+
+    const ctx = radarCanvas.getContext('2d');
     const data = [stats.maths, stats.english, stats.gk, stats.reasoning];
     const textColor = document.body.getAttribute('data-theme') === 'dark' ? '#cbd5e1' : '#64748b';
     const gridColor = document.body.getAttribute('data-theme') === 'dark' ? '#334155' : '#e2e8f0';
@@ -895,6 +901,8 @@ function updateRadarChart(stats) {
 // --- TAB SWITCHING ---
 function switchTab(tabId) {
     const targetContent = document.getElementById(tabId);
+    if (!targetContent) return; // Fail-safe added
+
     const filterBar = document.getElementById('main-filter-bar');
 
     // 1. Check if clicked subject is already open -> Animate closing
