@@ -1221,19 +1221,9 @@ async function renderCalendar() {
         const checkDateStr = getLocalISOString(checkDate);
         const status = dayStatus[checkDateStr];
         
-        let clickTimer = null;
-        dayDiv.addEventListener('click', (e) => {
-            if (clickTimer) {
-                clearTimeout(clickTimer);
-                clickTimer = null;
-                openQuickAddModal(checkDateStr);
-            } else {
-                clickTimer = setTimeout(() => {
-                    clickTimer = null;
-                    window.location.href = `studydashboard.html?date=${checkDateStr}`;
-                }, 250);
-            }
-        });
+dayDiv.addEventListener('click', () => {
+    window.location.href = `studydashboard.html?date=${checkDateStr}`;
+});
         
         const tooltip = document.createElement('div');
         tooltip.className = 'cal-tooltip';
@@ -1282,9 +1272,9 @@ async function renderCalendar() {
                                      <div class="tooltip-hint">Click to jump to this date</div>`;
             }
         } else {
-            tooltip.innerHTML = `<div class="tooltip-title" style="color: #64748b;">📅 No Data</div>
-                                 <div class="tooltip-row" style="margin-top:0;">No targets were set for this day.</div>
-                                 <div class="tooltip-hint">Double-click to quick add</div>`;
+           tooltip.innerHTML = `<div class="tooltip-title" style="color: #64748b;">📅 No Data</div>
+                     <div class="tooltip-row" style="margin-top:0;">No targets were set for this day.</div>
+                     <div class="tooltip-hint">Click to jump to this date</div>`;
         }
         
         dayDiv.appendChild(tooltip);
