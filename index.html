@@ -335,12 +335,9 @@ header p { color: #64748b; font-size: 1.1rem; }
                     <span id="sync-status" class="sync-status" title="Sync Status">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="9 16 12 19 16 14"></polyline></svg>
                     </span>
-                    <button class="notepad-action-btn" id="btn-spellcheck" title="Toggle Spell Check & Grammar" onclick="toggleSpellCheck()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><polyline points="10 10 12 12 15 9"></polyline></svg>
-                    </button>
-                    <button class="notepad-action-btn" id="btn-search-replace" title="Search & Replace" onclick="toggleSearchReplace()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    </button>
+                    <button class="notepad-action-btn" id="btn-search" title="Search Notes" onclick="toggleSearch()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+</button>
                     <button class="notepad-action-btn" id="btn-history" title="Version History" onclick="showHistoryModal()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><polyline points="12 7 12 12 15 15"></polyline></svg>
                     </button>
@@ -353,11 +350,10 @@ header p { color: #64748b; font-size: 1.1rem; }
                 </div>
             </div>
             
-            <div id="search-replace-ui" style="display: none; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
-                <input type="text" id="search-input" placeholder="Find..." style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none;">
-                <input type="text" id="replace-input" placeholder="Replace with..." style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none;">
-                <button onclick="performReplace()" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Replace All</button>
-            </div>
+            <div id="search-ui" style="display: none; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
+    <input type="text" id="search-input" placeholder="Find in notes" style="flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none;">
+    <button onclick="performSearch()" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Find Next</button>
+</div>
 
             <textarea id="quick-notepad" class="notepad-textarea" placeholder="Note down formulas, ideas, or quick reminders" spellcheck="false"></textarea>
             
@@ -443,9 +439,13 @@ header p { color: #64748b; font-size: 1.1rem; }
         <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 15px;">Last 5 removed/cleared notes</p>
         <div id="history-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto;">
         </div>
-        <div style="text-align: right; margin-top: 20px;">
-            <button onclick="document.getElementById('history-modal').style.display='none'" style="background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
-        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+    <button id="clear-history-btn" onclick="clearNoteHistory()" style="background: transparent; border: 1px solid var(--error); color: var(--error); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='var(--error)'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='var(--error)';">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Clear History
+    </button>
+    <button onclick="document.getElementById('history-modal').style.display='none'" style="background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
+</div>
     </div>
 </div>
 
@@ -1430,46 +1430,64 @@ if (quickNotepad) {
         }, 1500); 
     });
 }
+// Search Variables
+let lastSearchIndex = 0;
+let lastSearchQuery = "";
 
-// Action Bar Utilities
-let spellCheckActive = false;
-function toggleSpellCheck() {
-    spellCheckActive = !spellCheckActive;
-    quickNotepad.setAttribute('spellcheck', spellCheckActive.toString());
-    const btn = document.getElementById('btn-spellcheck');
-    if(spellCheckActive) {
-        btn.style.color = 'var(--primary)';
-        showToast("Spell check & grammar suggestions enabled.", "success");
-    } else {
-        btn.style.color = '#64748b';
-        showToast("Spell check disabled.", "info");
-    }
-}
-
-function toggleSearchReplace() {
-    const ui = document.getElementById('search-replace-ui');
+function toggleSearch() {
+    const ui = document.getElementById('search-ui');
     ui.style.display = ui.style.display === 'none' ? 'flex' : 'none';
-    if(ui.style.display === 'flex') document.getElementById('search-input').focus();
-}
-
-function performReplace() {
-    const searchStr = document.getElementById('search-input').value;
-    const replaceStr = document.getElementById('replace-input').value;
-    if (!searchStr) return;
-    
-    const originalText = quickNotepad.value;
-    const newText = originalText.split(searchStr).join(replaceStr);
-    
-    if (originalText !== newText) {
-        quickNotepad.value = newText;
-        updateNoteStats();
-        clearTimeout(noteSaveTimeout);
-        saveNotepadToFirebase();
-        showToast("Text replaced successfully.", "success");
+    if(ui.style.display === 'flex') {
+        document.getElementById('search-input').focus();
     } else {
-        showToast("Text not found.", "info");
+        // Reset search states when closed
+        lastSearchIndex = 0;
+        lastSearchQuery = "";
     }
 }
+
+function performSearch() {
+    const searchStr = document.getElementById('search-input').value;
+    if (!searchStr) {
+        showToast("Please enter text to search.", "info");
+        return;
+    }
+    
+    // Reset index if the user types a new word
+    if (searchStr !== lastSearchQuery) {
+        lastSearchIndex = 0;
+        lastSearchQuery = searchStr;
+    }
+
+    const originalText = quickNotepad.value;
+    const lowerText = originalText.toLowerCase();
+    const lowerSearch = searchStr.toLowerCase();
+    
+    const index = lowerText.indexOf(lowerSearch, lastSearchIndex);
+    
+    if (index !== -1) {
+        // Match found: Focus and highlight the text
+        quickNotepad.focus();
+        quickNotepad.setSelectionRange(index, index + searchStr.length);
+        
+        // Update index for the next "Find Next" click
+        lastSearchIndex = index + searchStr.length;
+    } else {
+        if (lastSearchIndex > 0) {
+            // Reached the bottom, wrap around to the top
+            showToast("Reached the end. Starting from top.", "info");
+            lastSearchIndex = 0;
+        } else {
+            // Word doesn't exist in the text at all
+            showToast("Text not found.", "info");
+        }
+    }
+}
+
+// Optional: Allow pressing "Enter" inside the search box to trigger the search
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') performSearch();
+});
 
 function copyNotepad() {
     if (!quickNotepad.value.trim()) {
@@ -1535,7 +1553,36 @@ function restoreHistory(index) {
     document.getElementById('history-modal').style.display = 'none';
     showToast("Note restored successfully.", "success");
 }
+async function clearNoteHistory() {
+    // Check if there's actually anything to delete
+    if (deletedNotesHistory.length === 0) {
+        showToast("History is already empty.", "info");
+        return;
+    }
 
+    // Prompt the user using your custom confirm modal
+    const confirmed = await showCustomConfirm("Are you sure you want to permanently delete your note history? This cannot be undone.", "Clear Version History", true);
+
+    if (confirmed) {
+        deletedNotesHistory = []; // Empty the local array
+
+        if (isGuestMode) {
+            localStorage.removeItem('guestHistory');
+        } else {
+            try {
+                // Clear the history array in Firebase
+                await db.collection('portalData').doc('noteHistory').set({ history: [] });
+            } catch (e) {
+                console.error("Error clearing history in Firebase", e);
+                showToast("Failed to clear cloud history.", "error");
+                return;
+            }
+        }
+
+        showToast("Version history cleared.", "success");
+        showHistoryModal(); // Re-render the modal UI so it shows "No removed notes history yet."
+    }
+}
 // ==========================================
 // ON PAGE LOAD: CHECK IF SESSION IS VALID
 // ==========================================
