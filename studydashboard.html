@@ -744,10 +744,6 @@ function addTask() {
 
 function toggleTask(id, currentStatus) {
     db.collection("dailyTargets").doc(id).update({ completed: !currentStatus });
-    const xpChange = !currentStatus ? 10 : -10;
-    db.collection("userStats").doc("global").set({ 
-        xp: firebase.firestore.FieldValue.increment(xpChange) 
-    }, { merge: true });
 }
 
 async function deleteTask(id) {
