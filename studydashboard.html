@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+    if (sessionStorage.getItem('isUnlocked') !== 'true' && localStorage.getItem('isUnlocked') !== 'true') {
+        window.location.href = 'index.html';
+    }
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Dashboard - SSC Portal</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root { 
+    --primary: #2563eb; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; 
+    --border: #e2e8f0; --error: #ef4444; --success: #22c55e; --target: #8b5cf6; 
+    --target-hover: #7c3aed; --holiday-bg: linear-gradient(135deg, #fde047, #f59e0b); --holiday-text: #78350f;
+}
+[data-theme="dark"] { 
+    --primary: #60a5fa; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; 
+    --border: #334155; --error: #f87171; --success: #4ade80; --target: #a78bfa; 
+    --target-hover: #8b5cf6; --holiday-bg: linear-gradient(135deg, #78350f, #b45309); --holiday-text: #fef3c7;
+}
+
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.3s; }
+.container { max-width: 800px; margin: auto; padding-top: 40px; padding-bottom: 50px; }
+
+.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
+.header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; color: var(--target); display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.header-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; align-items: center;}
+.back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
+svg { fill: currentColor; }
+
+.progress-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s, transform 0.3s;}
+.date-selector { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
+.date-selector h3 { margin: 0; font-size: 1.2rem; }
+.date-controls { display: flex; align-items: center; gap: 10px; }
+.date-input { padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s; cursor: pointer; font-weight: bold;}
+.date-input:focus { border-color: var(--target); }
+.carry-over-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+.carry-over-btn:hover { border-color: var(--primary); color: var(--primary); }
+.holiday-btn:hover { border-color: var(--error); color: var(--error); }
+
+.progress-bar-bg { height: 12px; background: var(--bg); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.progress-bar-fill { height: 100%; width: 0%; background: var(--target); transition: width 0.4s ease-out, background-color 0.3s; }
+.progress-text { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 0.85rem; font-weight: bold; color: var(--target); margin-top: 5px; transition: color 0.3s;}
+
+@keyframes guiltyShake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+.guilty-card { animation: guiltyShake 0.5s ease; border-color: var(--error) !important; }
+
+.add-task-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;}
+.add-task-form input[type="text"] { flex: 2; min-width: 250px; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s;}
+.add-task-form input[type="text"]:focus { border-color: var(--target); }
+
+/* Updated Select Dropdown with custom arrow and fixed width */
+.add-task-form select { 
+    flex: 0 0 auto; 
+    width: 140px; 
+    padding: 12px 35px 12px 15px; 
+    border: 2px solid var(--border); 
+    border-radius: 8px; 
+    background-color: var(--card-bg); 
+    color: var(--text); 
+    font-size: 1rem; 
+    outline: none; 
+    cursor: pointer; 
+    box-sizing: border-box; 
+    appearance: none; 
+    -webkit-appearance: none; 
+    -moz-appearance: none; 
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    transition: border-color 0.3s;
+}
+/* New Hover Effect for the dropdown */
+.add-task-form select:hover {
+    border-color: var(--target);
+}
+
+.add-btn { background: var(--target); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px;}
+.add-btn:hover { background: var(--target-hover); transform: translateY(-2px); }
+.add-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.filters-container { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+.filters-container::-webkit-scrollbar { display: none; }
+.filter-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: 0.2s; white-space: nowrap; }
+.filter-btn:hover { border-color: var(--target); color: var(--target); }
+.filter-btn.active { background: var(--target); color: white; border-color: var(--target); }
+[data-theme="dark"] .filter-btn.active { background: var(--target); color: white; }
+
+.task-list { display: flex; flex-direction: column; gap: 12px; }
+.task-item { background: var(--card-bg); padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 15px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+.task-item:hover { border-color: var(--target); transform: translateX(3px); }
+.task-item.completed { opacity: 0.6; background: var(--bg); }
+.task-item.completed .task-text { text-decoration: line-through; color: #64748b; }
+.task-hidden { display: none !important; }
+
+.task-left { display: flex; align-items: center; gap: 15px; flex: 1; overflow: hidden; }
+.custom-checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; background: var(--bg);}
+.task-item.completed .custom-checkbox { background: var(--success); border-color: var(--success); color: white; }
+.task-text { font-size: 1.05rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s; cursor: pointer; display: flex; align-items: center; gap: 8px;}
+
+.task-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.subj-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: bold; margin-right: 5px; }
+.subj-Maths { background: #dbeafe; color: #1e40af; }
+.subj-English { background: #fef3c7; color: #92400e; }
+.subj-GK { background: #dcfce3; color: #166534; }
+.subj-Reasoning { background: #f3e8ff; color: #6b21a8; }
+.subj-Mock { background: #fee2e2; color: #991b1b; }
+.subj-Other { background: #f1f5f9; color: #475569; }
+[data-theme="dark"] .subj-Maths { background: #1e3a8a; color: #bfdbfe; }
+[data-theme="dark"] .subj-English { background: #78350f; color: #fde68a; }
+[data-theme="dark"] .subj-GK { background: #14532d; color: #bbf7d0; }
+[data-theme="dark"] .subj-Reasoning { background: #581c87; color: #e9d5ff; }
+[data-theme="dark"] .subj-Mock { background: #7f1d1d; color: #fecaca; }
+[data-theme="dark"] .subj-Other { background: #334155; color: #cbd5e1; }
+
+/* Reflection Box Styles */
+.reflection-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s; }
+.reflection-header { display: flex; justify-content: space-between; align-items: center; }
+.reflection-header h3 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; color: var(--target); }
+#reflection-content { padding: 12px 15px; background: var(--bg); border-radius: 8px; border: 1px dashed var(--border); }
+
+@keyframes holidayBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
+.holiday-banner { background: var(--holiday-bg); color: var(--holiday-text); padding: 30px 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); animation: holidayBreathe 3s ease-in-out infinite; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.holiday-banner h3 { margin: 0; font-size: 1.6rem; display: flex; align-items: center; gap: 10px; }
+.holiday-banner p { margin: 0; font-size: 1.1rem; opacity: 0.9; max-width: 80%; }
+.holiday-delete-btn { background: rgba(255, 255, 255, 0.25); border: none; color: inherit; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+.holiday-delete-btn:hover { background: rgba(255, 255, 255, 0.4); }
+[data-theme="dark"] .holiday-delete-btn { background: rgba(0, 0, 0, 0.3); }
+[data-theme="dark"] .holiday-delete-btn:hover { background: rgba(0, 0, 0, 0.5); }
+
+.icon-btn { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+.icon-btn:hover { background: rgba(0,0,0,0.05); }
+.icon-btn.edit-btn:hover { color: var(--primary); background: rgba(37, 99, 235, 0.1); }
+.icon-btn.delete-btn:hover { color: var(--error); background: rgba(239, 68, 68, 0.1); }
+[data-theme="dark"] .icon-btn:hover { background: rgba(255,255,255,0.05); }
+
+.empty-state { text-align: center; padding: 40px 20px; color: #64748b; font-style: italic; }
+
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-6px); } }
+.input-error { border-color: var(--error) !important; animation: shake 0.4s ease-in-out; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+
+.theme-toggle { position: absolute; top: 30px; right: 30px; background: var(--card-bg); border: 2px solid var(--border); cursor: pointer; color: var(--text); padding: 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 1000;}
+.theme-toggle:hover { transform: translateY(-5px); border-color: var(--primary); color: var(--primary); }
+.theme-toggle svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.5s; }
+.rotate { transform: rotate(360deg); }
+
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 550px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+.modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--primary); font-size: 1.6rem; }
+.date-range-container { background: var(--bg); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); }
+.presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; justify-content: center; }
+.preset-btn { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+.preset-btn:hover { border-color: var(--primary); color: var(--primary); }
+.preset-btn.active { background: var(--target); color: white; border-color: var(--target); }
+.custom-dates { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; align-items: center; }
+.custom-dates label { font-size: 0.9rem; font-weight: bold; color: var(--text); }
+.custom-dates input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg); color: var(--text); outline: none; font-family: inherit; }
+.custom-dates input:focus { border-color: var(--target); }
+
+.custom-dialog-box { max-width: 400px; text-align: left; padding: 25px; }
+.custom-dialog-box h3 { font-size: 1.4rem; color: var(--target); margin-bottom: 15px; }
+.custom-dialog-box p { font-size: 1.05rem; margin-bottom: 20px; color: var(--text); line-height: 1.5; }
+.custom-dialog-input { width: 100%; box-sizing: border-box; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; margin-bottom: 20px; font-family: inherit; }
+.custom-dialog-input:focus { border-color: var(--target); }
+.custom-dialog-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.custom-dialog-cancel { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: 0.2s; }
+.custom-dialog-cancel:hover { border-color: var(--error); color: var(--error); }
+.custom-dialog-confirm { background: var(--target); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: 0.2s; }
+.custom-dialog-confirm:hover { background: var(--target-hover); transform: translateY(-2px); }
+
+.insights-box { background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #d97706; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; display: none; align-items: flex-start; gap: 10px; text-align: left; line-height: 1.4; }
+[data-theme="dark"] .insights-box { color: #fbbf24; }
+.insights-box.success-insight { background: rgba(34, 197, 94, 0.1); border-color: var(--success); color: var(--success); }
+[data-theme="dark"] .insights-box.success-insight { color: var(--success); }
+.insights-box svg { flex-shrink: 0; margin-top: 2px; fill: currentColor; }
+
+.analytics-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+.tab-btn { background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: 0.2s; }
+.tab-btn:hover { border-color: var(--target); color: var(--target); }
+.tab-btn.active { background: var(--target); color: white; border-color: var(--target); }
+#analytics-subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 15px; font-weight: 500; }
+.close-modal { margin-top: 25px; background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s;}
+.close-modal:hover { border-color: var(--error); color: var(--error); }
+.chart-container { position: relative; height: 250px; width: 100%; display: flex; justify-content: center;}
+
+.dropdown { position: relative; display: inline-block; }
+.dropdown-content { display: none; position: absolute; background-color: var(--card-bg); min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1); z-index: 1000; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; top: 100%; right: 0; margin-top: 8px; }
+.dropdown-content.show { display: block; }
+.dropdown-content a { color: var(--text); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; transition: background-color 0.2s, color 0.2s; }
+.dropdown-content a:hover { background-color: var(--bg); color: var(--target); }
+.dropdown-active { border-color: var(--target) !important; color: var(--target) !important; }
+
+@media (max-width: 600px) {
+    .header { flex-direction: column; align-items: stretch; gap: 15px; }
+    .header h2 { font-size: 1.5rem; order: -1; margin-bottom: 5px; }
+    .header-actions { justify-content: center; width: 100%; }
+    .add-task-form input[type="text"] { width: 100%; flex: none; }
+    .add-task-form select { flex: 1; }
+    .add-btn { width: 100%; }
+    .custom-dates { flex-direction: column; gap: 10px; }
+    .dropdown-content { right: auto; left: 50%; transform: translateX(-50%); }
+}
+</style>
+</head>
+<body>
+
+<div id="weekly-recap-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-content custom-dialog-box" style="text-align: center; max-width: 450px;">
+        <h3 style="font-size: 1.8rem; margin-bottom: 10px; color: var(--target);">📅 Weekly Recap</h3>
+        <p style="font-size: 1.1rem; margin-bottom: 25px; color: var(--text);">Here is your performance from the past 7 days!</p>
+        <div style="display: flex; justify-content: space-around; margin-bottom: 25px; gap: 15px;">
+            <div style="background: var(--bg); padding: 15px; border-radius: 10px; border: 1px solid var(--border); flex: 1;">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--success);" id="recap-completed">0</div>
+                <div style="font-size: 0.9rem; color: var(--text); font-weight: 500;">Tasks Completed<br>(out of <span id="recap-total">0</span>)</div>
+            </div>
+            <div style="background: var(--bg); padding: 15px; border-radius: 10px; border: 1px solid var(--border); flex: 1;">
+                <div style="font-size: 1.4rem; font-weight: bold; color: var(--error); margin-top: 5px; min-height: 33px; display: flex; align-items: center; justify-content: center;" id="recap-weakest">None</div>
+                <div style="font-size: 0.9rem; color: var(--text); font-weight: 500; margin-top: 5px;">Weakest Subject</div>
+            </div>
+        </div>
+        <button class="custom-dialog-confirm" style="width: 100%; padding: 12px; font-size: 1.1rem;" onclick="document.getElementById('weekly-recap-modal').style.display='none'">Let's Conquer This Week!</button>
+    </div>
+</div>
+
+<div id="custom-dialog-overlay" class="modal-overlay">
+    <div class="modal-content custom-dialog-box">
+        <h3 id="custom-dialog-title">Title</h3>
+        <p id="custom-dialog-message">Message</p>
+        <input type="text" id="custom-dialog-input" class="custom-dialog-input" />
+        <div class="custom-dialog-actions">
+            <button id="custom-dialog-cancel" class="custom-dialog-cancel">Cancel</button>
+            <button id="custom-dialog-confirm" class="custom-dialog-confirm">OK</button>
+        </div>
+    </div>
+</div>
+
+<div id="analytics-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-content">
+        <h3>Performance Analytics</h3>
+        <div class="date-range-container">
+            <div class="presets">
+                <button class="preset-btn" onclick="setPreset('week', this)">1 Week</button>
+                <button class="preset-btn" onclick="setPreset('15days', this)">Last 15 Days</button>
+                <button class="preset-btn" onclick="setPreset('currentMonth', this)">Current Month</button>
+                <button class="preset-btn" onclick="setPreset('lastMonth', this)">Last Month</button>
+            </div>
+            <div class="custom-dates">
+                <div>
+                    <label>From: </label>
+                    <input type="date" id="analytics-start" onchange="clearPresetsAndFetch()">
+                </div>
+                <div>
+                    <label>To: </label>
+                    <input type="date" id="analytics-end" onchange="clearPresetsAndFetch()">
+                </div>
+            </div>
+        </div>
+        <p id="analytics-subtitle">Select date range</p>
+        <div id="analytics-insights" class="insights-box"></div>
+        <div class="analytics-tabs">
+            <button class="tab-btn active" id="tab-completion" onclick="switchChartTab('completion')">Completion %</button>
+            <button class="tab-btn" id="tab-subjects" onclick="switchChartTab('subjects')">Subject Breakdown</button>
+        </div>
+        <div class="chart-container">
+            <canvas id="weeklyChart"></canvas>
+        </div>
+        <button class="close-modal" onclick="document.getElementById('analytics-modal').style.display='none'">Close</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <div class="header-actions">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Home
+            </button>
+            <div class="dropdown">
+                <button class="back-btn" onclick="toggleDropdown(event)" style="background: transparent; border: 2px solid var(--border); color: var(--text); padding: 10px; display: flex; align-items: center; justify-content: center;" title="Go to Dashboard">
+                    <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+                </button>
+                <div id="gotoDropdown" class="dropdown-content">
+                    <a href="doubtsdashboard.html">Doubt Dashboard</a>
+                    <a href="syllabusdashboard.html">Syllabus Dashboard</a>
+                    <a href="mockdashboard.html">Mock Dashboard</a>
+                </div>
+            </div>
+            <button class="back-btn" onclick="openAnalyticsModal()" style="background: var(--target); color: white;">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Analytics
+            </button>
+        </div>
+        <h2>Study Dashboard</h2>
+    </div>
+
+    <div class="progress-card" id="progress-card">
+        <div class="date-selector">
+            <h3 id="display-date-text">Today's Plan</h3>
+            <div class="date-controls">
+                <button class="carry-over-btn holiday-btn" id="holiday-btn" onclick="addHoliday()" title="Mark today as a Holiday (Clears Tasks)">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
+                </button>
+                <button class="carry-over-btn" id="carry-over-btn" onclick="carryOverTasks()" title="Bring unfinished tasks & recurring tasks from yesterday to this date">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/></svg>
+                </button>
+                <input type="date" id="target-date" class="date-input" onchange="fetchTargets()">
+            </div>
+        </div>
+        <div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0/0 Completed (0%)</div>
+        </div>
+    </div>
+
+    <div class="add-task-form" id="add-task-container">
+        <input type="text" id="new-task-text" placeholder="What do you want to accomplish?" onkeypress="if(event.key === 'Enter') addTask()">
+        <select id="new-task-subject">
+            <option value="Maths">Maths</option>
+            <option value="English">English</option>
+            <option value="GK">GK</option>
+            <option value="Reasoning">Reasoning</option>
+            <option value="Mock">Mock Test</option>
+            <option value="Other">Other</option>
+        </select>
+        <button class="add-btn" id="add-task-btn" onclick="addTask()">Add Target</button>
+    </div>
+
+    <div class="filters-container" id="filters-container">
+        <button class="filter-btn active" onclick="setFilter('All', this)">All</button>
+        <button class="filter-btn" onclick="setFilter('Maths', this)">Maths</button>
+        <button class="filter-btn" onclick="setFilter('English', this)">English</button>
+        <button class="filter-btn" onclick="setFilter('GK', this)">GK</button>
+        <button class="filter-btn" onclick="setFilter('Reasoning', this)">Reasoning</button>
+        <button class="filter-btn" onclick="setFilter('Mock', this)">Mock Test</button>
+        <button class="filter-btn" onclick="setFilter('Other', this)">Other</button>
+    </div>
+
+    <div class="task-list" id="task-list">
+        <div class="empty-state">Loading targets...</div>
+    </div>
+
+    <div class="reflection-card" id="reflection-container" style="display: none;">
+        <div class="reflection-header">
+            <h3>
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/></svg> 
+                Daily Reflection
+            </h3>
+            <button class="icon-btn edit-btn" id="edit-reflection-btn" onclick="openReflectionDialog()" title="Edit Reflection" style="display: none;">
+                <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </button>
+        </div>
+        <div id="reflection-content">
+            <p class="empty-state" style="margin: 0; padding: 5px;">No reflection yet.</p>
+        </div>
+        <button class="add-btn" id="add-reflection-btn" onclick="openReflectionDialog()" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> 
+            Add Quick Note
+        </button>
+    </div>
+</div>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyCAw1Eozvog8hUdZW7THJQBlgze79sCkGk",
+    authDomain: "my-site-7fd99.firebaseapp.com",
+    projectId: "my-site-7fd99",
+    storageBucket: "my-site-7fd99.firebasestorage.app",
+    messagingSenderId: "1024490010463",
+    appId: "1:1024490010463:web:130447b333eaa7a5f468ea",
+    measurementId: "G-WS0G17WRE9"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let targetsUnsubscribe = null;
+let reflectionUnsubscribe = null;
+let currentReflection = "";
+let editingTargetId = null;
+let currentFilter = 'All';
+let previousPercentage = -1; 
+let weeklyChartInstance = null;
+let currentChartTab = 'completion'; 
+let lastAnalyticsData = null; 
+
+function toggleDropdown(event) {
+    event.stopPropagation();
+    document.getElementById("gotoDropdown").classList.toggle("show");
+    event.currentTarget.classList.toggle("dropdown-active");
+}
+
+window.addEventListener('click', function(event) {
+    if (!event.target.closest('.dropdown')) {
+        const dropdowns = document.getElementsByClassName("dropdown-content");
+        const buttons = document.querySelectorAll(".dropdown .back-btn");
+        for (let i = 0; i < dropdowns.length; i++) {
+            if (dropdowns[i].classList.contains('show')) {
+                dropdowns[i].classList.remove('show');
+            }
+        }
+        buttons.forEach(btn => btn.classList.remove('dropdown-active'));
+    }
+});
+
+function showCustomDialog({ type = 'alert', title = 'Notice', message = '', placeholder = '', defaultValue = '' }) {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('custom-dialog-overlay');
+        const titleEl = document.getElementById('custom-dialog-title');
+        const msgEl = document.getElementById('custom-dialog-message');
+        const inputEl = document.getElementById('custom-dialog-input');
+        const cancelBtn = document.getElementById('custom-dialog-cancel');
+        const confirmBtn = document.getElementById('custom-dialog-confirm');
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+
+        inputEl.style.display = 'none';
+        inputEl.value = '';
+        cancelBtn.style.display = 'none';
+
+        if (type === 'prompt') {
+            inputEl.style.display = 'block';
+            inputEl.placeholder = placeholder;
+            inputEl.value = defaultValue;
+            cancelBtn.style.display = 'inline-block';
+        } else if (type === 'confirm') {
+            cancelBtn.style.display = 'inline-block';
+        }
+
+        overlay.style.display = 'flex';
+        if (type === 'prompt') inputEl.focus();
+
+        const closeDialog = (result) => {
+            overlay.style.display = 'none';
+            cancelBtn.onclick = null;
+            confirmBtn.onclick = null;
+            resolve(result);
+        };
+
+        cancelBtn.onclick = () => closeDialog(null);
+        confirmBtn.onclick = () => {
+            if (type === 'prompt') {
+                closeDialog(inputEl.value);
+            } else {
+                closeDialog(true);
+            }
+        };
+    });
+}
+
+function getLocalISOString(date) {
+    const offset = date.getTimezoneOffset() * 60000;
+    return (new Date(date - offset)).toISOString().split('T')[0];
+}
+
+function initDate() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
+    if (dateParam) {
+        document.getElementById('target-date').value = dateParam;
+    } else {
+        document.getElementById('target-date').value = getLocalISOString(new Date());
+    }
+}
+
+function updateDateHeader(selectedDateStr) {
+    const selectedDate = new Date(selectedDateStr);
+    const todayStr = getLocalISOString(new Date());
+    const headerText = document.getElementById('display-date-text');
+    if (selectedDateStr === todayStr) {
+        headerText.innerText = "Today's Plan";
+    } else {
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        headerText.innerText = selectedDate.toLocaleDateString('en-IN', options) + " Plan";
+    }
+}
+
+function setFilter(subject, btnElement) {
+    currentFilter = subject;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    btnElement.classList.add('active');
+    
+    const tasks = document.querySelectorAll('.task-item');
+    tasks.forEach(task => {
+        if (currentFilter === 'All' || task.getAttribute('data-subject') === currentFilter) {
+            task.classList.remove('task-hidden');
+        } else {
+            task.classList.add('task-hidden');
+        }
+    });
+}
+
+function fetchReflection(date, isPastDate) {
+    const container = document.getElementById('reflection-container');
+    const content = document.getElementById('reflection-content');
+    const addBtn = document.getElementById('add-reflection-btn');
+    const editBtn = document.getElementById('edit-reflection-btn');
+
+    container.style.display = 'flex'; 
+
+    if (reflectionUnsubscribe) reflectionUnsubscribe();
+
+    reflectionUnsubscribe = db.collection("dailyReflections").doc(date)
+        .onSnapshot((doc) => {
+            if (doc.exists) {
+                currentReflection = doc.data().reflection;
+                content.innerHTML = `<p style="margin: 0; font-style: italic; color: var(--text); line-height: 1.5;">"${currentReflection}"</p>`;
+                addBtn.style.display = 'none';
+                editBtn.style.display = isPastDate ? 'none' : 'flex';
+            } else {
+                currentReflection = "";
+                content.innerHTML = isPastDate 
+                    ? `<p class="empty-state" style="margin:0; padding: 10px;">No reflection recorded for this day.</p>` 
+                    : `<p class="empty-state" style="margin:0; padding: 10px;">How did today go? Add a quick note.</p>`;
+                addBtn.style.display = isPastDate ? 'none' : 'flex';
+                editBtn.style.display = 'none';
+            }
+        }, (error) => {
+            console.error("Error fetching reflection:", error);
+        });
+}
+
+async function openReflectionDialog() {
+    const date = document.getElementById('target-date').value;
+    const text = await showCustomDialog({
+        type: 'prompt',
+        title: 'Daily Reflection',
+        message: 'How did today go? Log your thoughts, bottlenecks, or wins.',
+        placeholder: 'Type your reflection here...',
+        defaultValue: currentReflection
+    });
+
+    if (text !== null) { 
+        if (text.trim() === "") {
+            await db.collection("dailyReflections").doc(date).delete();
+        } else {
+            await db.collection("dailyReflections").doc(date).set({
+                reflection: text.trim(),
+                date: date,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+    }
+}
+
+function fetchTargets() {
+    const selectedDate = document.getElementById('target-date').value;
+    updateDateHeader(selectedDate);
+    
+    const todayStr = getLocalISOString(new Date());
+    const isPastDate = selectedDate < todayStr;
+
+    document.getElementById('holiday-btn').style.display = isPastDate ? 'none' : 'flex';
+    document.getElementById('carry-over-btn').style.display = isPastDate ? 'none' : 'flex';
+    
+    editingTargetId = null;
+    document.getElementById('add-task-btn').innerText = "Add Target";
+    document.getElementById('new-task-text').value = '';
+    previousPercentage = -1; 
+    
+    const listContainer = document.getElementById('task-list');
+    listContainer.innerHTML = '<div class="empty-state"><span class="spinner" style="border-top-color: var(--target);"></span> Loading...</div>';
+
+    if (targetsUnsubscribe) targetsUnsubscribe();
+
+    targetsUnsubscribe = db.collection("dailyTargets")
+        .where("date", "==", selectedDate)
+        .orderBy("timestamp", "desc") 
+        .onSnapshot((snapshot) => {
+            listContainer.innerHTML = '';
+            
+            let total = 0;
+            let completed = 0;
+            let isHolidayDay = false;
+            let holidayData = null;
+            let holidayId = null;
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
+                    isHolidayDay = true;
+                    holidayData = data;
+                    holidayId = doc.id;
+                } else {
+                    total++;
+                    if (data.completed) completed++;
+                }
+            });
+
+            if (isHolidayDay) {
+                document.getElementById('add-task-container').style.display = 'none';
+                document.getElementById('filters-container').style.display = 'none';
+                renderHoliday(holidayId, holidayData, listContainer, isPastDate);
+                updateProgressHoliday();
+                return;
+            }
+
+            document.getElementById('add-task-container').style.display = isPastDate ? 'none' : 'flex';
+            document.getElementById('filters-container').style.display = 'flex';
+
+            if (total === 0) {
+                listContainer.innerHTML = '<div class="empty-state">No targets set for this date. Take a break or add a new goal!</div>';
+                updateProgress(0, 0);
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (!data.isHoliday && data.subject !== "Holiday" && !(data.task && data.task.startsWith("Holiday:"))) {
+                    renderTask(doc.id, data, listContainer, isPastDate);
+                }
+            });
+
+            updateProgress(completed, total);
+        }, (error) => {
+            console.error("Error fetching targets:", error);
+            listContainer.innerHTML = '<div class="empty-state" style="color:var(--error);">Failed to load targets. Please check connection.</div>';
+        });
+
+    fetchReflection(selectedDate, isPastDate);
+}
+
+function renderTask(id, data, container, isPastDate) {
+    const div = document.createElement('div');
+    div.className = `task-item ${data.completed ? 'completed' : ''}`;
+    div.setAttribute('data-subject', data.subject);
+    
+    if (currentFilter !== 'All' && data.subject !== currentFilter) { div.classList.add('task-hidden'); }
+    
+    const checkIcon = data.completed ? `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>` : ``;
+    const safeTaskText = data.task ? data.task.replace(/'/g, "\\'") : "";
+    const recurringIcon = data.isRecurring ? `<span title="Recurring Task" style="display:flex; align-items:center; margin-left:5px;"><svg viewBox="0 0 24 24" width="14" height="14" style="fill: currentColor;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.39 14.47 20 13.3 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></span>` : ``;
+
+    const toggleAction = isPastDate ? '' : `onclick="toggleTask('${id}', ${data.completed})"`;
+    const cursorStyle = isPastDate ? 'cursor: default;' : 'cursor: pointer;';
+    
+    const actionButtons = isPastDate ? '' : `
+        <button class="icon-btn edit-btn" onclick="editTarget('${id}', '${safeTaskText}', '${data.subject}', ${data.isRecurring || false})" title="Edit">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        </button>
+        <button class="icon-btn delete-btn" onclick="deleteTask('${id}')" title="Delete">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
+    `;
+
+    div.innerHTML = `
+        <div class="task-left" ${toggleAction} style="${cursorStyle}">
+            <div class="custom-checkbox" style="${cursorStyle}">${checkIcon}</div>
+            <span class="task-text" title="${data.task}" style="${cursorStyle}">${data.task} ${recurringIcon}</span>
+        </div>
+        <div class="task-right">
+            <span class="subj-badge subj-${data.subject}">${data.subject}</span>
+            ${actionButtons}
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function renderHoliday(id, data, container, isPastDate) {
+    const reason = data.task ? data.task.replace('Holiday: ', '') : 'Rest Day';
+    
+    const deleteBtn = isPastDate ? '' : `<button class="holiday-delete-btn" onclick="deleteTask('${id}')">Cancel Holiday</button>`;
+    
+    container.innerHTML = `
+        <div class="holiday-banner">
+            <h3>
+                <svg viewBox="0 0 24 24" width="28" height="28" style="fill: currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                Holiday Mode Active
+            </h3>
+            <p><strong>Reason:</strong> ${reason}</p>
+            ${deleteBtn}
+        </div>
+    `;
+}
+
+function updateProgressHoliday() {
+    const fill = document.getElementById('progress-fill');
+    const text = document.getElementById('progress-text');
+    const card = document.getElementById('progress-card');
+    
+    fill.style.width = '100%';
+    fill.style.background = '#f59e0b';
+    text.style.color = '#f59e0b';
+    text.innerHTML = `🌴 Enjoy your well-deserved break!`;
+    card.classList.remove('guilty-card');
+    
+    previousPercentage = -1; 
+}
+
+function editTarget(id, taskText, subject, isRecurring) {
+    editingTargetId = id;
+    document.getElementById('new-task-text').value = taskText;
+    document.getElementById('new-task-subject').value = subject;
+    document.getElementById('add-task-btn').innerText = "Update Target";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('new-task-text').focus();
+}
+
+function addTask() {
+    const input = document.getElementById('new-task-text');
+    const subject = document.getElementById('new-task-subject').value;
+    const isRecurring = false;
+    const date = document.getElementById('target-date').value;
+    const btn = document.getElementById('add-task-btn');
+    
+    input.classList.remove('input-error');
+    const taskText = input.value.trim();
+
+    if (!taskText) {
+        input.classList.add('input-error');
+        input.addEventListener('input', () => input.classList.remove('input-error'), { once: true });
+        return;
+    }
+
+    btn.disabled = true;
+    
+    if (editingTargetId) {
+        btn.innerText = "Updating...";
+        db.collection("dailyTargets").doc(editingTargetId).update({ 
+            task: taskText, subject: subject, isRecurring: isRecurring 
+        }).then(() => {
+            input.value = ''; editingTargetId = null; btn.disabled = false; btn.innerText = "Add Target"; 
+            document.getElementById('add-task-btn').innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Target`;
+        });
+    } else {
+        btn.innerText = "Adding...";
+        db.collection("dailyTargets").add({
+            task: taskText, subject: subject, date: date, completed: false, isRecurring: isRecurring, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            input.value = ''; btn.disabled = false; btn.innerText = "Add Target";
+            document.getElementById('add-task-btn').innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Target`;
+        });
+    }
+}
+
+function toggleTask(id, currentStatus) {
+    db.collection("dailyTargets").doc(id).update({ completed: !currentStatus });
+    const xpChange = !currentStatus ? 10 : -10;
+    db.collection("userStats").doc("global").set({ 
+        xp: firebase.firestore.FieldValue.increment(xpChange) 
+    }, { merge: true });
+}
+
+async function deleteTask(id) {
+    const confirmed = await showCustomDialog({
+        type: 'confirm',
+        title: 'Delete Target',
+        message: 'Are you sure you want to delete this target?'
+    });
+    if (confirmed) {
+        db.collection("dailyTargets").doc(id).delete();
+    }
+}
+
+async function addHoliday() {
+    const reason = await showCustomDialog({
+        type: 'prompt',
+        title: 'Mark as Holiday',
+        message: 'Enter a compulsory reason for your holiday (this will clear your tasks for the day):',
+        placeholder: 'e.g., Sick, Vacation, Rest day...'
+    });
+
+    if (reason === null) return; 
+
+    if (reason.trim() === "") {
+        await showCustomDialog({
+            type: 'alert',
+            title: 'Action Cancelled',
+            message: 'Holiday reason is compulsory! Action was cancelled.'
+        });
+        return;
+    }
+
+    const date = document.getElementById('target-date').value;
+    const btn = document.getElementById('holiday-btn');
+    btn.disabled = true;
+
+    try {
+        const snapshot = await db.collection("dailyTargets").where("date", "==", date).get();
+        const batch = db.batch();
+        
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        const newRef = db.collection("dailyTargets").doc();
+        batch.set(newRef, {
+            task: "Holiday: " + reason.trim(),
+            subject: "Holiday", 
+            isHoliday: true,
+            date: date,
+            completed: false, 
+            isRecurring: false,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await batch.commit();
+        
+    } catch (error) {
+        console.error("Error setting holiday:", error);
+        await showCustomDialog({
+            type: 'alert',
+            title: 'Error',
+            message: 'Failed to set holiday. Please check your connection.'
+        });
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function updateProgress(completed, total) {
+    const fill = document.getElementById('progress-fill');
+    const text = document.getElementById('progress-text');
+    const card = document.getElementById('progress-card');
+    
+    const checkCircleSVG = `<svg viewBox="0 0 24 24" width="16" height="16" style="fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+    const warningSVG = `<svg viewBox="0 0 24 24" width="16" height="16" style="fill: currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
+
+    if (total === 0) {
+        fill.style.width = '0%'; text.innerHTML = `0/0 Completed (0%)`;
+        fill.style.background = 'var(--target)'; card.classList.remove('guilty-card'); 
+    } else {
+        const percentage = Math.round((completed / total) * 100);
+        fill.style.width = `${percentage}%`;
+
+        if (percentage === 100) {
+            fill.style.background = 'var(--success)'; text.style.color = 'var(--success)';
+            text.innerHTML = `${completed}/${total} Completed (${percentage}%) ${checkCircleSVG} All done!`;
+            card.classList.remove('guilty-card');
+            
+            if (previousPercentage !== 100 && previousPercentage !== -1) {
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#22c55e', '#3b82f6', '#8b5cf6', '#eab308'] });
+            }
+        } else {
+            fill.style.background = 'var(--target)'; text.style.color = 'var(--error)';
+            text.innerHTML = `${completed}/${total} Completed (${percentage}%) ${warningSVG} Missing Targets!`;
+            card.classList.remove('guilty-card');
+            void card.offsetWidth; 
+            card.classList.add('guilty-card');
+        }
+        previousPercentage = percentage;
+    }
+}
+
+async function carryOverTasks() {
+    const btn = document.getElementById('carry-over-btn');
+    btn.style.opacity = '0.5'; btn.disabled = true;
+
+    const targetDateStr = document.getElementById('target-date').value;
+    const targetDate = new Date(targetDateStr);
+    targetDate.setDate(targetDate.getDate() - 1);
+    const yesterdayStr = getLocalISOString(targetDate);
+
+    try {
+        const todaySnap = await db.collection("dailyTargets").where("date", "==", targetDateStr).get();
+        const todayTaskNames = new Set();
+        todaySnap.forEach(doc => todayTaskNames.add(doc.data().task.trim().toLowerCase()));
+
+        const yesterdaySnap = await db.collection("dailyTargets").where("date", "==", yesterdayStr).get();
+
+        const batch = db.batch();
+        let addedCount = 0;
+
+        yesterdaySnap.forEach(doc => {
+            const data = doc.data();
+            
+            if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) return;
+            
+            const shouldCarryOver = !data.completed || data.isRecurring;
+            const notAlreadyAdded = !todayTaskNames.has(data.task.trim().toLowerCase());
+            
+            if (shouldCarryOver && notAlreadyAdded) {
+                const newRef = db.collection("dailyTargets").doc();
+                batch.set(newRef, {
+                    task: data.task,
+                    subject: data.subject,
+                    date: targetDateStr,
+                    completed: false,
+                    isRecurring: data.isRecurring || false,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                addedCount++;
+            }
+        });
+        
+        if (addedCount > 0) {
+            await batch.commit();
+            await showCustomDialog({
+                type: 'alert',
+                title: 'Success',
+                message: `Carried over ${addedCount} task(s) to today!`
+            });
+        } else {
+            await showCustomDialog({
+                type: 'alert',
+                title: 'Up to Date',
+                message: 'Everything is up to date! No tasks needed carrying over.'
+            });
+        }
+    } catch (error) {
+        console.error("Error carrying over tasks:", error);
+        await showCustomDialog({
+            type: 'alert',
+            title: 'Error',
+            message: "Failed to fetch yesterday's tasks. Please check your connection."
+        });
+    }
+    btn.style.opacity = '1'; btn.disabled = false;
+}
+
+function openAnalyticsModal() {
+    document.getElementById('analytics-modal').style.display = 'flex';
+    const weekBtn = document.querySelector('.presets button:first-child');
+    setPreset('week', weekBtn);
+}
+
+function setPreset(type, btnElement) {
+    document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+
+    const today = new Date();
+    let start = new Date();
+    let end = new Date();
+
+    if (type === 'week') { start.setDate(today.getDate() - 6); } 
+    else if (type === '15days') { start.setDate(today.getDate() - 14); } 
+    else if (type === 'currentMonth') { start = new Date(today.getFullYear(), today.getMonth(), 1); } 
+    else if (type === 'lastMonth') {
+        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        end = new Date(today.getFullYear(), today.getMonth(), 0); 
+    }
+
+    document.getElementById('analytics-start').value = getLocalISOString(start);
+    document.getElementById('analytics-end').value = getLocalISOString(end);
+    fetchAnalyticsData();
+}
+
+function clearPresetsAndFetch() {
+    document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+    fetchAnalyticsData();
+}
+
+function switchChartTab(tab) {
+    currentChartTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    
+    if(lastAnalyticsData) { renderChart(); }
+}
+
+async function fetchAnalyticsData() {
+    const startDateStr = document.getElementById('analytics-start').value;
+    const endDateStr = document.getElementById('analytics-end').value;
+
+    if (!startDateStr || !endDateStr) return;
+
+    const sDate = new Date(startDateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    const eDate = new Date(endDateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    document.getElementById('analytics-subtitle').innerText = `Data from ${sDate} to ${eDate}`;
+
+    try {
+        const snapshot = await db.collection("dailyTargets")
+            .where("date", ">=", startDateStr)
+            .where("date", "<=", endDateStr)
+            .get();
+
+        let completed = 0; let incomplete = 0; let total = 0;
+        
+        const subjectStats = {
+            Maths: { total: 0, completed: 0 },
+            English: { total: 0, completed: 0 },
+            GK: { total: 0, completed: 0 },
+            Reasoning: { total: 0, completed: 0 },
+            Mock: { total: 0, completed: 0 },
+            Other: { total: 0, completed: 0 }
+        };
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            
+            if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) return;
+
+            total++;
+            if (subjectStats[data.subject] !== undefined) {
+                subjectStats[data.subject].total++;
+                if (data.completed) {
+                    completed++;
+                    subjectStats[data.subject].completed++;
+                } else {
+                    incomplete++;
+                }
+            }
+        });
+
+        const insightsDiv = document.getElementById('analytics-insights');
+        let weakSubject = null;
+        let lowestCompletion = 101;
+        let hasIncomplete = false;
+
+        for (const [subj, stats] of Object.entries(subjectStats)) {
+            if (stats.total > 0) {
+                let pct = (stats.completed / stats.total) * 100;
+                if (pct < 100) hasIncomplete = true;
+                if (pct < lowestCompletion) {
+                    lowestCompletion = pct;
+                    weakSubject = subj;
+                }
+            }
+        }
+
+        insightsDiv.className = 'insights-box'; 
+        
+        if (total === 0) {
+            insightsDiv.style.display = 'none';
+        } else if (!hasIncomplete) {
+            insightsDiv.style.display = 'flex';
+            insightsDiv.classList.add('success-insight');
+            insightsDiv.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 
+            <div><strong>Perfect!</strong> You have a 100% completion rate for the selected period. Great consistency!</div>`;
+        } else if (weakSubject) {
+            insightsDiv.style.display = 'flex';
+            insightsDiv.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> 
+            <div><strong>Study Tip:</strong> Your lowest completion rate is in <strong>${weakSubject}</strong> (${Math.round(lowestCompletion)}%). Try scheduling it earlier in the day when your energy is highest!</div>`;
+        }
+
+        lastAnalyticsData = { completed, incomplete, total, subjectStats };
+        renderChart();
+
+    } catch(error) {
+        console.error("Error fetching analytics:", error);
+    }
+}
+
+function renderChart() {
+    const chartContainer = document.querySelector('.chart-container');
+    const data = lastAnalyticsData;
+
+    if (!data || data.total === 0) {
+        chartContainer.innerHTML = '<div style="margin-top: 80px; color: #64748b; font-style: italic;">No tasks found in this date range.</div>';
+        return;
+    } else {
+        chartContainer.innerHTML = '<canvas id="weeklyChart"></canvas>';
+    }
+
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
+    const cardBg = getComputedStyle(document.body).getPropertyValue('--card-bg').trim();
+
+    if (weeklyChartInstance) { weeklyChartInstance.destroy(); }
+
+    if (currentChartTab === 'completion') {
+        const completedPct = Math.round((data.completed / data.total) * 100);
+        const incompletePct = 100 - completedPct;
+        
+        weeklyChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'Incomplete'],
+                datasets: [{
+                    data: [completedPct, incompletePct],
+                    backgroundColor: ['#22c55e', '#ef4444'],
+                    borderWidth: 2, borderColor: cardBg
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: textColor, font: { family: "'Segoe UI', sans-serif", size: 14 } } },
+                    tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.raw + '%'; } } }
+                }
+            }
+        });
+    } else if (currentChartTab === 'subjects') {
+        const subjLabels = Object.keys(data.subjectStats);
+        const subjData = Object.values(data.subjectStats).map(s => s.completed);
+
+        weeklyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: subjLabels,
+                datasets: [{
+                    label: 'Tasks Completed',
+                    data: subjData,
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e', '#a855f7', '#ef4444', '#64748b'],
+                    borderWidth: 1, borderColor: cardBg, borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: textColor, stepSize: 1, precision: 0 }, grid: { color: 'rgba(100, 116, 139, 0.1)' } },
+                    x: { ticks: { color: textColor }, grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: function(c) { return ' ' + c.raw + ' tasks'; } } }
+                }
+            }
+        });
+    }
+}
+
+async function checkWeeklyRecap() {
+    const today = new Date();
+    if (today.getDay() !== 1) return;
+
+    const todayStr = getLocalISOString(today);
+    const lastRecap = localStorage.getItem('lastRecapDate');
+    if (lastRecap === todayStr) return;
+
+    const startLimit = new Date();
+    startLimit.setDate(startLimit.getDate() - 7);
+    const startStr = getLocalISOString(startLimit);
+
+    try {
+        const snapshot = await db.collection("dailyTargets")
+            .where("date", ">=", startStr)
+            .where("date", "<", todayStr)
+            .get();
+
+        let total = 0;
+        let completed = 0;
+        let subjects = {};
+        let completedSubjects = {};
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) return;
+            
+            total++;
+            if (!subjects[data.subject]) subjects[data.subject] = 0;
+            if (!completedSubjects[data.subject]) completedSubjects[data.subject] = 0;
+            
+            subjects[data.subject]++;
+            if (data.completed) {
+                completed++;
+                completedSubjects[data.subject]++;
+            }
+        });
+
+        if (total === 0) return;
+
+        let weakest = "None";
+        let minCompletion = 101;
+        
+        for (let subj in subjects) {
+            let pct = (completedSubjects[subj] / subjects[subj]) * 100;
+            if (pct < minCompletion) {
+                minCompletion = pct;
+                weakest = subj;
+            }
+        }
+
+        document.getElementById('recap-completed').innerText = completed;
+        document.getElementById('recap-total').innerText = total;
+        document.getElementById('recap-weakest').innerText = weakest;
+        
+        document.getElementById('weekly-recap-modal').style.display = 'flex';
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        
+        localStorage.setItem('lastRecapDate', todayStr);
+    } catch (e) {
+        console.error("Error fetching recap:", e);
+    }
+}
+
+const body = document.body;
+if (localStorage.getItem('theme') === 'dark') {
+    body.setAttribute('data-theme', 'dark');
+} else {
+    body.removeAttribute('data-theme'); 
+}
+
+window.onload = () => {
+    initDate();
+    fetchTargets();
+    setTimeout(checkWeeklyRecap, 2000); 
+};
+</script>
+</body>
+</html>
