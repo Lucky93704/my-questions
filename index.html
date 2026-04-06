@@ -314,10 +314,6 @@ header p { color: #64748b; font-size: 1.1rem; }
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
                 Unlock
             </button>
-            <button id="guest-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                Guest
-            </button>
         </div>
     </div>
 </div>
@@ -633,17 +629,6 @@ header p { color: #64748b; font-size: 1.1rem; }
 
 <script>
 // ==========================================
-// GUEST MODE PURGE (48-HOUR TIMEOUT)
-// ==========================================
-function checkGuestExpiry() {
-    const lastActive = parseInt(localStorage.getItem('guestLastActive') || '0');
-    if (lastActive && (Date.now() - lastActive > 48 * 60 * 60 * 1000)) {
-        ['guestTargets', 'guestNotes', 'guestHistory', 'guestLastActive'].forEach(k => localStorage.removeItem(k));
-    }
-}
-checkGuestExpiry();
-
-// ==========================================
 // TOAST NOTIFICATION SYSTEM
 // ==========================================
 function showToast(message, type = 'info') {
@@ -729,11 +714,10 @@ function getLocalISOString(date) {
 }
 
 // Global state
-let isGuestMode = sessionStorage.getItem('isGuest') === 'true';
 let currentSessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
 let activeSessionsArray = [];
 let isLoggingOut = false;
-let editingSessionId = null; // New global var for renaming
+let editingSessionId = null; 
 
 // ==========================================
 // SESSION MANAGEMENT (LINKED DEVICES)
@@ -741,7 +725,6 @@ let editingSessionId = null; // New global var for renaming
 function getDeviceName() {
     const ua = navigator.userAgent;
     let browser = "Unknown Browser";
-    
     if (ua.includes("Edg/")) browser = "Edge";
     else if (ua.includes("SamsungBrowser")) browser = "Samsung Internet";
     else if (ua.includes("OPR") || ua.includes("Opera")) browser = "Opera";
@@ -751,7 +734,6 @@ function getDeviceName() {
     else if (ua.includes("Trident") || ua.includes("MSIE")) browser = "Internet Explorer";
         
     let os = "Unknown OS";
-    
     if (ua.includes("Android")) os = "Android";
     else if (ua.match(/iPhone|iPad|iPod/i) || ua.includes("like Mac")) os = "iOS";
     else if (ua.includes("CrOS")) os = "Chrome OS";
@@ -773,8 +755,6 @@ function getOrCreateDeviceId() {
 }
 
 async function initSession() {
-    if (isGuestMode) return;
-    
     const persistentDeviceId = getOrCreateDeviceId();
 
     if (!currentSessionId) {
@@ -785,14 +765,13 @@ async function initSession() {
             sessionStorage.setItem('sessionId', currentSessionId);
         }
                 
-        // Fetch custom name STRICTLY from Firebase device registry
         let finalName = getDeviceName();
         try {
             const registrySnap = await db.collection('portalData').doc('deviceRegistry').get();
             if (registrySnap.exists) {
                 const registry = registrySnap.data();
                 if (registry[persistentDeviceId]) {
-                    finalName = registry[persistentDeviceId]; // Use saved cloud name
+                    finalName = registry[persistentDeviceId]; 
                 }
             }
         } catch(e) { 
@@ -812,7 +791,6 @@ async function initSession() {
     }
 }
 
-// --- DEVICE RENAMING LOGIC ---
 function editDeviceName(sessionId) {
     editingSessionId = sessionId;
     renderLinkedDevices();
@@ -833,7 +811,6 @@ async function saveDeviceName(sessionId, deviceId) {
         return;
     }
 
-    // Update active UI state immediately
     const sessionIndex = activeSessionsArray.findIndex(s => s.id === sessionId);
     if (sessionIndex > -1) {
         activeSessionsArray[sessionIndex].name = newName;
@@ -842,15 +819,12 @@ async function saveDeviceName(sessionId, deviceId) {
     renderLinkedDevices();
 
     try {
-        // 1. Update the active session in Firebase
         await db.collection('portalData').doc('activeSessions').update({
             sessions: activeSessionsArray
         });
 
-        // Ensure we have a deviceId to register to the cloud
         const targetDeviceId = deviceId || getOrCreateDeviceId();
 
-        // 2. Save permanently to Firebase device registry so it survives logouts
         await db.collection('portalData').doc('deviceRegistry').set({
             [targetDeviceId]: newName
         }, { merge: true });
@@ -863,8 +837,6 @@ async function saveDeviceName(sessionId, deviceId) {
 }
 
 function listenToSessions() {
-    if (isGuestMode) return;
-    
     db.collection('portalData').doc('activeSessions').onSnapshot((doc) => {
         if (doc.exists) {
             activeSessionsArray = doc.data().sessions || [];
@@ -913,7 +885,6 @@ async function confirmRemoveAllOthers() {
 }
 
 async function removeSession(sessionId) {
-    if (isGuestMode) return;
     try {
         const docRef = db.collection('portalData').doc('activeSessions');
         const docSnap = await docRef.get();
@@ -1015,17 +986,11 @@ async function loadGlanceData() {
         let todayTargets = [];
         let streakTargets = [];
 
-        if (isGuestMode) {
-            const allGuestTargets = JSON.parse(localStorage.getItem('guestTargets') || '[]');
-            todayTargets = allGuestTargets.filter(t => t.date === todayStr);
-            streakTargets = allGuestTargets.filter(t => t.date >= startLimitStr && t.date <= todayStr);
-        } else {
-            const todaySnap = await db.collection("dailyTargets").where("date", "==", todayStr).get();
-            todaySnap.forEach(doc => todayTargets.push(doc.data()));
-            
-            const streakSnap = await db.collection("dailyTargets").where("date", ">=", startLimitStr).where("date", "<=", todayStr).get();
-            streakSnap.forEach(doc => streakTargets.push(doc.data()));
-        }
+        const todaySnap = await db.collection("dailyTargets").where("date", "==", todayStr).get();
+        todaySnap.forEach(doc => todayTargets.push(doc.data()));
+        
+        const streakSnap = await db.collection("dailyTargets").where("date", ">=", startLimitStr).where("date", "<=", todayStr).get();
+        streakSnap.forEach(doc => streakTargets.push(doc.data()));
 
         let totalTasks = 0; let completedTasks = 0; let isHoliday = false;
         
@@ -1070,7 +1035,7 @@ async function loadGlanceData() {
             checkDate.setDate(checkDate.getDate() - 1);
         }
 
-        let streakStartDate = new Date(checkDate); // Tracks the furthest valid date back
+        let streakStartDate = new Date(checkDate);
 
         for (let i = 0; i < 90; i++) {
             const dateStr = getLocalISOString(checkDate);
@@ -1112,23 +1077,20 @@ async function loadGlanceData() {
         
         maxStreak = Math.max(maxStreak, currentStreak);
 
-        // --- GAMIFICATION: EVOLVING COLORS ---
         const streakContainer = document.getElementById('glance-streak-container');
         if (currentStreak >= 30) {
-            streakContainer.style.color = '#a855f7'; // Purple flame for 30+ days
+            streakContainer.style.color = '#a855f7'; 
         } else if (currentStreak >= 10) {
-            streakContainer.style.color = '#3b82f6'; // Blue flame for 10-29 days
+            streakContainer.style.color = '#3b82f6'; 
         } else {
-            streakContainer.style.color = '#ea580c'; // Standard orange flame for 1-9 days
+            streakContainer.style.color = '#ea580c'; 
         }
 
         document.getElementById('glance-streak').innerText = `${currentStreak} Days`;
 
-        // --- ALTERNATING SUBTEXT (STARTED ON) ---
         const subtextEl = document.getElementById('glance-streak-subtext');
-        subtextEl.style.transition = 'opacity 0.3s ease'; // Smooth fade effect
+        subtextEl.style.transition = 'opacity 0.3s ease'; 
 
-        // Clear any existing timers so they don't overlap if the page refreshes
         if (window.streakInterval) clearInterval(window.streakInterval);
 
         if (currentStreak > 0) {
@@ -1139,18 +1101,16 @@ async function loadGlanceData() {
             let showPb = true;
             subtextEl.innerHTML = pbText;
 
-            // Swap the text every 4 seconds
             window.streakInterval = setInterval(() => {
                 showPb = !showPb;
-                subtextEl.style.opacity = 0; // Fade out
+                subtextEl.style.opacity = 0; 
                 
                 setTimeout(() => {
                     subtextEl.innerHTML = showPb ? pbText : startedText;
-                    subtextEl.style.opacity = 1; // Fade in
-                }, 300); // Wait for fade out to finish before swapping text
+                    subtextEl.style.opacity = 1; 
+                }, 300); 
             }, 4000);
         } else {
-            // If streak is 0, just show Personal Best statically
             subtextEl.innerHTML = `Personal Best: <strong>${maxStreak} Days</strong>`;
         }
 
@@ -1169,8 +1129,6 @@ function setGreetingAndQuote() {
     else if (hour >= 12 && hour < 17) greeting = "Good Afternoon";
     else if (hour >= 17 && hour < 22) greeting = "Good Evening";
     else greeting = "Late Night Study";
-    
-    if (isGuestMode) greeting += " Guest";
     
     greetingElement.innerText = `${greeting}`;
     const quotes = [
@@ -1193,7 +1151,7 @@ function setGreetingAndQuote() {
 document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
         e.preventDefault(); 
-        if (localStorage.getItem('isUnlocked') === 'true' || isGuestMode) {
+        if (localStorage.getItem('isUnlocked') === 'true') {
             handleLogout('manual');
         }
     }
@@ -1213,13 +1171,9 @@ async function launchPortal() {
         
     setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad();
         
-    if (!isGuestMode) {
-        document.getElementById('linked-devices-btn').style.display = 'flex';
-        await initSession();
-        listenToSessions();
-    } else {
-        document.getElementById('linked-devices-btn').style.display = 'none';
-    }
+    document.getElementById('linked-devices-btn').style.display = 'flex';
+    await initSession();
+    listenToSessions();
 }
 
 function attemptUnlock() {
@@ -1229,7 +1183,6 @@ function attemptUnlock() {
         document.getElementById('unlock-btn').innerHTML = '<span class="spinner"></span> Unlocking...';
         localStorage.setItem('isUnlocked', 'true');
     
-        isGuestMode = false;
         showToast('Access Granted!', 'success');
          
         setTimeout(launchPortal, 800);
@@ -1257,28 +1210,18 @@ document.getElementById('toggle-pin-btn').addEventListener('click', function() {
     }
 });
 
-document.getElementById('guest-btn').addEventListener('click', () => {
-    isGuestMode = true;
-    sessionStorage.setItem('isGuest', 'true');
-    localStorage.setItem('guestLastActive', Date.now().toString());
-    showToast('Logged in as Guest', 'info');
-    setTimeout(launchPortal, 300);
-});
-
 async function handleLogout(type = 'manual') {
     isLoggingOut = true;
     document.getElementById('logout-btn').innerHTML = '<span class="spinner" style="border-top-color: var(--error);"></span> Locking...';
         
-    if (currentSessionId && !isGuestMode && type !== 'remote') {
+    if (currentSessionId && type !== 'remote') {
         await removeSession(currentSessionId);
     }
         
-    sessionStorage.removeItem('isGuest'); 
     sessionStorage.removeItem('sessionId'); 
     localStorage.removeItem('isUnlocked');
     localStorage.removeItem('sessionId');
         
-    isGuestMode = false;
     currentSessionId = null;
         
     if (type === 'remote') {
@@ -1329,18 +1272,6 @@ async function submitQuickTask() {
         return;
     }
 
-    if (isGuestMode) {
-        const allGuestTargets = JSON.parse(localStorage.getItem('guestTargets') || '[]');
-        allGuestTargets.push({
-            task: taskText, subject: subject, date: quickAddTargetDate, completed: false, isRecurring: false, timestamp: Date.now()
-        });
-        localStorage.setItem('guestTargets', JSON.stringify(allGuestTargets));
-        showToast("Task scheduled locally (Guest)!", "success");
-        document.getElementById('quick-add-modal').style.display = 'none';
-        loadGlanceData(); renderCalendar();
-        return;
-    }
-    
     btn.innerHTML = '<span class="spinner"></span>';
     btn.disabled = true;
     
@@ -1360,22 +1291,12 @@ async function submitQuickTask() {
 }
 
 // ==========================================
-// CALENDAR LOGIC
+// CALENDAR (STUDY & LIFE FLIP LOGIC)
 // ==========================================
 const currentDate = new Date();
 let currentMonth = currentDate.getMonth();
 let currentYear = currentDate.getFullYear();
 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-function jumpToToday() {
-    currentMonth = currentDate.getMonth();
-    currentYear = currentDate.getFullYear();
-    renderCalendar();
-}
-
-// ==========================================
-// CALENDAR (STUDY & LIFE FLIP LOGIC)
-// ==========================================
 let activeReminderDate = "";
 
 function toggleCalendarFlip() {
@@ -1426,19 +1347,13 @@ async function renderCalendar() {
     let calendarTargets = [];
     let lifeReminders = [];
     
-    if (isGuestMode) {
-        const allGuestTargets = JSON.parse(localStorage.getItem('guestTargets') || '[]');
-        calendarTargets = allGuestTargets.filter(t => t.date >= startStr && t.date <= endStr);
-        lifeReminders = JSON.parse(localStorage.getItem('guestReminders') || '[]').filter(r => r.date >= startStr && r.date <= endStr);
-    } else {
-        try {
-            const snapshot = await db.collection("dailyTargets").where("date", ">=", startStr).where("date", "<=", endStr).get();
-            snapshot.forEach(doc => calendarTargets.push(doc.data()));
-            
-            const lifeSnap = await db.collection("personalReminders").where("date", ">=", startStr).where("date", "<=", endStr).get();
-            lifeSnap.forEach(doc => lifeReminders.push(doc.data()));
-        } catch (e) { console.error("Error fetching calendar data:", e); }
-    }
+    try {
+        const snapshot = await db.collection("dailyTargets").where("date", ">=", startStr).where("date", "<=", endStr).get();
+        snapshot.forEach(doc => calendarTargets.push(doc.data()));
+        
+        const lifeSnap = await db.collection("personalReminders").where("date", ">=", startStr).where("date", "<=", endStr).get();
+        lifeSnap.forEach(doc => lifeReminders.push(doc.data()));
+    } catch (e) { console.error("Error fetching calendar data:", e); }
 
     const dayStatus = {};
     calendarTargets.forEach(data => {
@@ -1587,18 +1502,11 @@ async function saveReminder() {
     btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
 
     try {
-        if (isGuestMode) {
-            let allRem = JSON.parse(localStorage.getItem('guestReminders') || '[]');
-            allRem = allRem.filter(r => r.date !== activeReminderDate);
-            allRem.push({ date: activeReminderDate, note: noteText });
-            localStorage.setItem('guestReminders', JSON.stringify(allRem));
-        } else {
-            await db.collection("personalReminders").doc(activeReminderDate).set({
-                date: activeReminderDate,
-                note: noteText,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
+        await db.collection("personalReminders").doc(activeReminderDate).set({
+            date: activeReminderDate,
+            note: noteText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
         showToast("Reminder saved!", "success");
         document.getElementById('reminder-modal').style.display = 'none';
         renderCalendar();
@@ -1611,13 +1519,7 @@ async function saveReminder() {
 
 async function deleteReminder(dateStr) {
     try {
-        if (isGuestMode) {
-            let allRem = JSON.parse(localStorage.getItem('guestReminders') || '[]');
-            allRem = allRem.filter(r => r.date !== dateStr);
-            localStorage.setItem('guestReminders', JSON.stringify(allRem));
-        } else {
-            await db.collection("personalReminders").doc(dateStr).delete();
-        }
+        await db.collection("personalReminders").doc(dateStr).delete();
         showToast("Reminder deleted.", "info");
         document.getElementById('reminder-modal').style.display = 'none';
         renderCalendar();
@@ -1646,10 +1548,6 @@ function updateNoteStats() {
 }
 
 function loadHistory() {
-    if (isGuestMode) {
-        deletedNotesHistory = JSON.parse(localStorage.getItem('guestHistory') || '[]');
-        return;
-    }
     db.collection('portalData').doc('noteHistory').onSnapshot((doc) => {
         if (doc.exists) {
             deletedNotesHistory = doc.data().history || [];
@@ -1663,26 +1561,12 @@ async function saveHistory(noteContent) {
     deletedNotesHistory.unshift({ text: noteContent, time: timestamp });
     if(deletedNotesHistory.length > 5) deletedNotesHistory.pop();
     
-    if (isGuestMode) {
-        localStorage.setItem('guestHistory', JSON.stringify(deletedNotesHistory));
-        return; 
-    }
-
     try {
         await db.collection('portalData').doc('noteHistory').set({ history: deletedNotesHistory });
     } catch(e) { console.error("History save error", e); }
 }
 
 function loadNotepad() {
-    if (isGuestMode) {
-        quickNotepad.value = localStorage.getItem('guestNotes') || '';
-        syncStatus.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg> Saved Locally (Guest)`;
-        syncStatus.className = 'sync-status saved';
-        updateNoteStats();
-        loadHistory();
-        return;
-    }
-
     db.collection('portalData').doc('quickNotes').onSnapshot((doc) => {
         const serverText = doc.exists ? (doc.data().content || '') : '';
         
@@ -1710,13 +1594,6 @@ function loadNotepad() {
 }
 
 async function saveNotepadToFirebase() {
-    if (isGuestMode) {
-        localStorage.setItem('guestNotes', quickNotepad.value);
-        syncStatus.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg> Saved Locally (Guest)`;
-        syncStatus.className = 'sync-status saved';
-        return; 
-    }
-
     try {
         syncStatus.innerHTML = iconCloudSync;
         syncStatus.className = 'sync-status saving';
@@ -1740,13 +1617,8 @@ if (quickNotepad) {
     quickNotepad.addEventListener('input', () => {
         updateNoteStats();
         
-        if (!isGuestMode) {
-            syncStatus.innerHTML = `<span class="spinner" style="width:12px; height:12px; border-width: 2px; margin-right: 4px;"></span> Saving...`;
-            syncStatus.className = 'sync-status saving';
-        } else {
-            syncStatus.innerHTML = `<span class="spinner" style="width:12px; height:12px; border-width: 2px; margin-right: 4px;"></span> Saving locally...`;
-            syncStatus.className = 'sync-status saving';
-        }
+        syncStatus.innerHTML = `<span class="spinner" style="width:12px; height:12px; border-width: 2px; margin-right: 4px;"></span> Saving...`;
+        syncStatus.className = 'sync-status saving';
         
         clearTimeout(noteSaveTimeout);
         noteSaveTimeout = setTimeout(() => {
@@ -1765,7 +1637,6 @@ function toggleSearch() {
     if(ui.style.display === 'flex') {
         document.getElementById('search-input').focus();
     } else {
-        // Reset search states when closed
         lastSearchIndex = 0;
         lastSearchQuery = "";
     }
@@ -1778,7 +1649,6 @@ function performSearch() {
         return;
     }
     
-    // Reset index if the user types a new word
     if (searchStr !== lastSearchQuery) {
         lastSearchIndex = 0;
         lastSearchQuery = searchStr;
@@ -1791,19 +1661,14 @@ function performSearch() {
     const index = lowerText.indexOf(lowerSearch, lastSearchIndex);
     
     if (index !== -1) {
-        // Match found: Focus and highlight the text
         quickNotepad.focus();
         quickNotepad.setSelectionRange(index, index + searchStr.length);
-        
-        // Update index for the next "Find Next" click
         lastSearchIndex = index + searchStr.length;
     } else {
         if (lastSearchIndex > 0) {
-            // Reached the bottom, wrap around to the top
             showToast("Reached the end. Starting from top.", "info");
             lastSearchIndex = 0;
         } else {
-            // Word doesn't exist in the text at all
             showToast("Text not found.", "info");
         }
     }
@@ -1851,7 +1716,6 @@ function showHistoryModal() {
         deletedNotesHistory.forEach((item, index) => {
             const div = document.createElement('div');
             div.className = 'history-item';
-            
             const safeText = item.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
             
             div.innerHTML = `
@@ -1888,19 +1752,13 @@ async function clearNoteHistory() {
     
     if (confirmed) {
         deletedNotesHistory = []; 
-        
-        if (isGuestMode) {
-            localStorage.removeItem('guestHistory');
-        } else {
-            try {
-                await db.collection('portalData').doc('noteHistory').set({ history: [] });
-            } catch (e) {
-                console.error("Error clearing history in Firebase", e);
-                showToast("Failed to clear cloud history.", "error");
-                return;
-            }
+        try {
+            await db.collection('portalData').doc('noteHistory').set({ history: [] });
+        } catch (e) {
+            console.error("Error clearing history in Firebase", e);
+            showToast("Failed to clear cloud history.", "error");
+            return;
         }
-        
         showToast("Version history cleared.", "success");
         showHistoryModal(); 
     }
@@ -1910,16 +1768,12 @@ async function clearNoteHistory() {
 // ON PAGE LOAD: CHECK IF SESSION IS VALID
 // ==========================================
 async function checkSessionValidity() {
-    const isLocalUnlocked = localStorage.getItem('isUnlocked') === 'true';
-    const isGuestSession = sessionStorage.getItem('isGuest') === 'true';
-
-    if (isLocalUnlocked || isGuestSession) {
+    if (localStorage.getItem('isUnlocked') === 'true') {
         launchPortal();
     }
 }
 
 checkSessionValidity();
-
 // ==========================================
 // THEME LOGIC
 // ==========================================
