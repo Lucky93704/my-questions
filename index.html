@@ -109,7 +109,7 @@ header p { color: #64748b; font-size: 1.1rem; }
 .tooltip-row span { font-weight: 500; color: var(--text); }
 .tooltip-hint { display: block; margin-top: 8px; font-size: 0.75rem; color: #94a3b8; font-style: italic; text-align: center; border-top: 1px solid var(--border); padding-top: 6px;}
 
-#home-screen { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+#home-screen { grid-column: 1 / -1; display: block; width: 100%; padding-top: 15px; }
 .subject-card { background: var(--bg); padding: 30px 20px; text-align: center; border-radius: 12px; font-size: 1.3rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; border: 2px dashed var(--primary); cursor: pointer; font-family: inherit; width: 100%; box-sizing: border-box; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; animation-delay: 0.2s;}
 .subject-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 10px 15px rgba(37, 99, 235, 0.15); background: var(--primary); color: white; border-style: solid; }
 
@@ -539,8 +539,8 @@ header p { color: #64748b; font-size: 1.1rem; }
             </div>
         </div>
 
-    <div id="home-screen">
-        <button onclick="document.getElementById('dashboard-modal').style.display='flex'" class="subject-card">
+<div id="home-screen" style="display: block; width: 100%; margin-top: 20px;">
+        <button onclick="document.getElementById('dashboard-modal').style.display='flex'" class="subject-card" style="width: 100% !important; flex: 1;">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             Open Dashboards
         </button>
