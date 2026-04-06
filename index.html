@@ -255,6 +255,20 @@ header p { color: #64748b; font-size: 1.1rem; }
 .calc-history-list { display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem; font-family: monospace;}
 .calc-history-item { color: #64748b; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; background: var(--bg); border: 1px solid transparent; word-break: break-all;}
 .calc-history-item:hover { background: var(--card-bg); border-color: var(--primary); color: var(--primary); }
+/* --- CALENDAR FLIP & LIFE MODE STYLES --- */
+.calendar-widget.flip-mode { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; perspective: 1000px; }
+.cal-flip-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; display: grid; grid-template-areas: "face"; }
+.cal-flip-inner.flipped { transform: rotateY(180deg); }
+.cal-flip-front, .cal-flip-back { grid-area: face; backface-visibility: hidden; background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
+.cal-flip-back { transform: rotateY(180deg); }
+
+.cal-header-btn { background: transparent; border: 1px solid var(--border); color: #64748b; padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; margin: 0 5px;}
+.cal-header-btn:hover { background: var(--bg); color: var(--primary); border-color: var(--primary); }
+.life-theme-text { color: #a855f7 !important; }
+
+.life-day.has-reminder { background: rgba(168, 85, 247, 0.15); color: #a855f7; font-weight: bold; border: 1px solid rgba(168, 85, 247, 0.4); box-shadow: 0 4px 10px rgba(168, 85, 247, 0.2); z-index: 5;}
+.life-day.has-reminder:hover { background: rgba(168, 85, 247, 0.25); transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); }
+.life-day.has-reminder::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: #a855f7; border-radius: 50%; }
 </style>
 </head>
 <body>
@@ -365,23 +379,70 @@ header p { color: #64748b; font-size: 1.1rem; }
     </div>
 
     <div class="dashboard-row">
-        <div class="calendar-widget">
-            <div class="calendar-header">
-                <button class="calendar-nav" id="prev-month">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-                <div class="calendar-header-center">
-                    <h3 id="calendar-month-year">Month Year</h3>
-                    <button class="btn-today" id="btn-today" onclick="jumpToToday()">Back to Today</button>
+<div class="calendar-widget flip-mode">
+            <div class="cal-flip-inner" id="calendar-inner">
+                
+                <div class="cal-flip-front">
+                    <div class="calendar-header">
+                        <button class="calendar-nav" onclick="changeMonth(-1)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <div class="calendar-header-center">
+                            <h3 id="calendar-month-year">Month Year</h3>
+                            <button class="btn-today" id="btn-today" onclick="jumpToToday()">Back to Today</button>
+                        </div>
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                            <button class="cal-header-btn" onclick="toggleCalendarFlip()" title="Switch to Life Planner">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                            </button>
+                            <button class="calendar-nav" onclick="changeMonth(1)">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="calendar-weekdays"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>
+                    <div class="calendar-days" id="calendar-days"></div>
                 </div>
-                <button class="calendar-nav" id="next-month">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
+
+                <div class="cal-flip-back">
+                    <div class="calendar-header">
+                        <button class="calendar-nav" onclick="changeMonth(-1)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <div class="calendar-header-center">
+                            <h3 id="life-month-year" class="life-theme-text">Month Year</h3>
+                            <button class="btn-today" id="life-btn-today" onclick="jumpToToday()">Back to Today</button>
+                        </div>
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                            <button class="cal-header-btn" onclick="toggleCalendarFlip()" title="Switch to Study Targets">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            </button>
+                            <button class="calendar-nav" onclick="changeMonth(1)">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="calendar-weekdays"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>
+                    <div class="calendar-days" id="life-calendar-days"></div>
+                </div>
             </div>
-            <div class="calendar-weekdays">
-                <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
-            </div>
-            <div class="calendar-days" id="calendar-days">
+        </div>
+
+        <div id="reminder-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'" style="z-index: 2500;">
+            <div class="modal-content" style="max-width: 400px; text-align: left; padding: 25px;">
+                <h3 style="display: flex; align-items: center; gap: 10px; color: #a855f7; margin-top: 0; margin-bottom: 10px; justify-content: flex-start;">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Life Event / Reminder
+                </h3>
+                <p id="reminder-date-text" style="color: #64748b; font-size: 0.95rem; margin-top: 0; margin-bottom: 20px; font-weight: 500;">For: YYYY-MM-DD</p>
+                
+                <textarea id="reminder-text" style="width: 100%; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; margin-bottom: 20px; box-sizing: border-box; font-family: inherit; min-height: 120px; resize: vertical;" placeholder="Doctor appt, friend's bday, call family..."></textarea>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button id="reminder-delete-btn" style="display:none; background: transparent; border: 1px solid var(--error); color: var(--error); padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: auto; transition: 0.2s;" onmouseover="this.style.background='var(--error)'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='var(--error)';">Delete</button>
+                    <button onclick="document.getElementById('reminder-modal').style.display='none'" style="background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button id="reminder-submit-btn" onclick="saveReminder()" style="background: #a855f7; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; min-width: 100px;">Save</button>
+                </div>
             </div>
         </div>
 
@@ -1312,81 +1373,113 @@ function jumpToToday() {
     renderCalendar();
 }
 
+// ==========================================
+// CALENDAR (STUDY & LIFE FLIP LOGIC)
+// ==========================================
+let activeReminderDate = "";
+
+function toggleCalendarFlip() {
+    document.getElementById('calendar-inner').classList.toggle('flipped');
+}
+
+function changeMonth(offset) {
+    currentMonth += offset;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    renderCalendar();
+}
+
+function jumpToToday() {
+    currentMonth = currentDate.getMonth();
+    currentYear = currentDate.getFullYear();
+    renderCalendar();
+}
+
 async function renderCalendar() {
     const daysContainer = document.getElementById("calendar-days");
+    const lifeDaysContainer = document.getElementById("life-calendar-days");
     const monthYearText = document.getElementById("calendar-month-year");
+    const lifeMonthYearText = document.getElementById("life-month-year");
     const btnToday = document.getElementById("btn-today");
+    const lifeBtnToday = document.getElementById("life-btn-today");
     
     if (currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear()) {
         btnToday.classList.remove("visible");
+        lifeBtnToday.classList.remove("visible");
     } else {
         btnToday.classList.add("visible");
+        lifeBtnToday.classList.add("visible");
     }
     
     daysContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;"><span class="spinner" style="border-top-color: var(--primary);"></span></div>';
+    lifeDaysContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;"><span class="spinner" style="border-top-color: #a855f7;"></span></div>';
     
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
     monthYearText.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+    lifeMonthYearText.innerText = `${monthNames[currentMonth]} ${currentYear}`;
     
     const startStr = getLocalISOString(new Date(currentYear, currentMonth, 1));
     const endStr = getLocalISOString(new Date(currentYear, currentMonth + 1, 0));
     
     let calendarTargets = [];
+    let lifeReminders = [];
+    
     if (isGuestMode) {
         const allGuestTargets = JSON.parse(localStorage.getItem('guestTargets') || '[]');
         calendarTargets = allGuestTargets.filter(t => t.date >= startStr && t.date <= endStr);
+        lifeReminders = JSON.parse(localStorage.getItem('guestReminders') || '[]').filter(r => r.date >= startStr && r.date <= endStr);
     } else {
         try {
             const snapshot = await db.collection("dailyTargets").where("date", ">=", startStr).where("date", "<=", endStr).get();
             snapshot.forEach(doc => calendarTargets.push(doc.data()));
+            
+            const lifeSnap = await db.collection("personalReminders").where("date", ">=", startStr).where("date", "<=", endStr).get();
+            lifeSnap.forEach(doc => lifeReminders.push(doc.data()));
         } catch (e) { console.error("Error fetching calendar data:", e); }
     }
 
     const dayStatus = {};
     calendarTargets.forEach(data => {
         const dateStr = data.date;
-        if (!dayStatus[dateStr]) {
-            dayStatus[dateStr] = { total: 0, completed: 0, isHoliday: false, reason: "", doneTasks: [], missedTasks: [] };
-        }
-        
+        if (!dayStatus[dateStr]) dayStatus[dateStr] = { total: 0, completed: 0, isHoliday: false, reason: "", doneTasks: [], missedTasks: [] };
         if (data.isHoliday || data.subject === "Holiday" || (data.task && data.task.startsWith("Holiday:"))) {
             dayStatus[dateStr].isHoliday = true;
             dayStatus[dateStr].reason = data.task ? data.task.replace("Holiday: ", "") : "Rest Day";
         } else {
             dayStatus[dateStr].total++;
-            if (data.completed) {
-                dayStatus[dateStr].completed++;
-                dayStatus[dateStr].doneTasks.push(data.subject);
-            } else {
-                dayStatus[dateStr].missedTasks.push(data.subject);
-            }
+            if (data.completed) { dayStatus[dateStr].completed++; dayStatus[dateStr].doneTasks.push(data.subject); } 
+            else { dayStatus[dateStr].missedTasks.push(data.subject); }
         }
     });
+
+    const lifeStatus = {};
+    lifeReminders.forEach(r => { lifeStatus[r.date] = r.note; });
 
     const isStreakActiveDay = (dStatus) => dStatus && dStatus.total > 0 && dStatus.completed > 0;
 
     daysContainer.innerHTML = ""; 
+    lifeDaysContainer.innerHTML = "";
     let animationDelay = 0;
 
     for (let i = 0; i < firstDayOfMonth; i++) {
-        const emptyDiv = document.createElement("div");
-        emptyDiv.classList.add("cal-day", "empty");
+        const emptyDiv = document.createElement("div"); emptyDiv.classList.add("cal-day", "empty");
+        const emptyLifeDiv = document.createElement("div"); emptyLifeDiv.classList.add("cal-day", "empty");
         daysContainer.appendChild(emptyDiv);
+        lifeDaysContainer.appendChild(emptyLifeDiv);
     }
     
     for (let i = 1; i <= daysInMonth; i++) {
-        const dayDiv = document.createElement("div");
-        dayDiv.classList.add("cal-day");
-        dayDiv.innerText = i;
-        
         const checkDate = new Date(currentYear, currentMonth, i);
         const checkDateStr = getLocalISOString(checkDate);
+        
+        // --- 1. SETUP FRONT STUDY DAY ---
+        const dayDiv = document.createElement("div");
+        dayDiv.classList.add("cal-day"); dayDiv.innerText = i;
         const status = dayStatus[checkDateStr];
         
-        dayDiv.addEventListener('click', () => {
-            window.location.href = `studydashboard.html?date=${checkDateStr}`;
-        });
+        dayDiv.addEventListener('click', () => { window.location.href = `studydashboard.html?date=${checkDateStr}`; });
         
         const tooltip = document.createElement('div');
         tooltip.className = 'cal-tooltip';
@@ -1396,64 +1489,142 @@ async function renderCalendar() {
                 dayDiv.classList.add("holiday-day");
                 tooltip.innerHTML = `<div class="tooltip-title holiday">🌴 Holiday</div><div class="tooltip-row"><span>Reason:</span> ${status.reason}</div><div class="tooltip-hint">Click to jump to this date</div>`;
             } else if (status.total > 0 && status.completed > 0) {
-                
                 dayDiv.classList.add("completed-day");
-                
                 const uniqueDone = status.doneTasks.length > 0 ? [...new Set(status.doneTasks)].join(', ') : 'None';
                 const uniqueMissed = status.missedTasks.length > 0 ? [...new Set(status.missedTasks)].join(', ') : 'None';
                 
                 if (status.completed === status.total) {
-                    tooltip.innerHTML = `<div class="tooltip-title success"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 100% Completed!</div>
-                                         <div class="tooltip-row"><span>Finished:</span> ${uniqueDone}</div>
-                                         <div class="tooltip-hint">Click to jump to this date</div>`;
+                    tooltip.innerHTML = `<div class="tooltip-title success"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> 100% Completed!</div><div class="tooltip-row"><span>Finished:</span> ${uniqueDone}</div><div class="tooltip-hint">Click to jump to this date</div>`;
                 } else {
                     dayDiv.classList.add("incomplete-day");
-                    tooltip.innerHTML = `<div class="tooltip-title error"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> ${status.completed}/${status.total} Completed</div>
-                                         <div class="tooltip-row"><span>Done:</span> <span style="color:var(--success); font-weight:normal;">${uniqueDone}</span></div>
-                                         <div class="tooltip-row"><span>Missed:</span> <span style="color:var(--error); font-weight:normal;">${uniqueMissed}</span></div>
-                                         <div class="tooltip-hint">Click to jump to this date</div>`;
+                    tooltip.innerHTML = `<div class="tooltip-title error"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> ${status.completed}/${status.total} Completed</div><div class="tooltip-row"><span>Done:</span> <span style="color:var(--success); font-weight:normal;">${uniqueDone}</span></div><div class="tooltip-row"><span>Missed:</span> <span style="color:var(--error); font-weight:normal;">${uniqueMissed}</span></div><div class="tooltip-hint">Click to jump to this date</div>`;
                 }
 
                 const tomorrow = new Date(checkDate); tomorrow.setDate(tomorrow.getDate() + 1);
                 const tomorrowStatus = dayStatus[getLocalISOString(tomorrow)];
-                if (checkDate.getDay() !== 6 && isStreakActiveDay(tomorrowStatus)) {
-                    dayDiv.classList.add("streak-next");
-                }
+                if (checkDate.getDay() !== 6 && isStreakActiveDay(tomorrowStatus)) dayDiv.classList.add("streak-next");
                 
                 const yesterday = new Date(checkDate); yesterday.setDate(yesterday.getDate() - 1);
                 const yesterdayStatus = dayStatus[getLocalISOString(yesterday)];
-                if (checkDate.getDay() !== 0 && isStreakActiveDay(yesterdayStatus)) {
-                    dayDiv.classList.add("streak-prev");
-                }
-
+                if (checkDate.getDay() !== 0 && isStreakActiveDay(yesterdayStatus)) dayDiv.classList.add("streak-prev");
             } else if (status.total > 0 && status.completed === 0) {
                 dayDiv.classList.add("incomplete-day");
-                
                 const uniqueMissed = [...new Set(status.missedTasks)].join(', ');
-                tooltip.innerHTML = `<div class="tooltip-title error"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> 0/${status.total} Completed</div>
-                                     <div class="tooltip-row"><span>Missed:</span> <span style="color:var(--error); font-weight:normal;">${uniqueMissed}</span></div>
-                                     <div class="tooltip-hint">Click to jump to this date</div>`;
+                tooltip.innerHTML = `<div class="tooltip-title error"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> 0/${status.total} Completed</div><div class="tooltip-row"><span>Missed:</span> <span style="color:var(--error); font-weight:normal;">${uniqueMissed}</span></div><div class="tooltip-hint">Click to jump to this date</div>`;
             }
         } else {
-            tooltip.innerHTML = `<div class="tooltip-title" style="color: #64748b;">📅 No Data</div>
-                                 <div class="tooltip-row" style="margin-top:0;">No targets were set for this day.</div>
-                                 <div class="tooltip-hint">Click to jump to this date</div>`;
+            tooltip.innerHTML = `<div class="tooltip-title" style="color: #64748b;">📅 No Data</div><div class="tooltip-row" style="margin-top:0;">No targets were set for this day.</div><div class="tooltip-hint">Click to jump to this date</div>`;
         }
         
         dayDiv.appendChild(tooltip);
         dayDiv.style.animationDelay = `${animationDelay}s`;
-        animationDelay += 0.015;
-        
         if (i === currentDate.getDate() && currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear()) {
             dayDiv.classList.add("today");
         }
-        
         daysContainer.appendChild(dayDiv);
+
+        // --- 2. SETUP BACK LIFE DAY ---
+        const lifeDayDiv = document.createElement("div");
+        lifeDayDiv.classList.add("cal-day", "life-day"); lifeDayDiv.innerText = i;
+        
+        const lifeTooltip = document.createElement('div');
+        lifeTooltip.className = 'cal-tooltip';
+        
+        const lifeNote = lifeStatus[checkDateStr];
+        if (lifeNote) {
+            lifeDayDiv.classList.add("has-reminder");
+            const safeNote = lifeNote.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            lifeTooltip.innerHTML = `<div class="tooltip-title" style="color: #a855f7;">📌 Reminder</div><div class="tooltip-row" style="margin-top:0; white-space: pre-wrap;">${safeNote}</div><div class="tooltip-hint">Click to edit</div>`;
+        } else {
+            lifeTooltip.innerHTML = `<div class="tooltip-title" style="color: #64748b;">📅 Life</div><div class="tooltip-row" style="margin-top:0;">No personal events planned.</div><div class="tooltip-hint">Click to add reminder</div>`;
+        }
+        
+        lifeDayDiv.addEventListener('click', () => openReminderModal(checkDateStr, lifeNote || ""));
+        
+        lifeDayDiv.appendChild(lifeTooltip);
+        lifeDayDiv.style.animationDelay = `${animationDelay}s`;
+        if (i === currentDate.getDate() && currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear()) {
+            lifeDayDiv.classList.add("today");
+            if (!lifeNote) lifeDayDiv.style.background = "#a855f7";
+        }
+        lifeDaysContainer.appendChild(lifeDayDiv);
+
+        animationDelay += 0.015;
     }
 }
 
-document.getElementById("prev-month").addEventListener("click", () => { currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} renderCalendar(); });
-document.getElementById("next-month").addEventListener("click", () => { currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} renderCalendar(); });
+// --- LIFE REMINDER LOGIC ---
+function openReminderModal(dateStr, existingNote) {
+    activeReminderDate = dateStr;
+    const dateObj = new Date(dateStr);
+    const displayDate = dateObj.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    
+    document.getElementById('reminder-date-text').innerText = `For: ${displayDate}`;
+    document.getElementById('reminder-text').value = existingNote;
+    
+    const delBtn = document.getElementById('reminder-delete-btn');
+    if (existingNote) {
+        delBtn.style.display = 'block';
+        delBtn.onclick = () => deleteReminder(dateStr);
+    } else {
+        delBtn.style.display = 'none';
+    }
+    
+    document.getElementById('reminder-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('reminder-text').focus(), 100);
+}
+
+async function saveReminder() {
+    const noteText = document.getElementById('reminder-text').value.trim();
+    const btn = document.getElementById('reminder-submit-btn');
+    
+    if (!noteText) {
+        document.getElementById('reminder-text').style.borderColor = 'var(--error)';
+        setTimeout(() => document.getElementById('reminder-text').style.borderColor = 'var(--border)', 1500);
+        return;
+    }
+
+    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+
+    try {
+        if (isGuestMode) {
+            let allRem = JSON.parse(localStorage.getItem('guestReminders') || '[]');
+            allRem = allRem.filter(r => r.date !== activeReminderDate);
+            allRem.push({ date: activeReminderDate, note: noteText });
+            localStorage.setItem('guestReminders', JSON.stringify(allRem));
+        } else {
+            await db.collection("personalReminders").doc(activeReminderDate).set({
+                date: activeReminderDate,
+                note: noteText,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        showToast("Reminder saved!", "success");
+        document.getElementById('reminder-modal').style.display = 'none';
+        renderCalendar();
+    } catch(e) {
+        console.error(e); showToast("Failed to save reminder.", "error");
+    } finally {
+        btn.innerHTML = 'Save'; btn.disabled = false;
+    }
+}
+
+async function deleteReminder(dateStr) {
+    try {
+        if (isGuestMode) {
+            let allRem = JSON.parse(localStorage.getItem('guestReminders') || '[]');
+            allRem = allRem.filter(r => r.date !== dateStr);
+            localStorage.setItem('guestReminders', JSON.stringify(allRem));
+        } else {
+            await db.collection("personalReminders").doc(dateStr).delete();
+        }
+        showToast("Reminder deleted.", "info");
+        document.getElementById('reminder-modal').style.display = 'none';
+        renderCalendar();
+    } catch(e) {
+        showToast("Failed to delete.", "error");
+    }
+}
 
 // ==========================================
 // NOTEPAD LOGIC (FIREBASE SYNC & UTILITIES)
