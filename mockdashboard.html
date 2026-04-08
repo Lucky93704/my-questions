@@ -88,6 +88,13 @@ table { width: 100%; border-collapse: collapse; min-width: 850px; text-align: le
 th, td { padding: 12px 15px; border-bottom: 1px solid var(--border); }
 th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
 .th-content { display: flex; align-items: center; gap: 6px; }
+
+/* Expandable Row Styling */
+.main-row { cursor: pointer; transition: background-color 0.2s ease; }
+.main-row:hover { background-color: var(--bg); }
+.chevron-icon { transition: transform 0.3s ease; color: #64748b; }
+.details-content { padding: 15px 20px; background: var(--bg); margin: 5px 15px 20px 15px; border-radius: 8px; border-left: 4px solid var(--target); font-size: 0.95rem; color: var(--text); word-break: break-word;}
+
 .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
 .badge-good { background: rgba(34, 197, 94, 0.15); color: var(--success); }
 .badge-warn { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
@@ -268,7 +275,7 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
             </div>
             <div class="form-group">
                 <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Weakest Subject / Notes</label>
-                <input type="text" id="mock-notes" placeholder="e.g. Need to revise Geo, missed easy Maths">
+                <textarea id="mock-notes" style="width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 80px;" placeholder="e.g. Need to revise Geo, missed easy Maths"></textarea>
             </div>
             
             <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -317,9 +324,8 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
                         <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Score</div></th>
                         <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</div></th>
                         <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy</div></th>
-                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Notes</div></th>
                         <th style="text-align: center;"><div class="th-content" style="justify-content: center;"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Actions</div></th>
-                    </tr>
+                        <th style="width: 30px;"></th> </tr>
                 </thead>
                 <tbody id="history-body">
                     </tbody>
@@ -360,6 +366,24 @@ function autoFillTotalMarks() {
         totalInput.value = "200";
     } else {
         totalInput.value = "50"; 
+    }
+}
+
+// Custom Expandable Row Logic
+function toggleDetails(rowId, mainRowEl) {
+    const detailsRow = document.getElementById(rowId);
+    const chevron = mainRowEl.querySelector('.chevron-icon');
+    
+    if (detailsRow.style.display === 'none') {
+        detailsRow.style.display = 'table-row';
+        chevron.style.transform = 'rotate(180deg)';
+        mainRowEl.style.borderBottom = 'none';
+        mainRowEl.style.backgroundColor = 'var(--bg)';
+    } else {
+        detailsRow.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)';
+        mainRowEl.style.borderBottom = '';
+        mainRowEl.style.backgroundColor = '';
     }
 }
 
@@ -550,13 +574,13 @@ async function deleteMock(id) {
 function updateDashboard() {
     const filterType = document.getElementById('view-filter').value;
     
-    // 1. DATA FOR THE HISTORY TABLE (Respects exact filter, "All" shows all)
+    // 1. DATA FOR THE HISTORY TABLE
     let tableDataList = mockData;
     if (filterType !== 'All') {
         tableDataList = mockData.filter(mock => (mock.type || 'Full Mock') === filterType);
     }
 
-    // 2. DATA FOR STATS & CHARTS (Prevents mixed data by defaulting to "Full Mock")
+    // 2. DATA FOR STATS & CHARTS
     const chartTargetType = filterType === 'All' ? 'Full Mock' : filterType;
     const analysisDataList = mockData.filter(mock => (mock.type || 'Full Mock') === chartTargetType);
 
@@ -568,7 +592,7 @@ function updateDashboard() {
     document.getElementById('chart-title-score').innerHTML = `${chartIcon} ${chartTargetType} Scores`;
     document.getElementById('chart-title-percentile').innerHTML = `${chartIcon} ${chartTargetType} Percentiles`;
 
-    // --- RENDER TABLE ---
+    // --- RENDER EXPANDABLE TABLE ---
     const tbody = document.getElementById('history-body');
     tbody.innerHTML = '';
     
@@ -583,30 +607,44 @@ function updateDashboard() {
             const badgeClass = mock.percentile >= 90 ? 'badge-good' : (mock.percentile >= 75 ? 'badge-warn' : 'badge-bad');
             const pctDisplay = mock.percentile ? `<span class="badge ${badgeClass}">${mock.percentile}%ile</span>` : '-';
             const accDisplay = mock.accuracy ? `${mock.accuracy}%` : '-';
+            const notesContent = mock.notes || 'No notes provided for this test.';
             
             const d = new Date(mock.date);
             const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 
             tbody.innerHTML += `
-                <tr>
+                <tr class="main-row" onclick="toggleDetails('details-${mock.id}', this)">
                     <td style="font-weight: 500;">${dateStr}</td>
                     <td><span class="type-badge" style="color: ${typeBadgeColor}; border-color: ${typeBadgeColor}40;">${mockType.replace(' Sectional', '')}</span></td>
                     <td>${mock.name}</td>
                     <td style="font-weight: bold; color: var(--text);">${mock.scored} <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">/ ${mock.total}</span></td>
                     <td>${pctDisplay}</td>
                     <td>${accDisplay}</td>
-                    <td style="font-size:0.9rem; color:#64748b;">${mock.notes || '-'}</td>
                     <td style="text-align: center;">
                         <div class="action-btn-group">
-                            <button class="action-btn" style="color: var(--success);" onclick="window.location.href='doubtsdashboard.html'" title="Log specific questions in Doubts">
+                            <button class="action-btn" style="color: var(--success);" onclick="event.stopPropagation(); window.location.href='doubtsdashboard.html'" title="Log specific questions in Doubts">
                                 <svg class="icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                             </button>
-                            <button class="action-btn edit" onclick="editMock('${mock.id}')" title="Edit Mock Stats">
+                            <button class="action-btn edit" onclick="event.stopPropagation(); editMock('${mock.id}')" title="Edit Mock Stats">
                                 <svg class="icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
-                            <button class="action-btn delete" onclick="deleteMock('${mock.id}')" title="Delete">
+                            <button class="action-btn delete" onclick="event.stopPropagation(); deleteMock('${mock.id}')" title="Delete">
                                 <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
+                        </div>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        <svg class="chevron-icon icon-md" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </td>
+                </tr>
+                <tr id="details-${mock.id}" style="display: none;">
+                    <td colspan="8" style="padding: 0; border-bottom: 1px solid var(--border);">
+                        <div class="details-content">
+                            <div style="display: flex; align-items: center; gap: 8px; color: var(--target); font-weight: bold; margin-bottom: 8px;">
+                                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                Notes & Weaknesses
+                            </div>
+                            <div>${notesContent}</div>
                         </div>
                     </td>
                 </tr>
@@ -650,7 +688,6 @@ function updateDashboard() {
     const avgScore = (totalScore / analysisDataList.length).toFixed(1);
     const avgPercentile = validPercentiles > 0 ? (totalPercentile / validPercentiles).toFixed(1) : 0;
 
-    // Total counts the rows in the table, everything else uses isolated analysis data
     document.getElementById('stat-total').innerText = tableDataList.length;
     document.getElementById('stat-avg-score').innerText = avgScore;
     document.getElementById('stat-avg-percentile').innerText = `${avgPercentile}%`;
