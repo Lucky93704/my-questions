@@ -728,9 +728,9 @@ function updateAnalytics() {
             <h4>${displayNames[subject]} <span class="percent">${subjPercent}%</span></h4>
             <div class="mini-progress"><div class="mini-progress-fill" style="width: ${subjPercent}%;"></div></div>
             <div class="stat-badges">
-                ${weakCount > 0 ? `<span class="badge badge-weak">🔴 ${weakCount} Weak</span>` : ''}
-                ${averageCount > 0 ? `<span class="badge badge-average">🟡 ${averageCount} Average</span>` : ''}
-                ${strongCount > 0 ? `<span class="badge badge-strong">🟢 ${strongCount} Strong</span>` : ''}
+                ${weakCount > 0 ? `<span class="badge badge-weak" style="cursor:pointer;" onclick="handleBadgeClick(event, '${subject}', 'weak')">🔴 ${weakCount} Weak</span>` : ''}
+                ${averageCount > 0 ? `<span class="badge badge-average" style="cursor:pointer;" onclick="handleBadgeClick(event, '${subject}', 'average')">🟡 ${averageCount} Average</span>` : ''}
+                ${strongCount > 0 ? `<span class="badge badge-strong" style="cursor:pointer;" onclick="handleBadgeClick(event, '${subject}', 'strong')">🟢 ${strongCount} Strong</span>` : ''}
                 ${overdueCount > 0 ? `<span class="badge badge-overdue">⚠️ ${overdueCount} Overdue</span>` : ''}
                 ${weakCount === 0 && averageCount === 0 && strongCount === 0 && overdueCount === 0 ? `<span class="badge" style="opacity:0.6;">No data yet</span>` : ''}
             </div>
@@ -944,7 +944,23 @@ function switchTab(tabId) {
         }, 50);
     }
 }
-
+// --- QUICK FILTER VIA BADGE CLICK ---
+function handleBadgeClick(event, subject, filterType) {
+    // 1. Stop the card's main click event from firing simultaneously
+    event.stopPropagation();
+    
+    // 2. Open the correct subject tab
+    switchTab(subject);
+    
+    // 3. Apply the corresponding filter (this automatically calls renderTables)
+    setFilter(filterType);
+    
+    // 4. Scroll down slightly to see the filtered list smoothly
+    setTimeout(() => {
+        const filterBar = document.getElementById('main-filter-bar');
+        if (filterBar) filterBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
 // Initialize on load
 window.onload = loadSyllabusData;
 </script>
