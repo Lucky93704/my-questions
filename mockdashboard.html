@@ -550,30 +550,71 @@ async function deleteMock(id) {
 function updateDashboard() {
     const filterType = document.getElementById('view-filter').value;
     
-    let filteredData = mockData;
+    // 1. DATA FOR THE HISTORY TABLE (Respects exact filter, "All" shows all)
+    let tableDataList = mockData;
     if (filterType !== 'All') {
-        filteredData = mockData.filter(mock => {
-            const mockType = mock.type || 'Full Mock'; 
-            return mockType === filterType;
-        });
+        tableDataList = mockData.filter(mock => (mock.type || 'Full Mock') === filterType);
     }
 
+    // 2. DATA FOR STATS & CHARTS (Prevents mixed data by defaulting to "Full Mock")
+    const chartTargetType = filterType === 'All' ? 'Full Mock' : filterType;
+    const analysisDataList = mockData.filter(mock => (mock.type || 'Full Mock') === chartTargetType);
+
+    // Dynamic Title Updates
     const titleIcon = `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
     document.getElementById('stat-label-total').innerHTML = filterType === 'All' ? `${titleIcon} Total Tests` : `${titleIcon} Total ${filterType.split(' ')[0]}`;
 
+    const chartIcon = `<svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>`;
+    document.getElementById('chart-title-score').innerHTML = `${chartIcon} ${chartTargetType} Scores`;
+    document.getElementById('chart-title-percentile').innerHTML = `${chartIcon} ${chartTargetType} Percentiles`;
+
+    // --- RENDER TABLE ---
     const tbody = document.getElementById('history-body');
     tbody.innerHTML = '';
     
-    if (filteredData.length === 0) {
+    if (tableDataList.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 20px;">No tests match this filter.</td></tr>';
-        document.getElementById('stat-total').innerText = '0';
-        document.getElementById('stat-avg-score').innerText = '0';
-        document.getElementById('stat-avg-percentile').innerText = '0%';
-        document.getElementById('stat-highest').innerText = '0';
-        renderCharts([], [], [], []);
-        return;
+    } else {
+        const displayTable = [...tableDataList].reverse();
+        displayTable.forEach(mock => {
+            const mockType = mock.type || 'Full Mock';
+            let typeBadgeColor = mockType === 'Full Mock' ? 'var(--primary)' : 'var(--target)';
+            
+            const badgeClass = mock.percentile >= 90 ? 'badge-good' : (mock.percentile >= 75 ? 'badge-warn' : 'badge-bad');
+            const pctDisplay = mock.percentile ? `<span class="badge ${badgeClass}">${mock.percentile}%ile</span>` : '-';
+            const accDisplay = mock.accuracy ? `${mock.accuracy}%` : '-';
+            
+            const d = new Date(mock.date);
+            const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="font-weight: 500;">${dateStr}</td>
+                    <td><span class="type-badge" style="color: ${typeBadgeColor}; border-color: ${typeBadgeColor}40;">${mockType.replace(' Sectional', '')}</span></td>
+                    <td>${mock.name}</td>
+                    <td style="font-weight: bold; color: var(--text);">${mock.scored} <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">/ ${mock.total}</span></td>
+                    <td>${pctDisplay}</td>
+                    <td>${accDisplay}</td>
+                    <td style="font-size:0.9rem; color:#64748b;">${mock.notes || '-'}</td>
+                    <td style="text-align: center;">
+                        <div class="action-btn-group">
+                            <button class="action-btn" style="color: var(--success);" onclick="window.location.href='doubtsdashboard.html'" title="Log specific questions in Doubts">
+                                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            </button>
+                            <button class="action-btn edit" onclick="editMock('${mock.id}')" title="Edit Mock Stats">
+                                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteMock('${mock.id}')" title="Delete">
+                                <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
     }
 
+    // --- RENDER STATS & CHARTS ---
     let totalScore = 0;
     let totalPercentile = 0;
     let validPercentiles = 0;
@@ -583,46 +624,16 @@ function updateDashboard() {
     const scorePoints = [];
     const percentilePoints = [];
 
-    const tableData = [...filteredData].reverse();
+    if(analysisDataList.length === 0) {
+        document.getElementById('stat-total').innerText = tableDataList.length; 
+        document.getElementById('stat-avg-score').innerText = '0';
+        document.getElementById('stat-avg-percentile').innerText = '0%';
+        document.getElementById('stat-highest').innerText = '0';
+        renderCharts([], [], []);
+        return;
+    }
 
-    tableData.forEach(mock => {
-        const mockType = mock.type || 'Full Mock';
-        let typeBadgeColor = mockType === 'Full Mock' ? 'var(--primary)' : 'var(--target)';
-        
-        const badgeClass = mock.percentile >= 90 ? 'badge-good' : (mock.percentile >= 75 ? 'badge-warn' : 'badge-bad');
-        const pctDisplay = mock.percentile ? `<span class="badge ${badgeClass}">${mock.percentile}%ile</span>` : '-';
-        const accDisplay = mock.accuracy ? `${mock.accuracy}%` : '-';
-        
-        const d = new Date(mock.date);
-        const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-
-        tbody.innerHTML += `
-            <tr>
-                <td style="font-weight: 500;">${dateStr}</td>
-                <td><span class="type-badge" style="color: ${typeBadgeColor}; border-color: ${typeBadgeColor}40;">${mockType.replace(' Sectional', '')}</span></td>
-                <td>${mock.name}</td>
-                <td style="font-weight: bold; color: var(--text);">${mock.scored} <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">/ ${mock.total}</span></td>
-                <td>${pctDisplay}</td>
-                <td>${accDisplay}</td>
-                <td style="font-size:0.9rem; color:#64748b;">${mock.notes || '-'}</td>
-                <td style="text-align: center;">
-                    <div class="action-btn-group">
-                        <button class="action-btn" style="color: var(--success);" onclick="window.location.href='doubtsdashboard.html'" title="Log specific questions in Doubts">
-                            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                        </button>
-                        <button class="action-btn edit" onclick="editMock('${mock.id}')" title="Edit Mock Stats">
-                            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
-                        <button class="action-btn delete" onclick="deleteMock('${mock.id}')" title="Delete">
-                            <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-
-    filteredData.forEach(mock => {
+    analysisDataList.forEach(mock => {
         totalScore += mock.scored;
         if (mock.scored > highestScore) highestScore = mock.scored;
         if (mock.percentile) {
@@ -636,10 +647,11 @@ function updateDashboard() {
         if (mock.percentile) percentilePoints.push(mock.percentile);
     });
 
-    const avgScore = (totalScore / filteredData.length).toFixed(1);
+    const avgScore = (totalScore / analysisDataList.length).toFixed(1);
     const avgPercentile = validPercentiles > 0 ? (totalPercentile / validPercentiles).toFixed(1) : 0;
 
-    document.getElementById('stat-total').innerText = filteredData.length;
+    // Total counts the rows in the table, everything else uses isolated analysis data
+    document.getElementById('stat-total').innerText = tableDataList.length;
     document.getElementById('stat-avg-score').innerText = avgScore;
     document.getElementById('stat-avg-percentile').innerText = `${avgPercentile}%`;
     document.getElementById('stat-highest').innerText = highestScore;
