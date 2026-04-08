@@ -28,39 +28,37 @@
 body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.3s; }
 .container { max-width: 1200px; margin: auto; padding-top: 40px; padding-bottom: 50px; }
 
+/* SVG Styling */
+svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-sm { width: 16px; height: 16px; }
+.icon-md { width: 20px; height: 20px; }
+.icon-lg { width: 28px; height: 28px; }
+
 /* Header & Nav */
 .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
 .header-left { display: flex; gap: 10px; align-items: center; }
 .header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; color: var(--target); display: flex; align-items: center; justify-content: center; gap: 10px;}
 .header-actions { display: flex; gap: 15px; align-items: center; }
 .back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
-svg { fill: currentColor; }
 
 .dashboard-filter {
-    padding: 10px 15px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: var(--card-bg);
-    color: var(--text);
-    font-size: 0.95rem;
-    cursor: pointer;
-    outline: none;
-    font-weight: 600;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--card-bg); color: var(--text); font-size: 0.95rem;
+    cursor: pointer; outline: none; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 /* Dropdown */
 .dropdown { position: relative; display: inline-block; }
 .dropdown-content { display: none; position: absolute; background-color: var(--card-bg); min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1); z-index: 1000; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; top: 100%; left: 0; margin-top: 8px; }
 .dropdown-content.show { display: block; }
-.dropdown-content a { color: var(--text); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; transition: 0.2s; }
+.dropdown-content a { color: var(--text); padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 500; transition: 0.2s; }
 .dropdown-content a:hover { background-color: var(--bg); color: var(--primary); }
 
 /* Stats Grid */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
 .stat-card { background: var(--card-bg); padding: 25px 20px; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.2s; }
 .stat-card:hover { transform: translateY(-3px); border-color: var(--target); }
-.stat-card h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px;}
+.stat-card h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px;}
 .stat-card .value { font-size: 2.2rem; font-weight: bold; color: var(--target); margin: 0;}
 
 /* Main Layout */
@@ -70,7 +68,7 @@ svg { fill: currentColor; }
 .form-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 .form-card h3 { margin-top: 0; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
 .form-group { margin-bottom: 15px; }
-.form-group label { display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: #64748b; }
+.form-group label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: #64748b; }
 .form-group input, .form-group select { width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; }
 .form-group input:focus, .form-group select:focus { border-color: var(--target); }
 .add-btn { background: var(--target); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;}
@@ -79,15 +77,17 @@ svg { fill: currentColor; }
 /* Charts Area */
 .charts-area { display: flex; flex-direction: column; gap: 25px; }
 .chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-.chart-container h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: var(--text); text-align: center; }
+.chart-container h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px;}
 .canvas-wrapper { position: relative; height: 280px; width: 100%; }
 
 /* History Table */
 .history-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); grid-column: 1 / -1; overflow-x: auto; }
 .history-card h3 { margin-top: 0; margin-bottom: 20px; color: var(--text); display: flex; justify-content: space-between; align-items: center;}
+.history-card h3 span { display: flex; align-items: center; gap: 8px; }
 table { width: 100%; border-collapse: collapse; min-width: 850px; text-align: left; }
 th, td { padding: 12px 15px; border-bottom: 1px solid var(--border); }
 th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
+.th-content { display: flex; align-items: center; gap: 6px; }
 .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
 .badge-good { background: rgba(34, 197, 94, 0.15); color: var(--success); }
 .badge-warn { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
@@ -100,7 +100,7 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
 .action-btn.delete { color: var(--error); }
 .action-btn.delete:hover { background: rgba(239, 68, 68, 0.1); }
 
-/* Custom Modal Animation & Styles */
+/* Modal & Toasts */
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(4px); animation: fadeInOverlay 0.3s ease; }
 .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .modal-content h3 { margin-top: 0; margin-bottom: 15px; color: var(--error); display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -115,7 +115,6 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
 @keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(4px); } }
 @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
 
-/* Spinner & Toasts */
 #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; transition: 0.3s; }
 .spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -137,13 +136,16 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
 
 <div id="loading-overlay">
     <div class="spinner"></div>
-    <h3 style="color: var(--text);">Loading Mock Data...</h3>
+    <h3 style="color: var(--text); display: flex; align-items: center; gap: 10px;">
+        <svg class="icon-md" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+        Loading Mock Data...
+    </h3>
 </div>
 
 <div id="custom-confirm-modal" class="modal-overlay">
     <div class="modal-content">
         <h3 id="confirm-title">
-            <svg viewBox="0 0 24 24" width="24" height="24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <svg class="icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             Confirm Action
         </h3>
         <p id="confirm-message">Are you sure you want to delete this test?</p>
@@ -160,21 +162,21 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
     <div class="header">
         <div class="header-left">
             <button class="back-btn" onclick="window.location.href='index.html'">
-                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Home
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Home
             </button>
             <div class="dropdown">
                 <button class="back-btn" onclick="toggleDropdown(event)" style="background: transparent; border: 2px solid var(--border); color: var(--text);">
-                    <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+                    <svg class="icon-md" viewBox="0 0 24 24"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>
                 </button>
                 <div id="gotoDropdown" class="dropdown-content">
-                    <a href="studydashboard.html">Study Dashboard</a>
-                    <a href="syllabusdashboard.html">Syllabus Dashboard</a>
-                    <a href="doubtsdashboard.html">Doubts Dashboard</a>
+                    <a href="studydashboard.html"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg> Study Dashboard</a>
+                    <a href="syllabusdashboard.html"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Syllabus Dashboard</a>
+                    <a href="doubtsdashboard.html"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Doubts Dashboard</a>
                 </div>
             </div>
         </div>
         <h2>
-            <svg viewBox="0 0 24 24" width="28" height="28"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <svg class="icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
             Mock Test Analysis
         </h2>
         <div class="header-actions">
@@ -191,19 +193,31 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
 
     <div class="stats-grid">
         <div class="stat-card">
-            <h3 id="stat-label-total">Total Tests</h3>
+            <h3 id="stat-label-total">
+                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                Total Tests
+            </h3>
             <p class="value" id="stat-total">0</p>
         </div>
         <div class="stat-card">
-            <h3>Avg Score</h3>
+            <h3>
+                <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                Avg Score
+            </h3>
             <p class="value" id="stat-avg-score">0</p>
         </div>
         <div class="stat-card">
-            <h3>Avg Percentile</h3>
+            <h3>
+                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                Avg Percentile
+            </h3>
             <p class="value" id="stat-avg-percentile">0<span style="font-size:1.2rem;">%</span></p>
         </div>
         <div class="stat-card">
-            <h3>Highest Score</h3>
+            <h3>
+                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+                Highest Score
+            </h3>
             <p class="value" id="stat-highest">0</p>
         </div>
     </div>
@@ -211,11 +225,11 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
     <div class="dashboard-grid">
         <div class="form-card">
             <h3 id="form-title">
-                <svg viewBox="0 0 24 24" width="22" height="22"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 Log New Test
             </h3>
             <div class="form-group">
-                <label>Test Type</label>
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Test Type</label>
                 <select id="mock-type" onchange="autoFillTotalMarks()">
                     <option value="Full Mock">Full Mock</option>
                     <option value="Maths Sectional">Maths Sectional</option>
@@ -225,44 +239,45 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
                 </select>
             </div>
             <div class="form-group">
-                <label>Test Name / Platform</label>
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name / Platform</label>
                 <input type="text" id="mock-name" placeholder="e.g. Testbook Full Mock 4" required>
             </div>
             <div class="form-group">
-                <label>Date Attempted</label>
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date Attempted</label>
                 <input type="date" id="mock-date" required>
             </div>
             <div style="display: flex; gap: 15px;">
                 <div class="form-group" style="flex: 1;">
-                    <label>Total Marks</label>
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Total Marks</label>
                     <input type="number" id="mock-total" value="200" required>
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label>Marks Scored</label>
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Marks Scored</label>
                     <input type="number" id="mock-scored" step="0.5" placeholder="e.g. 135.5" required>
                 </div>
             </div>
             <div style="display: flex; gap: 15px;">
                 <div class="form-group" style="flex: 1;">
-                    <label>Percentile</label>
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</label>
                     <input type="number" id="mock-percentile" step="0.1" placeholder="e.g. 92.5">
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label>Accuracy (%)</label>
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy (%)</label>
                     <input type="number" id="mock-accuracy" placeholder="e.g. 85">
                 </div>
             </div>
             <div class="form-group">
-                <label>Weakest Subject / Notes</label>
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Weakest Subject / Notes</label>
                 <input type="text" id="mock-notes" placeholder="e.g. Need to revise Geo, missed easy Maths">
             </div>
             
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="add-btn" onclick="saveMock()" id="save-btn">
-                    <svg viewBox="0 0 24 24" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Save Results
                 </button>
                 <button class="add-btn" onclick="cancelEdit()" id="cancel-edit-btn" style="display: none; background: var(--bg); color: var(--text); border: 2px solid var(--border);">
+                    <svg class="icon-md" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     Cancel
                 </button>
             </div>
@@ -270,13 +285,19 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
 
         <div class="charts-area">
             <div class="chart-container">
-                <h3 id="chart-title-score">Score Progression</h3>
+                <h3 id="chart-title-score">
+                    <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                    Score Progression
+                </h3>
                 <div class="canvas-wrapper">
                     <canvas id="scoreChart"></canvas>
                 </div>
             </div>
             <div class="chart-container">
-                <h3 id="chart-title-percentile">Percentile Trend</h3>
+                <h3 id="chart-title-percentile">
+                    <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                    Percentile Trend
+                </h3>
                 <div class="canvas-wrapper">
                     <canvas id="percentileChart"></canvas>
                 </div>
@@ -284,18 +305,20 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
         </div>
 
         <div class="history-card">
-            <h3>Test History</h3>
+            <h3>
+                <span><svg class="icon-md" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Test History</span>
+            </h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Test Name</th>
-                        <th>Score</th>
-                        <th>Percentile</th>
-                        <th>Accuracy</th>
-                        <th>Notes</th>
-                        <th style="text-align: center;">Actions</th>
+                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date</div></th>
+                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Type</div></th>
+                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name</div></th>
+                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Score</div></th>
+                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</div></th>
+                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy</div></th>
+                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Notes</div></th>
+                        <th style="text-align: center;"><div class="th-content" style="justify-content: center;"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Actions</div></th>
                     </tr>
                 </thead>
                 <tbody id="history-body">
@@ -345,7 +368,7 @@ function showCustomConfirm(title, message) {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-confirm-modal');
         document.getElementById('confirm-title').innerHTML = `
-            <svg viewBox="0 0 24 24" width="24" height="24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <svg class="icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             ${title}
         `;
         document.getElementById('confirm-message').innerText = message;
@@ -428,14 +451,14 @@ function editMock(id) {
     document.getElementById('mock-notes').value = mock.notes || '';
 
     document.getElementById('form-title').innerHTML = `
-        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         Edit Test
     `;
     document.getElementById('save-btn').innerHTML = `
-        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <svg class="icon-md" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         Update Results
     `;
-    document.getElementById('cancel-edit-btn').style.display = 'block';
+    document.getElementById('cancel-edit-btn').style.display = 'flex';
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -451,11 +474,11 @@ function cancelEdit() {
     autoFillTotalMarks(); 
 
     document.getElementById('form-title').innerHTML = `
-        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         Log New Test
     `;
     document.getElementById('save-btn').innerHTML = `
-        <svg viewBox="0 0 24 24" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         Save Results
     `;
     document.getElementById('cancel-edit-btn').style.display = 'none';
@@ -478,7 +501,7 @@ function saveMock() {
 
     const btn = document.getElementById('save-btn');
     const originalText = btn.innerHTML;
-    btn.innerHTML = `<span style="display:inline-block; width:16px; height:16px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite;"></span> Saving...`;
+    btn.innerHTML = `<svg class="icon-md" style="animation: spin 1s linear infinite;" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Saving...`;
     btn.disabled = true;
 
     const dataObj = {
@@ -535,7 +558,8 @@ function updateDashboard() {
         });
     }
 
-    document.getElementById('stat-label-total').innerText = filterType === 'All' ? 'Total Tests' : `Total ${filterType.split(' ')[0]}`;
+    const titleIcon = `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+    document.getElementById('stat-label-total').innerHTML = filterType === 'All' ? `${titleIcon} Total Tests` : `${titleIcon} Total ${filterType.split(' ')[0]}`;
 
     const tbody = document.getElementById('history-body');
     tbody.innerHTML = '';
@@ -558,7 +582,6 @@ function updateDashboard() {
     const labels = [];
     const scorePoints = [];
     const percentilePoints = [];
-    const accPoints = [];
 
     const tableData = [...filteredData].reverse();
 
@@ -585,13 +608,13 @@ function updateDashboard() {
                 <td style="text-align: center;">
                     <div class="action-btn-group">
                         <button class="action-btn" style="color: var(--success);" onclick="window.location.href='doubtsdashboard.html'" title="Log specific questions in Doubts">
-                            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                         </button>
                         <button class="action-btn edit" onclick="editMock('${mock.id}')" title="Edit Mock Stats">
-                            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
                         <button class="action-btn delete" onclick="deleteMock('${mock.id}')" title="Delete">
-                            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </div>
                 </td>
@@ -611,7 +634,6 @@ function updateDashboard() {
         labels.push(d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
         scorePoints.push(mock.scored);
         if (mock.percentile) percentilePoints.push(mock.percentile);
-        if (mock.accuracy) accPoints.push(mock.accuracy);
     });
 
     const avgScore = (totalScore / filteredData.length).toFixed(1);
@@ -622,10 +644,10 @@ function updateDashboard() {
     document.getElementById('stat-avg-percentile').innerText = `${avgPercentile}%`;
     document.getElementById('stat-highest').innerText = highestScore;
 
-    renderCharts(labels, scorePoints, percentilePoints, accPoints);
+    renderCharts(labels, scorePoints, percentilePoints);
 }
 
-function renderCharts(labels, scores, percentiles, accuracies) {
+function renderCharts(labels, scores, percentiles) {
     const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
     const gridColor = document.body.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
     
