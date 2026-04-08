@@ -38,16 +38,24 @@ svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; 
 .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
 .header-left { display: flex; gap: 10px; align-items: center; }
 .header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; color: var(--target); display: flex; align-items: center; justify-content: center; gap: 10px;}
-.header-actions { display: flex; gap: 15px; align-items: center; }
+.header-actions { display: flex; gap: 15px; align-items: center; z-index: 100;}
 .back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
 
-.dashboard-filter {
-    padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border);
-    background: var(--card-bg); color: var(--text); font-size: 0.95rem;
-    cursor: pointer; outline: none; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
+/* Custom SVG Dropdown Filter */
+.custom-select-wrapper { position: relative; display: inline-block; user-select: none; min-width: 220px; }
+.custom-select-trigger { padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 0.95rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.2s; }
+.custom-select-trigger:hover { border-color: var(--primary); }
+.custom-select-trigger > span { display: flex; align-items: center; gap: 8px; }
+.custom-select-trigger .chevron { transition: transform 0.3s ease; color: #64748b; }
+.custom-select-wrapper.open .custom-select-trigger .chevron { transform: rotate(180deg); }
 
-/* Dropdown */
+.custom-select-options { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); z-index: 1000; overflow: hidden; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.custom-select-wrapper.open .custom-select-options { opacity: 1; visibility: visible; transform: translateY(0); }
+.custom-option { padding: 12px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; font-size: 0.95rem; font-weight: 500; color: var(--text); }
+.custom-option:hover { background: var(--bg); color: var(--primary); }
+.custom-option.selected { background: rgba(37, 99, 235, 0.05); color: var(--primary); border-left: 3px solid var(--primary); padding-left: 12px; }
+
+/* Navigation Dropdown */
 .dropdown { position: relative; display: inline-block; }
 .dropdown-content { display: none; position: absolute; background-color: var(--card-bg); min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1); z-index: 1000; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; top: 100%; left: 0; margin-top: 8px; }
 .dropdown-content.show { display: block; }
@@ -71,6 +79,14 @@ svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; 
 .form-group label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: #64748b; }
 .form-group input, .form-group select { width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; }
 .form-group input:focus, .form-group select:focus { border-color: var(--target); }
+
+/* Standard select arrow fix for the form */
+.form-group select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; cursor: pointer;
+}
+
 .add-btn { background: var(--target); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;}
 .add-btn:hover { background: var(--target-hover); transform: translateY(-2px); }
 
@@ -187,14 +203,37 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
             Mock Test Analysis
         </h2>
         <div class="header-actions">
-            <select class="dashboard-filter" id="view-filter" onchange="updateDashboard()">
-                <option value="All">📊 All Tests</option>
-                <option value="Full Mock">📝 Full Mocks Only</option>
-                <option value="Maths Sectional">📐 Maths Sectionals</option>
-                <option value="English Sectional">📖 English Sectionals</option>
-                <option value="GK Sectional">🌍 GK Sectionals</option>
-                <option value="Reasoning Sectional">🧠 Reasoning Sectionals</option>
-            </select>
+            
+            <div class="custom-select-wrapper" id="filter-wrapper">
+                <div class="custom-select-trigger" onclick="toggleCustomFilter(event)">
+                    <span id="filter-trigger-content">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> All Tests
+                    </span>
+                    <svg class="icon-sm chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                <div class="custom-select-options" id="filter-options">
+                    <div class="custom-option selected" data-value="All" onclick="selectFilter('All', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> All Tests
+                    </div>
+                    <div class="custom-option" data-value="Full Mock" onclick="selectFilter('Full Mock', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Full Mocks Only
+                    </div>
+                    <div class="custom-option" data-value="Maths Sectional" onclick="selectFilter('Maths Sectional', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><polygon points="2 20 12 4 22 20"></polygon></svg> Maths Sectionals
+                    </div>
+                    <div class="custom-option" data-value="English Sectional" onclick="selectFilter('English Sectional', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> English Sectionals
+                    </div>
+                    <div class="custom-option" data-value="GK Sectional" onclick="selectFilter('GK Sectional', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> GK Sectionals
+                    </div>
+                    <div class="custom-option" data-value="Reasoning Sectional" onclick="selectFilter('Reasoning Sectional', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1.45.62 2.84 1.5 3.5.76.76 1.23 1.52 1.41 2.5"></path></svg> Reasoning Sectionals
+                    </div>
+                </div>
+                <input type="hidden" id="view-filter" value="All">
+            </div>
+
         </div>
     </div>
 
@@ -325,7 +364,8 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
                         <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</div></th>
                         <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy</div></th>
                         <th style="text-align: center;"><div class="th-content" style="justify-content: center;"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Actions</div></th>
-                        <th style="width: 30px;"></th> </tr>
+                        <th style="width: 30px;"></th>
+                    </tr>
                 </thead>
                 <tbody id="history-body">
                     </tbody>
@@ -342,17 +382,40 @@ if (localStorage.getItem('theme') === 'dark') {
     document.body.removeAttribute('data-theme');
 }
 
-// Dropdown Logic
+// Navigation Dropdown & Custom Filter Dropdown Logic
 function toggleDropdown(event) {
     event.stopPropagation();
     document.getElementById("gotoDropdown").classList.toggle("show");
 }
+
+function toggleCustomFilter(event) {
+    event.stopPropagation();
+    document.getElementById("filter-wrapper").classList.toggle("open");
+}
+
+function selectFilter(value, element) {
+    document.getElementById("view-filter").value = value;
+    document.getElementById("filter-trigger-content").innerHTML = element.innerHTML;
+    
+    document.querySelectorAll(".custom-option").forEach(opt => opt.classList.remove("selected"));
+    element.classList.add("selected");
+    
+    document.getElementById("filter-wrapper").classList.remove("open");
+    updateDashboard();
+}
+
 window.addEventListener('click', function(e) {
+    // Nav Dropdown
     if (!e.target.closest('.dropdown')) {
         const dropdowns = document.getElementsByClassName("dropdown-content");
         for (let i = 0; i < dropdowns.length; i++) {
             dropdowns[i].classList.remove('show');
         }
+    }
+    // Custom Filter Dropdown
+    if (!e.target.closest('.custom-select-wrapper')) {
+        const filterWrapper = document.getElementById('filter-wrapper');
+        if (filterWrapper) filterWrapper.classList.remove('open');
     }
 });
 
