@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+    if (sessionStorage.getItem('isUnlocked') !== 'true' && localStorage.getItem('isUnlocked') !== 'true') {
+        window.location.href = 'index.html';
+    }
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock Tests Dashboard - SSC Portal</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root { 
+    --primary: #2563eb; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; 
+    --border: #e2e8f0; --error: #ef4444; --success: #22c55e; --target: #8b5cf6; 
+    --target-hover: #7c3aed; --warning: #f59e0b;
+}
+[data-theme="dark"] { 
+    --primary: #60a5fa; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; 
+    --border: #334155; --error: #f87171; --success: #4ade80; --target: #a78bfa; 
+    --target-hover: #8b5cf6; --warning: #fbbf24;
+}
+
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.3s; }
+.container { max-width: 1200px; margin: auto; padding-top: 40px; padding-bottom: 50px; }
+
+/* Header & Nav */
+.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
+.header-left { display: flex; gap: 10px; align-items: center; }
+.header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; color: var(--target); display: flex; align-items: center; justify-content: center; gap: 10px;}
+.header-actions { display: flex; gap: 15px; align-items: center; }
+.back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
+svg { fill: currentColor; }
+
+.dashboard-filter {
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    cursor: pointer;
+    outline: none;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Dropdown */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-content { display: none; position: absolute; background-color: var(--card-bg); min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1); z-index: 1000; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; top: 100%; left: 0; margin-top: 8px; }
+.dropdown-content.show { display: block; }
+.dropdown-content a { color: var(--text); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.95rem; font-weight: 500; transition: 0.2s; }
+.dropdown-content a:hover { background-color: var(--bg); color: var(--primary); }
+
+/* Stats Grid */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+.stat-card { background: var(--card-bg); padding: 25px 20px; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.2s; }
+.stat-card:hover { transform: translateY(-3px); border-color: var(--target); }
+.stat-card h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px;}
+.stat-card .value { font-size: 2.2rem; font-weight: bold; color: var(--target); margin: 0;}
+
+/* Main Layout */
+.dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; margin-bottom: 30px; }
+
+/* Add Form */
+.form-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.form-card h3 { margin-top: 0; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: #64748b; }
+.form-group input, .form-group select { width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; }
+.form-group input:focus, .form-group select:focus { border-color: var(--target); }
+.add-btn { background: var(--target); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;}
+.add-btn:hover { background: var(--target-hover); transform: translateY(-2px); }
+
+/* Charts Area */
+.charts-area { display: flex; flex-direction: column; gap: 25px; }
+.chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.chart-container h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: var(--text); text-align: center; }
+.canvas-wrapper { position: relative; height: 280px; width: 100%; }
+
+/* History Table */
+.history-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); grid-column: 1 / -1; overflow-x: auto; }
+.history-card h3 { margin-top: 0; margin-bottom: 20px; color: var(--text); display: flex; justify-content: space-between; align-items: center;}
+table { width: 100%; border-collapse: collapse; min-width: 850px; text-align: left; }
+th, td { padding: 12px 15px; border-bottom: 1px solid var(--border); }
+th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
+.badge { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
+.badge-good { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+.badge-warn { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.badge-bad { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+.type-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; font-weight: 600; border: 1px solid var(--border); background: var(--bg); color: var(--text); white-space: nowrap;}
+.action-btn-group { display: flex; gap: 5px; justify-content: center; }
+.action-btn { background: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+.action-btn.edit { color: var(--primary); }
+.action-btn.edit:hover { background: rgba(37, 99, 235, 0.1); }
+.action-btn.delete { color: var(--error); }
+.action-btn.delete:hover { background: rgba(239, 68, 68, 0.1); }
+
+/* Custom Modal Animation & Styles */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(4px); animation: fadeInOverlay 0.3s ease; }
+.modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.modal-content h3 { margin-top: 0; margin-bottom: 15px; color: var(--error); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.modal-content p { color: var(--text); margin-bottom: 25px; line-height: 1.5; font-size: 1rem; }
+.confirm-btn-group { display: flex; gap: 10px; justify-content: center; }
+.btn-confirm-cancel, .btn-confirm-danger { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; flex: 1; border: none; font-size: 1rem;}
+.btn-confirm-cancel { background: var(--bg); border: 2px solid var(--border); color: var(--text); }
+.btn-confirm-cancel:hover { background: var(--card-bg); border-color: var(--primary); color: var(--primary); }
+.btn-confirm-danger { background: var(--error); color: white; }
+.btn-confirm-danger:hover { background: #dc2626; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); transform: translateY(-2px); }
+
+@keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(4px); } }
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+
+/* Spinner & Toasts */
+#loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; transition: 0.3s; }
+.spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast { background: var(--card-bg); color: var(--text); padding: 14px 20px; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s forwards; }
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--error); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+@media (max-width: 900px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .header { flex-direction: column; }
+    .header h2 { order: -1; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <h3 style="color: var(--text);">Loading Mock Data...</h3>
+</div>
+
+<div id="custom-confirm-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="confirm-title">
+            <svg viewBox="0 0 24 24" width="24" height="24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Confirm Action
+        </h3>
+        <p id="confirm-message">Are you sure you want to delete this test?</p>
+        <div class="confirm-btn-group">
+            <button id="btn-confirm-cancel" class="btn-confirm-cancel">Cancel</button>
+            <button id="btn-confirm-danger" class="btn-confirm-danger">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Home
+            </button>
+            <div class="dropdown">
+                <button class="back-btn" onclick="toggleDropdown(event)" style="background: transparent; border: 2px solid var(--border); color: var(--text);">
+                    <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+                </button>
+                <div id="gotoDropdown" class="dropdown-content">
+                    <a href="studydashboard.html">Study Dashboard</a>
+                    <a href="syllabusdashboard.html">Syllabus Dashboard</a>
+                    <a href="doubtsdashboard.html">Doubts Dashboard</a>
+                </div>
+            </div>
+        </div>
+        <h2>
+            <svg viewBox="0 0 24 24" width="28" height="28"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Mock Test Analysis
+        </h2>
+        <div class="header-actions">
+            <select class="dashboard-filter" id="view-filter" onchange="updateDashboard()">
+                <option value="All">📊 All Tests</option>
+                <option value="Full Mock">📝 Full Mocks Only</option>
+                <option value="Maths Sectional">📐 Maths Sectionals</option>
+                <option value="English Sectional">📖 English Sectionals</option>
+                <option value="GK Sectional">🌍 GK Sectionals</option>
+                <option value="Reasoning Sectional">🧠 Reasoning Sectionals</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3 id="stat-label-total">Total Tests</h3>
+            <p class="value" id="stat-total">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Avg Score</h3>
+            <p class="value" id="stat-avg-score">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>Avg Percentile</h3>
+            <p class="value" id="stat-avg-percentile">0<span style="font-size:1.2rem;">%</span></p>
+        </div>
+        <div class="stat-card">
+            <h3>Highest Score</h3>
+            <p class="value" id="stat-highest">0</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="form-card">
+            <h3 id="form-title">
+                <svg viewBox="0 0 24 24" width="22" height="22"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Log New Test
+            </h3>
+            <div class="form-group">
+                <label>Test Type</label>
+                <select id="mock-type" onchange="autoFillTotalMarks()">
+                    <option value="Full Mock">Full Mock</option>
+                    <option value="Maths Sectional">Maths Sectional</option>
+                    <option value="English Sectional">English Sectional</option>
+                    <option value="GK Sectional">GK Sectional</option>
+                    <option value="Reasoning Sectional">Reasoning Sectional</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Test Name / Platform</label>
+                <input type="text" id="mock-name" placeholder="e.g. Testbook Full Mock 4" required>
+            </div>
+            <div class="form-group">
+                <label>Date Attempted</label>
+                <input type="date" id="mock-date" required>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Total Marks</label>
+                    <input type="number" id="mock-total" value="200" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Marks Scored</label>
+                    <input type="number" id="mock-scored" step="0.5" placeholder="e.g. 135.5" required>
+                </div>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Percentile</label>
+                    <input type="number" id="mock-percentile" step="0.1" placeholder="e.g. 92.5">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Accuracy (%)</label>
+                    <input type="number" id="mock-accuracy" placeholder="e.g. 85">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Weakest Subject / Notes</label>
+                <input type="text" id="mock-notes" placeholder="e.g. Need to revise Geo, missed easy Maths">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="add-btn" onclick="saveMock()" id="save-btn">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Save Results
+                </button>
+                <button class="add-btn" onclick="cancelEdit()" id="cancel-edit-btn" style="display: none; background: var(--bg); color: var(--text); border: 2px solid var(--border);">
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <div class="charts-area">
+            <div class="chart-container">
+                <h3 id="chart-title-score">Score Progression</h3>
+                <div class="canvas-wrapper">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 id="chart-title-percentile">Percentile Trend</h3>
+                <div class="canvas-wrapper">
+                    <canvas id="percentileChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-card">
+            <h3>Test History</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Test Name</th>
+                        <th>Score</th>
+                        <th>Percentile</th>
+                        <th>Accuracy</th>
+                        <th>Notes</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// Apply Global Theme
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.setAttribute('data-theme', 'dark');
+} else {
+    document.body.removeAttribute('data-theme');
+}
+
+// Dropdown Logic
+function toggleDropdown(event) {
+    event.stopPropagation();
+    document.getElementById("gotoDropdown").classList.toggle("show");
+}
+window.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown')) {
+        const dropdowns = document.getElementsByClassName("dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+            dropdowns[i].classList.remove('show');
+        }
+    }
+});
+
+// Default Date to Today
+document.getElementById('mock-date').value = new Date().toISOString().split('T')[0];
+
+function autoFillTotalMarks() {
+    const type = document.getElementById('mock-type').value;
+    const totalInput = document.getElementById('mock-total');
+    if (type === "Full Mock") {
+        totalInput.value = "200";
+    } else {
+        totalInput.value = "50"; 
+    }
+}
+
+// Custom Confirm Modal Logic
+function showCustomConfirm(title, message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-confirm-modal');
+        document.getElementById('confirm-title').innerHTML = `
+            <svg viewBox="0 0 24 24" width="24" height="24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            ${title}
+        `;
+        document.getElementById('confirm-message').innerText = message;
+        modal.style.display = 'flex';
+        
+        const btnDanger = document.getElementById('btn-confirm-danger');
+        const btnCancel = document.getElementById('btn-confirm-cancel');
+        
+        const cleanup = () => {
+            modal.style.display = 'none';
+            btnDanger.removeEventListener('click', handleConfirm);
+            btnCancel.removeEventListener('click', handleCancel);
+        };
+
+        const handleConfirm = () => { cleanup(); resolve(true); };
+        const handleCancel = () => { cleanup(); resolve(false); };
+        
+        btnDanger.addEventListener('click', handleConfirm);
+        btnCancel.addEventListener('click', handleCancel);
+    });
+}
+
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyCAw1Eozvog8hUdZW7THJQBlgze79sCkGk",
+    authDomain: "my-site-7fd99.firebaseapp.com",
+    projectId: "my-site-7fd99",
+    storageBucket: "my-site-7fd99.firebasestorage.app",
+    messagingSenderId: "1024490010463",
+    appId: "1:1024490010463:web:130447b333eaa7a5f468ea",
+    measurementId: "G-WS0G17WRE9"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Global Variables
+let mockData = [];
+let scoreChartInstance = null;
+let percentileChartInstance = null;
+let editingMockId = null; // Track edit state
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
+
+function fetchMocks() {
+    db.collection("mockTests").orderBy("date", "asc").onSnapshot(snapshot => {
+        mockData = [];
+        snapshot.forEach(doc => {
+            mockData.push({ id: doc.id, ...doc.data() });
+        });
+        
+        document.getElementById('loading-overlay').style.display = 'none';
+        updateDashboard();
+    }, error => {
+        console.error("Error fetching mocks:", error);
+        showToast("Failed to load data.", "error");
+        document.getElementById('loading-overlay').style.display = 'none';
+    });
+}
+
+// Edit function to populate the form
+function editMock(id) {
+    const mock = mockData.find(m => m.id === id);
+    if (!mock) return;
+
+    editingMockId = id;
+    
+    // Populate form fields
+    document.getElementById('mock-type').value = mock.type || 'Full Mock';
+    document.getElementById('mock-name').value = mock.name;
+    document.getElementById('mock-date').value = mock.date;
+    document.getElementById('mock-total').value = mock.total;
+    document.getElementById('mock-scored').value = mock.scored;
+    document.getElementById('mock-percentile').value = mock.percentile || '';
+    document.getElementById('mock-accuracy').value = mock.accuracy || '';
+    document.getElementById('mock-notes').value = mock.notes || '';
+
+    // Update UI for editing
+    document.getElementById('form-title').innerHTML = `
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        Edit Test
+    `;
+    document.getElementById('save-btn').innerHTML = `
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Update Results
+    `;
+    document.getElementById('cancel-edit-btn').style.display = 'block';
+
+    // Scroll smoothly to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEdit() {
+    editingMockId = null;
+    
+    // Clear form
+    document.getElementById('mock-name').value = '';
+    document.getElementById('mock-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('mock-percentile').value = '';
+    document.getElementById('mock-accuracy').value = '';
+    document.getElementById('mock-notes').value = '';
+    autoFillTotalMarks(); 
+
+    // Reset UI
+    document.getElementById('form-title').innerHTML = `
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        Log New Test
+    `;
+    document.getElementById('save-btn').innerHTML = `
+        <svg viewBox="0 0 24 24" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Save Results
+    `;
+    document.getElementById('cancel-edit-btn').style.display = 'none';
+}
+
+function saveMock() {
+    const type = document.getElementById('mock-type').value;
+    const name = document.getElementById('mock-name').value.trim();
+    const date = document.getElementById('mock-date').value;
+    const total = parseFloat(document.getElementById('mock-total').value);
+    const scored = parseFloat(document.getElementById('mock-scored').value);
+    const percentile = parseFloat(document.getElementById('mock-percentile').value) || null;
+    const accuracy = parseFloat(document.getElementById('mock-accuracy').value) || null;
+    const notes = document.getElementById('mock-notes').value.trim();
+
+    if (!name || !date || isNaN(total) || isNaN(scored)) {
+        showToast("Please fill in all required fields (Name, Date, Scores).", "error");
+        return;
+    }
+
+    const btn = document.getElementById('save-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<span style="display:inline-block; width:16px; height:16px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite;"></span> Saving...`;
+    btn.disabled = true;
+
+    const dataObj = {
+        type, name, date, total, scored, percentile, accuracy, notes,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (editingMockId) {
+        // Update existing document
+        db.collection("mockTests").doc(editingMockId).update(dataObj).then(() => {
+            showToast("Test updated successfully!");
+            cancelEdit(); 
+        }).catch(err => {
+            console.error(err);
+            showToast("Error updating test.", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    } else {
+        // Add new document
+        db.collection("mockTests").add(dataObj).then(() => {
+            showToast("Test saved successfully!");
+            cancelEdit(); // Clears form
+        }).catch(err => {
+            console.error(err);
+            showToast("Error saving test.", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+}
+
+// Async delete utilizing the custom animated modal
+async function deleteMock(id) {
+    const confirmed = await showCustomConfirm(
+        "Delete Test", 
+        "Are you sure you want to permanently delete this test record?"
+    );
+    
+    if(confirmed) {
+        db.collection("mockTests").doc(id).delete().then(() => {
+            showToast("Record deleted.");
+        }).catch(err => {
+            showToast("Failed to delete.", "error");
+        });
+    }
+}
+
+function updateDashboard() {
+    const filterType = document.getElementById('view-filter').value;
+    
+    let filteredData = mockData;
+    if (filterType !== 'All') {
+        filteredData = mockData.filter(mock => {
+            const mockType = mock.type || 'Full Mock'; 
+            return mockType === filterType;
+        });
+    }
+
+    document.getElementById('stat-label-total').innerText = filterType === 'All' ? 'Total Tests' : `Total ${filterType.split(' ')[0]}`;
+
+    const tbody = document.getElementById('history-body');
+    tbody.innerHTML = '';
+    
+    if (filteredData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 20px;">No tests match this filter.</td></tr>';
+        document.getElementById('stat-total').innerText = '0';
+        document.getElementById('stat-avg-score').innerText = '0';
+        document.getElementById('stat-avg-percentile').innerText = '0%';
+        document.getElementById('stat-highest').innerText = '0';
+        renderCharts([], [], [], []);
+        return;
+    }
+
+    let totalScore = 0;
+    let totalPercentile = 0;
+    let validPercentiles = 0;
+    let highestScore = 0;
+
+    const labels = [];
+    const scorePoints = [];
+    const percentilePoints = [];
+    const accPoints = [];
+
+    const tableData = [...filteredData].reverse();
+
+    tableData.forEach(mock => {
+        const mockType = mock.type || 'Full Mock';
+        let typeBadgeColor = mockType === 'Full Mock' ? 'var(--primary)' : 'var(--target)';
+        
+        const badgeClass = mock.percentile >= 90 ? 'badge-good' : (mock.percentile >= 75 ? 'badge-warn' : 'badge-bad');
+        const pctDisplay = mock.percentile ? `<span class="badge ${badgeClass}">${mock.percentile}%ile</span>` : '-';
+        const accDisplay = mock.accuracy ? `${mock.accuracy}%` : '-';
+        
+        const d = new Date(mock.date);
+        const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+
+        tbody.innerHTML += `
+            <tr>
+                <td style="font-weight: 500;">${dateStr}</td>
+                <td><span class="type-badge" style="color: ${typeBadgeColor}; border-color: ${typeBadgeColor}40;">${mockType.replace(' Sectional', '')}</span></td>
+                <td>${mock.name}</td>
+                <td style="font-weight: bold; color: var(--text);">${mock.scored} <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">/ ${mock.total}</span></td>
+                <td>${pctDisplay}</td>
+                <td>${accDisplay}</td>
+                <td style="font-size:0.9rem; color:#64748b;">${mock.notes || '-'}</td>
+                <td style="text-align: center;">
+                    <div class="action-btn-group">
+                        <button class="action-btn edit" onclick="editMock('${mock.id}')" title="Edit">
+                            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        </button>
+                        <button class="action-btn delete" onclick="deleteMock('${mock.id}')" title="Delete">
+                            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    filteredData.forEach(mock => {
+        totalScore += mock.scored;
+        if (mock.scored > highestScore) highestScore = mock.scored;
+        if (mock.percentile) {
+            totalPercentile += mock.percentile;
+            validPercentiles++;
+        }
+
+        const d = new Date(mock.date);
+        labels.push(d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
+        scorePoints.push(mock.scored);
+        if (mock.percentile) percentilePoints.push(mock.percentile);
+        if (mock.accuracy) accPoints.push(mock.accuracy);
+    });
+
+    const avgScore = (totalScore / filteredData.length).toFixed(1);
+    const avgPercentile = validPercentiles > 0 ? (totalPercentile / validPercentiles).toFixed(1) : 0;
+
+    document.getElementById('stat-total').innerText = filteredData.length;
+    document.getElementById('stat-avg-score').innerText = avgScore;
+    document.getElementById('stat-avg-percentile').innerText = `${avgPercentile}%`;
+    document.getElementById('stat-highest').innerText = highestScore;
+
+    renderCharts(labels, scorePoints, percentilePoints, accPoints);
+}
+
+function renderCharts(labels, scores, percentiles, accuracies) {
+    const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
+    const gridColor = document.body.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+    
+    // 1. Score Chart
+    const ctxScore = document.getElementById('scoreChart').getContext('2d');
+    if (scoreChartInstance) scoreChartInstance.destroy();
+    
+    let gradientScore = ctxScore.createLinearGradient(0, 0, 0, 300);
+    gradientScore.addColorStop(0, 'rgba(139, 92, 246, 0.4)'); 
+    gradientScore.addColorStop(1, 'rgba(139, 92, 246, 0)');
+
+    scoreChartInstance = new Chart(ctxScore, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Marks Scored',
+                data: scores,
+                borderColor: '#8b5cf6',
+                backgroundColor: gradientScore,
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#8b5cf6',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                y: { ticks: { color: textColor }, grid: { color: gridColor } },
+                x: { ticks: { color: textColor }, grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // 2. Percentile Chart
+    const ctxPct = document.getElementById('percentileChart').getContext('2d');
+    if (percentileChartInstance) percentileChartInstance.destroy();
+
+    let gradientPct = ctxPct.createLinearGradient(0, 0, 0, 300);
+    gradientPct.addColorStop(0, 'rgba(34, 197, 94, 0.4)'); 
+    gradientPct.addColorStop(1, 'rgba(34, 197, 94, 0)');
+
+    percentileChartInstance = new Chart(ctxPct, {
+        type: 'line',
+        data: {
+            labels: labels.slice(labels.length - percentiles.length),
+            datasets: [{
+                label: 'Percentile',
+                data: percentiles,
+                borderColor: '#22c55e',
+                backgroundColor: gradientPct,
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#22c55e',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                y: { max: 100, min: 0, ticks: { color: textColor, stepSize: 20 }, grid: { color: gridColor } },
+                x: { ticks: { color: textColor }, grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+// Initial Fetch
+window.onload = fetchMocks;
+</script>
+</body>
+</html>
