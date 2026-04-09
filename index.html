@@ -1865,26 +1865,56 @@ function calcBackspace() {
 function calculateResult() {
     if (!calcExpression) return;
     try {
-        // Map visual operators and scientific functions to JS Math
-        let safeExpr = calcExpression
+        let expr = calcExpression;
+
+        // 1. Auto-close any missing parentheses
+        let openParen = (expr.match(/\(/g) || []).length;
+        let closeParen = (expr.match(/\)/g) || []).length;
+        while (openParen > closeParen) {
+            expr += ')';
+            closeParen++;
+        }
+
+        // 2. Add implicit multiplication (e.g., "2sin(" becomes "2*sin(", "5(" becomes "5*(")
+        expr = expr.replace(/(\d)(sin|cos|tan|√|∛|\()/g, '$1*$2');
+        expr = expr.replace(/\)(\d)/g, ')*$1');
+
+        // 3. Map visual operators to code logic
+        let safeExpr = expr
             .replace(/×/g, '*')
             .replace(/÷/g, '/')
             .replace(/%/g, '/100')
             .replace(/\^/g, '**')
-            .replace(/sin\(/g, 'Math.sin(')
-            .replace(/cos\(/g, 'Math.cos(')
-            .replace(/tan\(/g, 'Math.tan(')
-            .replace(/√\(/g, 'Math.sqrt(')
-            .replace(/∛\(/g, 'Math.cbrt(');
+            .replace(/√\(/g, 'sqrt(')
+            .replace(/∛\(/g, 'cbrt(');
         
-        let result = new Function('return ' + safeExpr)(); 
+        // 4. Create a custom Math Environment (Converts Trigo to Degrees!)
+        const mathEnv = `
+            const sin = (d) => Math.sin(d * Math.PI / 180);
+            const cos = (d) => {
+                let res = Math.cos(d * Math.PI / 180);
+                return Math.abs(res) < 1e-10 ? 0 : res; // Fix for cos(90) floating point issue
+            };
+            const tan = (d) => {
+                if (d % 180 === 90) return "Error"; // tan(90) is undefined
+                return Math.tan(d * Math.PI / 180);
+            };
+            const sqrt = Math.sqrt;
+            const cbrt = Math.cbrt;
+            return ${safeExpr};
+        `;
         
-        // Better precision rounding for scientific math
-        result = Math.round(result * 100000000) / 100000000;
+        let result = new Function(mathEnv)(); 
         
-        const histString = `${calcExpression} = ${result}`;
+        if (result === "Error" || isNaN(result)) throw new Error("Invalid Math");
+
+        // Rounding to fix floating point chaos (like 0.1 + 0.2 = 0.300000000004)
+        result = Math.round(result * 10000000) / 10000000;
+        
+        // Add to history
+        const histString = `${expr} = ${result}`;
         calcHistArray.unshift(histString);
-        if (calcHistArray.length > 20) calcHistArray.pop(); // Keep 20 items now
+        if (calcHistArray.length > 20) calcHistArray.pop(); 
         
         localStorage.setItem('calcHistory', JSON.stringify(calcHistArray));
         
