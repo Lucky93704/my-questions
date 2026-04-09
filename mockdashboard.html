@@ -86,6 +86,7 @@ svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; 
     background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');
     background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; cursor: pointer;
 }
+.form-group select:hover { border-color: var(--target); }
 
 .add-btn { background: var(--target); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;}
 .add-btn:hover { background: var(--target-hover); transform: translateY(-2px); }
@@ -207,15 +208,12 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
             <div class="custom-select-wrapper" id="filter-wrapper">
                 <div class="custom-select-trigger" onclick="toggleCustomFilter(event)">
                     <span id="filter-trigger-content">
-                        <svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> All Tests
+                        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Full Mocks
                     </span>
                     <svg class="icon-sm chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
                 <div class="custom-select-options" id="filter-options">
-                    <div class="custom-option selected" data-value="All" onclick="selectFilter('All', this)">
-                        <svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> All Tests
-                    </div>
-                    <div class="custom-option" data-value="Full Mock" onclick="selectFilter('Full Mock', this)">
+                    <div class="custom-option selected" data-value="Full Mock" onclick="selectFilter('Full Mock', this)">
                         <svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Full Mocks
                     </div>
                     <div class="custom-option" data-value="Maths Sectional" onclick="selectFilter('Maths Sectional', this)">
@@ -231,7 +229,7 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
                         <svg class="icon-sm" viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1.45.62 2.84 1.5 3.5.76.76 1.23 1.52 1.41 2.5"></path></svg> Reasoning Sectionals
                     </div>
                 </div>
-                <input type="hidden" id="view-filter" value="All">
+                <input type="hidden" id="view-filter" value="Full Mock">
             </div>
 
         </div>
@@ -637,23 +635,17 @@ async function deleteMock(id) {
 function updateDashboard() {
     const filterType = document.getElementById('view-filter').value;
     
-    // 1. DATA FOR THE HISTORY TABLE
-    let tableDataList = mockData;
-    if (filterType !== 'All') {
-        tableDataList = mockData.filter(mock => (mock.type || 'Full Mock') === filterType);
-    }
-
-    // 2. DATA FOR STATS & CHARTS
-    const chartTargetType = filterType === 'All' ? 'Full Mock' : filterType;
-    const analysisDataList = mockData.filter(mock => (mock.type || 'Full Mock') === chartTargetType);
+    // 1. DATA FOR THE HISTORY TABLE & CHARTS
+    const tableDataList = mockData.filter(mock => (mock.type || 'Full Mock') === filterType);
+    const analysisDataList = tableDataList;
 
     // Dynamic Title Updates
     const titleIcon = `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
-    document.getElementById('stat-label-total').innerHTML = filterType === 'All' ? `${titleIcon} Total Tests` : `${titleIcon} Total ${filterType.split(' ')[0]}`;
+    document.getElementById('stat-label-total').innerHTML = `${titleIcon} Total ${filterType.split(' ')[0]}`;
 
     const chartIcon = `<svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>`;
-    document.getElementById('chart-title-score').innerHTML = `${chartIcon} ${chartTargetType} Scores`;
-    document.getElementById('chart-title-percentile').innerHTML = `${chartIcon} ${chartTargetType} Percentiles`;
+    document.getElementById('chart-title-score').innerHTML = `${chartIcon} ${filterType} Scores`;
+    document.getElementById('chart-title-percentile').innerHTML = `${chartIcon} ${filterType} Percentiles`;
 
     // --- RENDER EXPANDABLE TABLE ---
     const tbody = document.getElementById('history-body');
