@@ -238,7 +238,7 @@ header p { color: #64748b; font-size: 1.1rem; }
 <div id="loading-overlay">
     <div class="main-spinner"></div>
     <h3 style="color: var(--primary); font-size: 1.2rem; font-weight: bold; margin: 0;">
-        Loading Hub...
+Loading Study Portal
     </h3>
 </div>
 
@@ -1861,7 +1861,37 @@ function calcBackspace() {
     }
     updateCalcDisplay();
 }
+// Helper to convert decimals to fractions and standard surds
+function formatExactResult(num) {
+    if (Number.isInteger(num)) return num.toString();
+    const sign = Math.sign(num);
+    const absNum = Math.abs(num);
+    
+    // 1. Intercept Standard SSC Trigonometry Surds
+    const rounded = Math.round(absNum * 10000000) / 10000000;
+    if (rounded === 0.8660254) return sign < 0 ? '-√3/2' : '√3/2';
+    if (rounded === 0.7071068) return sign < 0 ? '-1/√2' : '1/√2';
+    if (rounded === 1.7320508) return sign < 0 ? '-√3' : '√3';
+    if (rounded === 0.5773503) return sign < 0 ? '-1/√3' : '1/√3';
 
+    // 2. Convert clean decimals to fractions (e.g., 0.5 -> 1/2)
+    let h1 = 1, h2 = 0, k1 = 0, k2 = 1;
+    let b = absNum;
+    do {
+        let a = Math.floor(b);
+        let aux = h1; h1 = a * h1 + h2; h2 = aux;
+        aux = k1; k1 = a * k1 + k2; k2 = aux;
+        b = 1 / (b - a);
+    } while (Math.abs(absNum - h1 / k1) > absNum * 1.0E-6);
+
+    // If it is a clean fraction (denominator 100 or less), display it
+    if (k1 <= 100 && k1 > 1) {
+        return (sign < 0 ? '-' : '') + h1 + '/' + k1;
+    }
+
+    // 3. Fallback: Return standard rounded decimal
+    return (sign < 0 ? '-' : '') + (Math.round(absNum * 10000) / 10000);
+}
 function calculateResult() {
     if (!calcExpression) return;
     try {
@@ -1908,17 +1938,17 @@ function calculateResult() {
         
         if (result === "Error" || isNaN(result)) throw new Error("Invalid Math");
 
-        // Rounding to fix floating point chaos (like 0.1 + 0.2 = 0.300000000004)
-        result = Math.round(result * 10000000) / 10000000;
+// Format to Exact Fraction or Surd!
+        let exactResult = formatExactResult(result);
         
         // Add to history
-        const histString = `${expr} = ${result}`;
+        const histString = `${expr} = ${exactResult}`;
         calcHistArray.unshift(histString);
         if (calcHistArray.length > 20) calcHistArray.pop(); 
         
         localStorage.setItem('calcHistory', JSON.stringify(calcHistArray));
         
-        calcExpression = result.toString();
+        calcExpression = exactResult;
         updateCalcDisplay();
     } catch(e) {
         calcExpression = "Error";
