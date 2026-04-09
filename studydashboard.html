@@ -56,7 +56,6 @@ svg { fill: currentColor; }
 .add-task-form input[type="text"] { flex: 2; min-width: 250px; padding: 12px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s;}
 .add-task-form input[type="text"]:focus { border-color: var(--target); }
 
-/* Updated Select Dropdown with custom arrow and fixed width */
 .add-task-form select { 
     flex: 0 0 auto; 
     width: 140px; 
@@ -78,7 +77,6 @@ svg { fill: currentColor; }
     background-size: 16px;
     transition: border-color 0.3s;
 }
-/* New Hover Effect for the dropdown */
 .add-task-form select:hover {
     border-color: var(--target);
 }
@@ -121,7 +119,6 @@ svg { fill: currentColor; }
 [data-theme="dark"] .subj-Mock { background: #7f1d1d; color: #fecaca; }
 [data-theme="dark"] .subj-Other { background: #334155; color: #cbd5e1; }
 
-/* Reflection Box Styles */
 .reflection-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s; }
 .reflection-header { display: flex; justify-content: space-between; align-items: center; }
 .reflection-header h3 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; color: var(--target); }
@@ -199,6 +196,11 @@ svg { fill: currentColor; }
 .dropdown-content a:hover { background-color: var(--bg); color: var(--target); }
 .dropdown-active { border-color: var(--target) !important; color: var(--target) !important; }
 
+/* Full-screen Loading Overlay */
+#loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; opacity: 1; transition: opacity 0.4s ease; }
+.main-spinner { width: 40px; height: 40px; border: 4px solid rgba(37, 99, 235, 0.2); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; margin-bottom: 15px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: currentColor; animation: spin 1s linear infinite; }
 @media (max-width: 600px) {
     .header { flex-direction: column; align-items: stretch; gap: 15px; }
     .header h2 { font-size: 1.5rem; order: -1; margin-bottom: 5px; }
@@ -212,6 +214,13 @@ svg { fill: currentColor; }
 </style>
 </head>
 <body>
+
+<div id="loading-overlay">
+    <div class="main-spinner"></div>
+    <h3 style="color: var(--primary); font-size: 1.2rem; font-weight: bold; margin: 0;">
+        Loading Study Plan...
+    </h3>
+</div>
 
 <div id="weekly-recap-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
     <div class="modal-content custom-dialog-box" style="text-align: center; max-width: 450px;">
@@ -392,6 +401,16 @@ let weeklyChartInstance = null;
 let currentChartTab = 'completion'; 
 let lastAnalyticsData = null; 
 
+function hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 400); // Matches the 0.4s CSS transition
+    }
+}
+
 function toggleDropdown(event) {
     event.stopPropagation();
     document.getElementById("gotoDropdown").classList.toggle("show");
@@ -568,8 +587,7 @@ function fetchTargets() {
     previousPercentage = -1; 
     
     const listContainer = document.getElementById('task-list');
-    listContainer.innerHTML = '<div class="empty-state"><span class="spinner" style="border-top-color: var(--target);"></span> Loading...</div>';
-
+    
     if (targetsUnsubscribe) targetsUnsubscribe();
 
     targetsUnsubscribe = db.collection("dailyTargets")
@@ -601,6 +619,7 @@ function fetchTargets() {
                 document.getElementById('filters-container').style.display = 'none';
                 renderHoliday(holidayId, holidayData, listContainer, isPastDate);
                 updateProgressHoliday();
+                hideLoading(); 
                 return;
             }
 
@@ -610,6 +629,7 @@ function fetchTargets() {
             if (total === 0) {
                 listContainer.innerHTML = '<div class="empty-state">No targets set for this date. Take a break or add a new goal!</div>';
                 updateProgress(0, 0);
+                hideLoading(); 
                 return;
             }
 
@@ -621,9 +641,12 @@ function fetchTargets() {
             });
 
             updateProgress(completed, total);
+            hideLoading(); 
+            
         }, (error) => {
             console.error("Error fetching targets:", error);
             listContainer.innerHTML = '<div class="empty-state" style="color:var(--error);">Failed to load targets. Please check connection.</div>';
+            hideLoading(); 
         });
 
     fetchReflection(selectedDate, isPastDate);
