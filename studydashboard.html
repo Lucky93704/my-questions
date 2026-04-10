@@ -784,7 +784,7 @@ async function addHoliday() {
     const reason = await showCustomDialog({
         type: 'prompt',
         title: 'Mark as Holiday',
-        message: 'Enter a compulsory reason for your holiday (this will clear your tasks for the day):',
+        message: 'Enter a reason for your holiday (this will clear your tasks for this day)',
         placeholder: 'e.g., Sick, Vacation, Rest day...'
     });
 
