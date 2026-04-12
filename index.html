@@ -1175,68 +1175,129 @@ async function launchPortal() {
     listenToSessions();
 }
 
-function attemptUnlock() {
-    const pinInput = document.getElementById('pin-input');
-    
-    if (pinInput.value === "24122009") {
-        document.getElementById('unlock-btn').innerHTML = '<span class="spinner" style="width: 16px; height: 16px; margin: 0; border-width: 2px;"></span> Unlocking...';
-        localStorage.setItem('isUnlocked', 'true');
-    
-        showToast('Access Granted!', 'success');
-         
-        setTimeout(launchPortal, 800);
-    } else {
-        showToast('Incorrect PIN.', 'error');
-        pinInput.classList.add('error-shake');
-        
-        setTimeout(() => {
-            pinInput.classList.remove('error-shake');
-            pinInput.value = '';
-        }, 400);
-    }
-}
+// ==========================================
+// FIREBASE AUTHENTICATION & MIGRATION
+// ==========================================
+const auth = firebase.auth();
 
-document.getElementById('toggle-pin-btn').addEventListener('click', function() {
-    const pinInput = document.getElementById('pin-input');
-    const eyeIcon = document.getElementById('eye-icon');
-    
-    if (pinInput.type === 'password') {
-        pinInput.type = 'text';
-        eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+const authScreen = document.getElementById('auth-screen');
+const mainContent = document.getElementById('main-content');
+const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+
+// 1. Listen for Auth State Changes
+auth.onAuthStateChanged(user => {
+    if (user) {
+        // Logged in!
+        window.currentUserUid = user.uid; // Store globally for other scripts
+        authScreen.style.display = 'none';
+        mainContent.style.display = 'block';
+        launchPortal(); 
     } else {
-        pinInput.type = 'password';
-        eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        // Logged out
+        window.currentUserUid = null;
+        authScreen.style.display = 'flex';
+        mainContent.style.display = 'none';
+        hideLoading();
     }
 });
 
+// 2. Login Logic
+document.getElementById('login-btn').addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if(!email || !password) return showToast("Enter email and password", "error");
+    
+    try {
+        document.getElementById('login-btn').innerText = "Logging in...";
+        await auth.signInWithEmailAndPassword(email, password);
+        showToast('Access Granted!', 'success');
+    } catch (error) {
+        showToast(error.message, 'error');
+        document.getElementById('login-btn').innerText = "Login";
+    }
+});
+
+// 3. Register Logic
+document.getElementById('register-btn').addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if(!email || !password) return showToast("Enter email and password", "error");
+
+    try {
+        document.getElementById('register-btn').innerText = "Registering...";
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        showToast('Account Created!', 'success');
+        
+        // IMPORTANT: Run migration for the very first user!
+        await migrateDataToUser(userCredential.user.uid);
+        
+    } catch (error) {
+        showToast(error.message, 'error');
+        document.getElementById('register-btn').innerText = "Register";
+    }
+});
+
+// 4. Logout Logic
 async function handleLogout(type = 'manual') {
     isLoggingOut = true;
     document.getElementById('logout-btn').innerHTML = '<span class="spinner" style="border-top-color: var(--error); width:14px; height:14px; border-width:2px; margin:0;"></span> Locking...';
-        
+    
     if (currentSessionId && type !== 'remote') {
         await removeSession(currentSessionId);
     }
-        
+    
     sessionStorage.removeItem('sessionId'); 
-    localStorage.removeItem('isUnlocked');
     localStorage.removeItem('sessionId');
-        
     currentSessionId = null;
-        
+    
+    await auth.signOut(); // Log out of Firebase
+    
     if (type === 'remote') {
         showToast('Logged out remotely from another device.', 'error');
-    } else if (type === 'auto') {
-        showToast('Portal auto-locked due to 15m inactivity.', 'info');
     } else {
         showToast('Portal Locked Successfully.', 'info');
     }
-        
+    
     setTimeout(() => { window.location.reload(); }, 800); 
 }
 
-document.getElementById('unlock-btn').addEventListener('click', attemptUnlock);
-document.getElementById('pin-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') attemptUnlock(); });
 document.getElementById('logout-btn').addEventListener('click', () => handleLogout('manual'));
+
+// 5. One-Time Data Migration Script
+async function migrateDataToUser(newUserId) {
+    showToast("Migrating your old data... please wait.", "info");
+    
+    // List of collections you want to secure
+    const collectionsToMigrate = ["dailyTargets", "dailyReflections", "personalReminders", "quickNotes"]; 
+    // Note: If you have doubt databases (e.g., mathsDoubts, englishDoubts), add them to this array!
+    
+    try {
+        for (const collectionName of collectionsToMigrate) {
+            const snapshot = await db.collection(collectionName).get();
+            const batch = db.batch();
+            let count = 0;
+            
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                // If it doesn't have a userId, claim it!
+                if (!data.userId) {
+                    batch.update(doc.ref, { userId: newUserId });
+                    count++;
+                }
+            });
+            
+            if (count > 0) {
+                await batch.commit();
+                console.log(`Migrated ${count} docs in ${collectionName}`);
+            }
+        }
+        showToast("Data migration complete!", "success");
+    } catch (error) {
+        console.error("Migration failed:", error);
+        showToast("Migration failed. Check console.", "error");
+    }
+}
 
 // ==========================================
 // QUICK ADD LOGIC
