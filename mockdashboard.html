@@ -17,12 +17,12 @@
 :root { 
     --primary: #2563eb; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; 
     --border: #e2e8f0; --error: #ef4444; --success: #22c55e; --target: #8b5cf6; 
-    --target-hover: #7c3aed; --warning: #f59e0b;
+    --target-hover: #7c3aed; --warning: #f59e0b; --pink: #ec4899;
 }
 [data-theme="dark"] { 
     --primary: #60a5fa; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; 
     --border: #334155; --error: #f87171; --success: #4ade80; --target: #a78bfa; 
-    --target-hover: #8b5cf6; --warning: #fbbf24;
+    --target-hover: #8b5cf6; --warning: #fbbf24; --pink: #f472b6;
 }
 
 body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.3s; }
@@ -69,38 +69,33 @@ svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; 
 .stat-card h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px;}
 .stat-card .value { font-size: 2.2rem; font-weight: bold; color: var(--target); margin: 0;}
 
-/* Main Layout */
-.dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; margin-bottom: 30px; }
+/* Add Form Modal */
+.form-modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); width: 90%; max-width: 600px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
+.form-modal-content::-webkit-scrollbar { width: 8px; }
+.form-modal-content::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 4px; }
+.close-modal-btn { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: #64748b; cursor: pointer; transition: 0.2s; }
+.close-modal-btn:hover { color: var(--error); transform: scale(1.1); }
 
-/* Add Form */
-.form-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); align-self: start; }
-.form-card h3 { margin-top: 0; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-.form-group { margin-bottom: 15px; }
+.form-group { margin-bottom: 15px; text-align: left; }
 .form-group label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: #64748b; }
 .form-group input, .form-group select { width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; }
 .form-group input:focus, .form-group select:focus { border-color: var(--target); }
 
-/* Standard select arrow fix for the form */
-.form-group select {
-    appearance: none; -webkit-appearance: none; -moz-appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; cursor: pointer;
-}
+.form-group select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; cursor: pointer; }
 .form-group select:hover { border-color: var(--target); }
 
-.add-btn { background: var(--target); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;}
-.add-btn:hover { background: var(--target-hover); transform: translateY(-2px); }
+.add-btn { background: var(--target); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;}
+.add-btn:hover { background: var(--target-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); }
 
-/* Charts Area */
-.charts-area { display: flex; flex-direction: column; gap: 25px; }
+/* Charts Area - 2x2 Grid */
+.charts-area { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin-bottom: 40px; }
 .chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 .chart-container h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px;}
 .canvas-wrapper { position: relative; height: 280px; width: 100%; }
 
 /* History Table */
-.history-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); grid-column: 1 / -1; overflow-x: auto; }
-.history-card h3 { margin-top: 0; margin-bottom: 20px; color: var(--text); display: flex; justify-content: space-between; align-items: center;}
-.history-card h3 span { display: flex; align-items: center; gap: 8px; }
+.history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px; }
+.history-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 850px; text-align: left; }
 th, td { padding: 12px 15px; border-bottom: 1px solid var(--border); }
 th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
@@ -124,8 +119,8 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
 .action-btn.delete { color: var(--error); }
 .action-btn.delete:hover { background: rgba(239, 68, 68, 0.1); }
 
-/* Modal & Toasts */
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(4px); animation: fadeInOverlay 0.3s ease; }
+/* Modals & Toasts */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(5px); animation: fadeInOverlay 0.3s ease; }
 .modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .modal-content h3 { margin-top: 0; margin-bottom: 15px; color: var(--error); display: flex; align-items: center; justify-content: center; gap: 8px; }
 .modal-content p { color: var(--text); margin-bottom: 25px; line-height: 1.5; font-size: 1rem; }
@@ -136,12 +131,10 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
 .btn-confirm-danger { background: var(--error); color: white; }
 .btn-confirm-danger:hover { background: #dc2626; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); transform: translateY(-2px); }
 
-@keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(4px); } }
+@keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(5px); } }
 @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
 
 #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; opacity: 1; transition: opacity 0.4s ease; }
-
-/* The cool Syllabus Dashboard spinner */
 .spinner { width: 40px; height: 40px; border: 4px solid rgba(37, 99, 235, 0.2); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; margin-bottom: 15px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -152,7 +145,7 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 @media (max-width: 900px) {
-    .dashboard-grid { grid-template-columns: 1fr; }
+    .charts-area { grid-template-columns: 1fr; }
     .header { flex-direction: column; }
     .header h2 { order: -1; }
 }
@@ -181,6 +174,91 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
     </div>
 </div>
 
+<div id="log-test-modal" class="modal-overlay">
+    <div class="form-modal-content">
+        <button class="close-modal-btn" onclick="closeLogModal()">
+            <svg class="icon-lg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        
+        <h3 id="form-title" style="margin-top: 0; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+            <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            <span id="form-title-text">Log New Test</span>
+        </h3>
+        
+        <div class="form-group">
+            <label><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Test Type</label>
+            <select id="mock-type" onchange="autoFillTotalMarks()">
+                <option value="Full Mock">Full Mock</option>
+                <option value="Maths Sectional">Maths Sectional</option>
+                <option value="English Sectional">English Sectional</option>
+                <option value="GK Sectional">GK Sectional</option>
+                <option value="Reasoning Sectional">Reasoning Sectional</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name / Platform</label>
+            <input type="text" id="mock-name" placeholder="e.g. Testbook Full Mock 4" required>
+        </div>
+        <div class="form-group">
+            <label><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date Attempted</label>
+            <input type="date" id="mock-date" required>
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Total Marks</label>
+                <input type="text" id="mock-total" value="200" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Marks Scored</label>
+                <input type="text" id="mock-scored" placeholder="e.g. 135.5" required>
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</label>
+                <input type="text" id="mock-percentile" placeholder="e.g. 92.5">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy (%)</label>
+                <input type="text" id="mock-accuracy" placeholder="e.g. 85">
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Total Attempted</label>
+                <input type="text" id="mock-attempted" placeholder="e.g. 85">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Right</label>
+                <input type="text" id="mock-right" placeholder="e.g. 70">
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Wrong</label>
+                <input type="text" id="mock-wrong" placeholder="e.g. 15">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg> Unattempted</label>
+                <input type="text" id="mock-unattempted" placeholder="e.g. 15">
+            </div>
+        </div>
+        <div class="form-group">
+            <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2-2z"></path></svg> Weakest Subject / Notes</label>
+            <textarea id="mock-notes" style="width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 80px;" placeholder="e.g. Need to revise Geo, missed easy Maths"></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="add-btn" style="flex: 2;" onclick="saveMock()" id="save-btn">
+                <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Save Results
+            </button>
+            <button class="add-btn" onclick="cancelEdit()" id="cancel-edit-btn" style="display: none; flex: 1; background: var(--bg); color: var(--text); border: 2px solid var(--border);">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
 <div id="toast-container"></div>
 
 <div class="container">
@@ -267,143 +345,73 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
         </div>
     </div>
 
-    <div class="dashboard-grid">
-<div class="form-card">
-            <h3 style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin: 0;" onclick="toggleForm()">
-                <div style="display: flex; align-items: center; gap: 8px; color: var(--primary);">
-                    <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    <span id="form-title-text">Log New Test</span>
-                </div>
-                <svg id="form-toggle-icon" class="icon-md" style="transition: transform 0.3s ease; color: #64748b;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    <div class="charts-area">
+        <div class="chart-container">
+            <h3 id="chart-title-score">
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                Score Progression
             </h3>
-            
-            <div id="form-content" style="display: none; margin-top: 25px;">
-                <div class="form-group">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Test Type</label>
-                    <select id="mock-type" onchange="autoFillTotalMarks()">
-                        <option value="Full Mock">Full Mock</option>
-                        <option value="Maths Sectional">Maths Sectional</option>
-                        <option value="English Sectional">English Sectional</option>
-                        <option value="GK Sectional">GK Sectional</option>
-                        <option value="Reasoning Sectional">Reasoning Sectional</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name / Platform</label>
-                    <input type="text" id="mock-name" placeholder="e.g. Testbook Full Mock 4" required>
-                </div>
-                <div class="form-group">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date Attempted</label>
-                    <input type="date" id="mock-date" required>
-                </div>
-                <div style="display: flex; gap: 15px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Total Marks</label>
-                        <input type="text" id="mock-total" value="200" required>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Marks Scored</label>
-                        <input type="text" id="mock-scored" placeholder="e.g. 135.5" required>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 15px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</label>
-                        <input type="text" id="mock-percentile" placeholder="e.g. 92.5">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy (%)</label>
-                        <input type="text" id="mock-accuracy" placeholder="e.g. 85">
-                    </div>
-                </div>
-                <div style="display: flex; gap: 15px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Total Attempted</label>
-                        <input type="text" id="mock-attempted" placeholder="e.g. 85">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Right</label>
-                        <input type="text" id="mock-right" placeholder="e.g. 70">
-                    </div>
-                </div>
-                <div style="display: flex; gap: 15px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Wrong</label>
-                        <input type="text" id="mock-wrong" placeholder="e.g. 15">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg> Unattempted</label>
-                        <input type="text" id="mock-unattempted" placeholder="e.g. 15">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2-2z"></path></svg> Weakest Subject / Notes</label>
-                    <textarea id="mock-notes" style="width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 80px;" placeholder="e.g. Need to revise Geo, missed easy Maths"></textarea>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="add-btn" onclick="saveMock()" id="save-btn">
-                        <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        Save Results
-                    </button>
-                    <button class="add-btn" onclick="cancelEdit()" id="cancel-edit-btn" style="display: none; background: var(--bg); color: var(--text); border: 2px solid var(--border);">
-                        <svg class="icon-md" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        Cancel
-                    </button>
-                </div>
-            </div> </div>
-
-        <div class="charts-area">
-            <div class="chart-container">
-                <h3 id="chart-title-score">
-                    <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
-                    Score Progression
-                </h3>
-                <div class="canvas-wrapper">
-                    <canvas id="scoreChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-container">
-                <h3 id="chart-title-percentile">
-                    <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
-                    Percentile Trend
-                </h3>
-                <div class="canvas-wrapper">
-                    <canvas id="percentileChart"></canvas>
-                </div>
-            </div>
-            <div class="chart-container">
-                <h3 id="chart-title-accuracy">
-                    <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
-                    Accuracy Trend
-                </h3>
-                <div class="canvas-wrapper">
-                    <canvas id="accuracyChart"></canvas>
-                </div>
+            <div class="canvas-wrapper">
+                <canvas id="scoreChart"></canvas>
             </div>
         </div>
-
-        <div class="history-card">
-            <h3>
-                <span><svg class="icon-md" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Test History</span>
+        <div class="chart-container">
+            <h3 id="chart-title-percentile">
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                Percentile Trend
             </h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date</div></th>
-                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Type</div></th>
-                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name</div></th>
-                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Score</div></th>
-                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</div></th>
-                        <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy</div></th>
-                        <th style="text-align: center;"><div class="th-content" style="justify-content: center;"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Actions</div></th>
-                        <th style="width: 30px;"></th>
-                    </tr>
-                </thead>
-                <tbody id="history-body">
-                    </tbody>
-            </table>
+            <div class="canvas-wrapper">
+                <canvas id="percentileChart"></canvas>
+            </div>
         </div>
+        <div class="chart-container">
+            <h3 id="chart-title-accuracy">
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                Accuracy Trend
+            </h3>
+            <div class="canvas-wrapper">
+                <canvas id="accuracyChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3 id="chart-title-scatter">
+                <svg class="icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="5" r="2"></circle><circle cx="5" cy="19" r="2"></circle><circle cx="19" cy="19" r="2"></circle></svg>
+                Attempts vs. Accuracy
+            </h3>
+            <div class="canvas-wrapper">
+                <canvas id="scatterChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-header">
+        <h3 style="margin: 0; color: var(--text); display: flex; align-items: center; gap: 8px; font-size: 1.3rem;">
+            <svg class="icon-md" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Test History
+        </h3>
+        <button class="add-btn" onclick="openLogModal()">
+            <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Log New Test
+        </button>
+    </div>
+    
+    <div class="history-card">
+        <table>
+            <thead>
+                <tr>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Type</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Score</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy</div></th>
+                    <th style="text-align: center;"><div class="th-content" style="justify-content: center;"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Actions</div></th>
+                    <th style="width: 30px;"></th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                </tbody>
+        </table>
     </div>
 </div>
 
@@ -438,14 +446,10 @@ function selectFilter(value, element) {
 }
 
 window.addEventListener('click', function(e) {
-    // Nav Dropdown
     if (!e.target.closest('.dropdown')) {
         const dropdowns = document.getElementsByClassName("dropdown-content");
-        for (let i = 0; i < dropdowns.length; i++) {
-            dropdowns[i].classList.remove('show');
-        }
+        for (let i = 0; i < dropdowns.length; i++) { dropdowns[i].classList.remove('show'); }
     }
-    // Custom Filter Dropdown
     if (!e.target.closest('.custom-select-wrapper')) {
         const filterWrapper = document.getElementById('filter-wrapper');
         if (filterWrapper) filterWrapper.classList.remove('open');
@@ -465,17 +469,15 @@ function autoFillTotalMarks() {
     }
 }
 
-// Form Toggle Logic
-function toggleForm() {
-    const content = document.getElementById('form-content');
-    const icon = document.getElementById('form-toggle-icon');
-    
-    if (content.style.display === 'none' || content.style.display === '') {
-        content.style.display = 'block';
-        icon.style.transform = 'rotate(180deg)';
-    } else {
-        content.style.display = 'none';
-        icon.style.transform = 'rotate(0deg)';
+// MODAL OPEN / CLOSE LOGIC
+function openLogModal() {
+    document.getElementById('log-test-modal').style.display = 'flex';
+}
+
+function closeLogModal() {
+    document.getElementById('log-test-modal').style.display = 'none';
+    if(editingMockId) {
+        cancelEdit(); // Reset form if they close while editing
     }
 }
 
@@ -543,6 +545,7 @@ let mockData = [];
 let scoreChartInstance = null;
 let percentileChartInstance = null;
 let accuracyChartInstance = null;
+let scatterChartInstance = null; // New chart instance
 let editingMockId = null;
 
 function showToast(message, type = 'success') {
@@ -588,23 +591,16 @@ function editMock(id) {
     document.getElementById('mock-right').value = mock.right || '';
     document.getElementById('mock-wrong').value = mock.wrong || '';
     document.getElementById('mock-unattempted').value = mock.unattempted || '';
-
     document.getElementById('mock-notes').value = mock.notes || '';
 
-    // Change title text
-    document.getElementById('form-title-text').innerText = 'Edit Test';
-    
+    document.getElementById('form-title-text').innerText = 'Edit Test Stats';
     document.getElementById('save-btn').innerHTML = `
         <svg class="icon-md" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         Update Results
     `;
     document.getElementById('cancel-edit-btn').style.display = 'flex';
 
-    // Force the form to open
-    document.getElementById('form-content').style.display = 'block';
-    document.getElementById('form-toggle-icon').style.transform = 'rotate(180deg)';
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    openLogModal(); // Open the modal automatically
 }
 
 function cancelEdit() {
@@ -619,18 +615,16 @@ function cancelEdit() {
     document.getElementById('mock-right').value = '';
     document.getElementById('mock-wrong').value = '';
     document.getElementById('mock-unattempted').value = '';
-
     document.getElementById('mock-notes').value = '';
     autoFillTotalMarks(); 
 
-    // Change title text back
     document.getElementById('form-title-text').innerText = 'Log New Test';
-    
     document.getElementById('save-btn').innerHTML = `
         <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         Save Results
     `;
     document.getElementById('cancel-edit-btn').style.display = 'none';
+    closeLogModal();
 }
 
 function saveMock() {
@@ -638,7 +632,6 @@ function saveMock() {
     const name = document.getElementById('mock-name').value.trim();
     const date = document.getElementById('mock-date').value;
     
-    // Standard parse logic allowing characters like / or , without erroring
     const total = parseFloat(document.getElementById('mock-total').value);
     const scored = parseFloat(document.getElementById('mock-scored').value);
     const percentile = parseFloat(document.getElementById('mock-percentile').value) || null;
@@ -790,13 +783,14 @@ function updateDashboard() {
     const scorePoints = [];
     const percentilePoints = [];
     const accuracyPoints = []; 
+    const scatterData = []; // New Scatter Data Array
 
     if(analysisDataList.length === 0) {
         document.getElementById('stat-total').innerText = tableDataList.length; 
         document.getElementById('stat-avg-score').innerText = '0';
         document.getElementById('stat-avg-percentile').innerText = '0%';
         document.getElementById('stat-highest').innerText = '0';
-        renderCharts([], [], [], []);
+        renderCharts([], [], [], [], []);
         return;
     }
 
@@ -813,6 +807,11 @@ function updateDashboard() {
         scorePoints.push(mock.scored);
         if (mock.percentile) percentilePoints.push(mock.percentile);
         if (mock.accuracy) accuracyPoints.push(mock.accuracy); 
+        
+        // Push Scatter Data (Attempted vs Accuracy)
+        if (mock.attempted && mock.accuracy) {
+            scatterData.push({ x: mock.attempted, y: mock.accuracy });
+        }
     });
 
     const avgScore = (totalScore / analysisDataList.length).toFixed(1);
@@ -823,118 +822,93 @@ function updateDashboard() {
     document.getElementById('stat-avg-percentile').innerText = `${avgPercentile}%`;
     document.getElementById('stat-highest').innerText = highestScore;
 
-    renderCharts(labels, scorePoints, percentilePoints, accuracyPoints);
+    renderCharts(labels, scorePoints, percentilePoints, accuracyPoints, scatterData);
 }
 
-function renderCharts(labels, scores, percentiles, accuracies) {
+function renderCharts(labels, scores, percentiles, accuracies, scatterData) {
     const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
     const gridColor = document.body.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
     
     // --- SCORE CHART ---
     const ctxScore = document.getElementById('scoreChart').getContext('2d');
     if (scoreChartInstance) scoreChartInstance.destroy();
-    
     let gradientScore = ctxScore.createLinearGradient(0, 0, 0, 300);
-    gradientScore.addColorStop(0, 'rgba(139, 92, 246, 0.4)'); 
-    gradientScore.addColorStop(1, 'rgba(139, 92, 246, 0)');
-
+    gradientScore.addColorStop(0, 'rgba(139, 92, 246, 0.4)'); gradientScore.addColorStop(1, 'rgba(139, 92, 246, 0)');
     scoreChartInstance = new Chart(ctxScore, {
         type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Marks Scored',
-                data: scores,
-                borderColor: '#8b5cf6',
-                backgroundColor: gradientScore,
-                borderWidth: 3,
-                tension: 0.3,
-                fill: true,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#8b5cf6',
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-                y: { ticks: { color: textColor }, grid: { color: gridColor } },
-                x: { ticks: { color: textColor }, grid: { display: false } }
-            },
-            plugins: { legend: { display: false } }
-        }
+        data: { labels: labels, datasets: [{ label: 'Marks Scored', data: scores, borderColor: '#8b5cf6', backgroundColor: gradientScore, borderWidth: 3, tension: 0.3, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#8b5cf6', pointRadius: 4, pointHoverRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: textColor }, grid: { color: gridColor } }, x: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false } } }
     });
 
     // --- PERCENTILE CHART ---
     const ctxPct = document.getElementById('percentileChart').getContext('2d');
     if (percentileChartInstance) percentileChartInstance.destroy();
-
     let gradientPct = ctxPct.createLinearGradient(0, 0, 0, 300);
-    gradientPct.addColorStop(0, 'rgba(34, 197, 94, 0.4)'); 
-    gradientPct.addColorStop(1, 'rgba(34, 197, 94, 0)');
-
+    gradientPct.addColorStop(0, 'rgba(34, 197, 94, 0.4)'); gradientPct.addColorStop(1, 'rgba(34, 197, 94, 0)');
     percentileChartInstance = new Chart(ctxPct, {
         type: 'line',
-        data: {
-            labels: labels.slice(labels.length - percentiles.length),
-            datasets: [{
-                label: 'Percentile',
-                data: percentiles,
-                borderColor: '#22c55e',
-                backgroundColor: gradientPct,
-                borderWidth: 3,
-                tension: 0.3,
-                fill: true,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#22c55e',
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-                y: { max: 100, min: 0, ticks: { color: textColor, stepSize: 20 }, grid: { color: gridColor } },
-                x: { ticks: { color: textColor }, grid: { display: false } }
-            },
-            plugins: { legend: { display: false } }
-        }
+        data: { labels: labels.slice(labels.length - percentiles.length), datasets: [{ label: 'Percentile', data: percentiles, borderColor: '#22c55e', backgroundColor: gradientPct, borderWidth: 3, tension: 0.3, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#22c55e', pointRadius: 4, pointHoverRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { max: 100, min: 0, ticks: { color: textColor, stepSize: 20 }, grid: { color: gridColor } }, x: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false } } }
     });
 
     // --- ACCURACY CHART ---
     const ctxAcc = document.getElementById('accuracyChart').getContext('2d');
     if (accuracyChartInstance) accuracyChartInstance.destroy();
-
     let gradientAcc = ctxAcc.createLinearGradient(0, 0, 0, 300);
-    gradientAcc.addColorStop(0, 'rgba(245, 158, 11, 0.4)'); 
-    gradientAcc.addColorStop(1, 'rgba(245, 158, 11, 0)');
-
+    gradientAcc.addColorStop(0, 'rgba(245, 158, 11, 0.4)'); gradientAcc.addColorStop(1, 'rgba(245, 158, 11, 0)');
     accuracyChartInstance = new Chart(ctxAcc, {
         type: 'line',
+        data: { labels: labels.slice(labels.length - accuracies.length), datasets: [{ label: 'Accuracy (%)', data: accuracies, borderColor: '#f59e0b', backgroundColor: gradientAcc, borderWidth: 3, tension: 0.3, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#f59e0b', pointRadius: 4, pointHoverRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { max: 100, min: 0, ticks: { color: textColor, stepSize: 20 }, grid: { color: gridColor } }, x: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+    });
+
+    // --- SCATTER CHART (ATTEMPTS VS ACCURACY) ---
+    const ctxScatter = document.getElementById('scatterChart').getContext('2d');
+    if (scatterChartInstance) scatterChartInstance.destroy();
+    
+    // Get the pink color from CSS variables for theming
+    const pinkColor = getComputedStyle(document.body).getPropertyValue('--pink').trim() || '#ec4899';
+    
+    scatterChartInstance = new Chart(ctxScatter, {
+        type: 'scatter',
         data: {
-            labels: labels.slice(labels.length - accuracies.length),
             datasets: [{
-                label: 'Accuracy (%)',
-                data: accuracies,
-                borderColor: '#f59e0b',
-                backgroundColor: gradientAcc,
-                borderWidth: 3,
-                tension: 0.3,
-                fill: true,
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#f59e0b',
-                pointRadius: 4,
-                pointHoverRadius: 6
+                label: 'Attempts vs Accuracy',
+                data: scatterData,
+                backgroundColor: pinkColor,
+                borderColor: pinkColor,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2
             }]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true, 
+            maintainAspectRatio: false,
             scales: {
-                y: { max: 100, min: 0, ticks: { color: textColor, stepSize: 20 }, grid: { color: gridColor } },
-                x: { ticks: { color: textColor }, grid: { display: false } }
+                y: { 
+                    max: 100, min: 0,
+                    title: { display: true, text: 'Accuracy (%)', color: textColor, font: { weight: 'bold' } },
+                    ticks: { color: textColor }, 
+                    grid: { color: gridColor } 
+                },
+                x: { 
+                    title: { display: true, text: 'Total Attempted', color: textColor, font: { weight: 'bold' } },
+                    ticks: { color: textColor }, 
+                    grid: { color: gridColor } 
+                }
             },
-            plugins: { legend: { display: false } }
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Attempts: ${context.parsed.x}, Accuracy: ${context.parsed.y}%`;
+                        }
+                    }
+                }
+            }
         }
     });
 }
