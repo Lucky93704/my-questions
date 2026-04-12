@@ -1156,24 +1156,6 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-async function launchPortal() {
-    document.getElementById('pin-screen').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
-    
-    const profileContainer = document.getElementById('profile-container');
-    if (profileContainer) {
-        profileContainer.style.display = 'block';
-        profileContainer.classList.add('anim-fade-in');
-    }
-        
-    document.getElementById('main-content').classList.add('anim-fade-in');
-        
-    setGreetingAndQuote(); loadGlanceData(); renderCalendar(); loadNotepad();
-        
-    document.getElementById('linked-devices-btn').style.display = 'flex';
-    await initSession();
-    listenToSessions();
-}
 
 // ==========================================
 // FIREBASE AUTHENTICATION & MIGRATION
