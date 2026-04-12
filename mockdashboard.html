@@ -73,7 +73,7 @@ svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; 
 .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; margin-bottom: 30px; }
 
 /* Add Form */
-.form-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.form-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); align-self: start; }
 .form-card h3 { margin-top: 0; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
 .form-group { margin-bottom: 15px; }
 .form-group label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: #64748b; }
@@ -268,85 +268,90 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
     </div>
 
     <div class="dashboard-grid">
-        <div class="form-card">
-            <h3 id="form-title">
-                <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                Log New Test
+<div class="form-card">
+            <h3 style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin: 0;" onclick="toggleForm()">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--primary);">
+                    <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <span id="form-title-text">Log New Test</span>
+                </div>
+                <svg id="form-toggle-icon" class="icon-md" style="transition: transform 0.3s ease; color: #64748b;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </h3>
-            <div class="form-group">
-                <label><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Test Type</label>
-                <select id="mock-type" onchange="autoFillTotalMarks()">
-                    <option value="Full Mock">Full Mock</option>
-                    <option value="Maths Sectional">Maths Sectional</option>
-                    <option value="English Sectional">English Sectional</option>
-                    <option value="GK Sectional">GK Sectional</option>
-                    <option value="Reasoning Sectional">Reasoning Sectional</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name / Platform</label>
-                <input type="text" id="mock-name" placeholder="e.g. Testbook Full Mock 4" required>
-            </div>
-            <div class="form-group">
-                <label><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date Attempted</label>
-                <input type="date" id="mock-date" required>
-            </div>
-            <div style="display: flex; gap: 15px;">
-                <div class="form-group" style="flex: 1;">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Total Marks</label>
-                    <input type="text" id="mock-total" value="200" required>
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Marks Scored</label>
-                    <input type="text" id="mock-scored" placeholder="e.g. 135.5" required>
-                </div>
-            </div>
-            <div style="display: flex; gap: 15px;">
-                <div class="form-group" style="flex: 1;">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</label>
-                    <input type="text" id="mock-percentile" placeholder="e.g. 92.5">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy (%)</label>
-                    <input type="text" id="mock-accuracy" placeholder="e.g. 85">
-                </div>
-            </div>
-            <div style="display: flex; gap: 15px;">
-                <div class="form-group" style="flex: 1;">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Total Attempted</label>
-                    <input type="text" id="mock-attempted" placeholder="e.g. 85">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Right</label>
-                    <input type="text" id="mock-right" placeholder="e.g. 70">
-                </div>
-            </div>
-            <div style="display: flex; gap: 15px;">
-                <div class="form-group" style="flex: 1;">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Wrong</label>
-                    <input type="text" id="mock-wrong" placeholder="e.g. 15">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg> Unattempted</label>
-                    <input type="text" id="mock-unattempted" placeholder="e.g. 15">
-                </div>
-            </div>
-            <div class="form-group">
-                <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Weakest Subject / Notes</label>
-                <textarea id="mock-notes" style="width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 80px;" placeholder="e.g. Need to revise Geo, missed easy Maths"></textarea>
-            </div>
             
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="add-btn" onclick="saveMock()" id="save-btn">
-                    <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    Save Results
-                </button>
-                <button class="add-btn" onclick="cancelEdit()" id="cancel-edit-btn" style="display: none; background: var(--bg); color: var(--text); border: 2px solid var(--border);">
-                    <svg class="icon-md" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    Cancel
-                </button>
-            </div>
-        </div>
+            <div id="form-content" style="display: none; margin-top: 25px;">
+                <div class="form-group">
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Test Type</label>
+                    <select id="mock-type" onchange="autoFillTotalMarks()">
+                        <option value="Full Mock">Full Mock</option>
+                        <option value="Maths Sectional">Maths Sectional</option>
+                        <option value="English Sectional">English Sectional</option>
+                        <option value="GK Sectional">GK Sectional</option>
+                        <option value="Reasoning Sectional">Reasoning Sectional</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name / Platform</label>
+                    <input type="text" id="mock-name" placeholder="e.g. Testbook Full Mock 4" required>
+                </div>
+                <div class="form-group">
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date Attempted</label>
+                    <input type="date" id="mock-date" required>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Total Marks</label>
+                        <input type="text" id="mock-total" value="200" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Marks Scored</label>
+                        <input type="text" id="mock-scored" placeholder="e.g. 135.5" required>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</label>
+                        <input type="text" id="mock-percentile" placeholder="e.g. 92.5">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy (%)</label>
+                        <input type="text" id="mock-accuracy" placeholder="e.g. 85">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Total Attempted</label>
+                        <input type="text" id="mock-attempted" placeholder="e.g. 85">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Right</label>
+                        <input type="text" id="mock-right" placeholder="e.g. 70">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Wrong</label>
+                        <input type="text" id="mock-wrong" placeholder="e.g. 15">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg> Unattempted</label>
+                        <input type="text" id="mock-unattempted" placeholder="e.g. 15">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2-2z"></path></svg> Weakest Subject / Notes</label>
+                    <textarea id="mock-notes" style="width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 80px;" placeholder="e.g. Need to revise Geo, missed easy Maths"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="add-btn" onclick="saveMock()" id="save-btn">
+                        <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Save Results
+                    </button>
+                    <button class="add-btn" onclick="cancelEdit()" id="cancel-edit-btn" style="display: none; background: var(--bg); color: var(--text); border: 2px solid var(--border);">
+                        <svg class="icon-md" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        Cancel
+                    </button>
+                </div>
+            </div> </div>
 
         <div class="charts-area">
             <div class="chart-container">
@@ -365,6 +370,15 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
                 </h3>
                 <div class="canvas-wrapper">
                     <canvas id="percentileChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3 id="chart-title-accuracy">
+                    <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                    Accuracy Trend
+                </h3>
+                <div class="canvas-wrapper">
+                    <canvas id="accuracyChart"></canvas>
                 </div>
             </div>
         </div>
@@ -451,6 +465,20 @@ function autoFillTotalMarks() {
     }
 }
 
+// Form Toggle Logic
+function toggleForm() {
+    const content = document.getElementById('form-content');
+    const icon = document.getElementById('form-toggle-icon');
+    
+    if (content.style.display === 'none' || content.style.display === '') {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
 // Custom Expandable Row Logic
 function toggleDetails(rowId, mainRowEl) {
     const detailsRow = document.getElementById(rowId);
@@ -514,6 +542,7 @@ const db = firebase.firestore();
 let mockData = [];
 let scoreChartInstance = null;
 let percentileChartInstance = null;
+let accuracyChartInstance = null;
 let editingMockId = null;
 
 function showToast(message, type = 'success') {
@@ -555,7 +584,6 @@ function editMock(id) {
     document.getElementById('mock-percentile').value = mock.percentile || '';
     document.getElementById('mock-accuracy').value = mock.accuracy || '';
     
-    // Populate new fields
     document.getElementById('mock-attempted').value = mock.attempted || '';
     document.getElementById('mock-right').value = mock.right || '';
     document.getElementById('mock-wrong').value = mock.wrong || '';
@@ -563,15 +591,18 @@ function editMock(id) {
 
     document.getElementById('mock-notes').value = mock.notes || '';
 
-    document.getElementById('form-title').innerHTML = `
-        <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-        Edit Test
-    `;
+    // Change title text
+    document.getElementById('form-title-text').innerText = 'Edit Test';
+    
     document.getElementById('save-btn').innerHTML = `
         <svg class="icon-md" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         Update Results
     `;
     document.getElementById('cancel-edit-btn').style.display = 'flex';
+
+    // Force the form to open
+    document.getElementById('form-content').style.display = 'block';
+    document.getElementById('form-toggle-icon').style.transform = 'rotate(180deg)';
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -584,7 +615,6 @@ function cancelEdit() {
     document.getElementById('mock-percentile').value = '';
     document.getElementById('mock-accuracy').value = '';
     
-    // Clear new fields
     document.getElementById('mock-attempted').value = '';
     document.getElementById('mock-right').value = '';
     document.getElementById('mock-wrong').value = '';
@@ -593,10 +623,9 @@ function cancelEdit() {
     document.getElementById('mock-notes').value = '';
     autoFillTotalMarks(); 
 
-    document.getElementById('form-title').innerHTML = `
-        <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-        Log New Test
-    `;
+    // Change title text back
+    document.getElementById('form-title-text').innerText = 'Log New Test';
+    
     document.getElementById('save-btn').innerHTML = `
         <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         Save Results
@@ -609,7 +638,7 @@ function saveMock() {
     const name = document.getElementById('mock-name').value.trim();
     const date = document.getElementById('mock-date').value;
     
-    // Using standard parse logic exactly like your original request
+    // Standard parse logic allowing characters like / or , without erroring
     const total = parseFloat(document.getElementById('mock-total').value);
     const scored = parseFloat(document.getElementById('mock-scored').value);
     const percentile = parseFloat(document.getElementById('mock-percentile').value) || null;
@@ -677,11 +706,9 @@ async function deleteMock(id) {
 function updateDashboard() {
     const filterType = document.getElementById('view-filter').value;
     
-    // 1. DATA FOR THE HISTORY TABLE & CHARTS
     const tableDataList = mockData.filter(mock => (mock.type || 'Full Mock') === filterType);
     const analysisDataList = tableDataList;
 
-    // Dynamic Title Updates
     const titleIcon = `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
     document.getElementById('stat-label-total').innerHTML = `${titleIcon} Total ${filterType.split(' ')[0]}`;
 
@@ -689,7 +716,6 @@ function updateDashboard() {
     document.getElementById('chart-title-score').innerHTML = `${chartIcon} ${filterType} Scores`;
     document.getElementById('chart-title-percentile').innerHTML = `${chartIcon} ${filterType} Percentiles`;
 
-    // --- RENDER EXPANDABLE TABLE ---
     const tbody = document.getElementById('history-body');
     tbody.innerHTML = '';
     
@@ -755,7 +781,6 @@ function updateDashboard() {
         });
     }
 
-    // --- RENDER STATS & CHARTS ---
     let totalScore = 0;
     let totalPercentile = 0;
     let validPercentiles = 0;
@@ -764,13 +789,14 @@ function updateDashboard() {
     const labels = [];
     const scorePoints = [];
     const percentilePoints = [];
+    const accuracyPoints = []; 
 
     if(analysisDataList.length === 0) {
         document.getElementById('stat-total').innerText = tableDataList.length; 
         document.getElementById('stat-avg-score').innerText = '0';
         document.getElementById('stat-avg-percentile').innerText = '0%';
         document.getElementById('stat-highest').innerText = '0';
-        renderCharts([], [], []);
+        renderCharts([], [], [], []);
         return;
     }
 
@@ -786,6 +812,7 @@ function updateDashboard() {
         labels.push(d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
         scorePoints.push(mock.scored);
         if (mock.percentile) percentilePoints.push(mock.percentile);
+        if (mock.accuracy) accuracyPoints.push(mock.accuracy); 
     });
 
     const avgScore = (totalScore / analysisDataList.length).toFixed(1);
@@ -796,13 +823,14 @@ function updateDashboard() {
     document.getElementById('stat-avg-percentile').innerText = `${avgPercentile}%`;
     document.getElementById('stat-highest').innerText = highestScore;
 
-    renderCharts(labels, scorePoints, percentilePoints);
+    renderCharts(labels, scorePoints, percentilePoints, accuracyPoints);
 }
 
-function renderCharts(labels, scores, percentiles) {
+function renderCharts(labels, scores, percentiles, accuracies) {
     const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
     const gridColor = document.body.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
     
+    // --- SCORE CHART ---
     const ctxScore = document.getElementById('scoreChart').getContext('2d');
     if (scoreChartInstance) scoreChartInstance.destroy();
     
@@ -838,6 +866,7 @@ function renderCharts(labels, scores, percentiles) {
         }
     });
 
+    // --- PERCENTILE CHART ---
     const ctxPct = document.getElementById('percentileChart').getContext('2d');
     if (percentileChartInstance) percentileChartInstance.destroy();
 
@@ -859,6 +888,42 @@ function renderCharts(labels, scores, percentiles) {
                 fill: true,
                 pointBackgroundColor: '#ffffff',
                 pointBorderColor: '#22c55e',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                y: { max: 100, min: 0, ticks: { color: textColor, stepSize: 20 }, grid: { color: gridColor } },
+                x: { ticks: { color: textColor }, grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // --- ACCURACY CHART ---
+    const ctxAcc = document.getElementById('accuracyChart').getContext('2d');
+    if (accuracyChartInstance) accuracyChartInstance.destroy();
+
+    let gradientAcc = ctxAcc.createLinearGradient(0, 0, 0, 300);
+    gradientAcc.addColorStop(0, 'rgba(245, 158, 11, 0.4)'); 
+    gradientAcc.addColorStop(1, 'rgba(245, 158, 11, 0)');
+
+    accuracyChartInstance = new Chart(ctxAcc, {
+        type: 'line',
+        data: {
+            labels: labels.slice(labels.length - accuracies.length),
+            datasets: [{
+                label: 'Accuracy (%)',
+                data: accuracies,
+                borderColor: '#f59e0b',
+                backgroundColor: gradientAcc,
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#f59e0b',
                 pointRadius: 4,
                 pointHoverRadius: 6
             }]
