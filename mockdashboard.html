@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+    if (sessionStorage.getItem('isUnlocked') !== 'true' && localStorage.getItem('isUnlocked') !== 'true') {
+        window.location.href = 'index.html';
+    }
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock Tests Dashboard</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root { 
+    --primary: #2563eb; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; 
+    --border: #e2e8f0; --error: #ef4444; --success: #22c55e; --target: #8b5cf6; 
+    --target-hover: #7c3aed; --warning: #f59e0b; --pink: #ec4899;
+}
+[data-theme="dark"] { 
+    --primary: #60a5fa; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; 
+    --border: #334155; --error: #f87171; --success: #4ade80; --target: #a78bfa; 
+    --target-hover: #8b5cf6; --warning: #fbbf24; --pink: #f472b6;
+}
+
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.3s; }
+.container { max-width: 1200px; margin: auto; padding-top: 40px; padding-bottom: 50px; }
+
+/* SVG Styling */
+svg { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-sm { width: 16px; height: 16px; }
+.icon-md { width: 20px; height: 20px; }
+.icon-lg { width: 28px; height: 28px; }
+
+/* Header & Nav */
+.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
+.header-left { display: flex; gap: 10px; align-items: center; }
+.header h2 { margin: 0; font-size: 1.8rem; text-align: center; flex: 1; color: var(--target); display: flex; align-items: center; justify-content: center; gap: 10px;}
+.header-actions { display: flex; gap: 15px; align-items: center; z-index: 100;}
+.back-btn { background: var(--text); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;}
+
+/* Custom SVG Dropdown Filter */
+.custom-select-wrapper { position: relative; display: inline-block; user-select: none; min-width: 220px; }
+.custom-select-trigger { padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 0.95rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.2s; }
+.custom-select-trigger:hover { border-color: var(--primary); }
+.custom-select-trigger > span { display: flex; align-items: center; gap: 8px; }
+.custom-select-trigger .chevron { transition: transform 0.3s ease; color: #64748b; }
+.custom-select-wrapper.open .custom-select-trigger .chevron { transform: rotate(180deg); }
+
+.custom-select-options { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); z-index: 1000; overflow: hidden; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.custom-select-wrapper.open .custom-select-options { opacity: 1; visibility: visible; transform: translateY(0); }
+.custom-option { padding: 12px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; font-size: 0.95rem; font-weight: 500; color: var(--text); }
+.custom-option:hover { background: var(--bg); color: var(--primary); }
+.custom-option.selected { background: rgba(37, 99, 235, 0.05); color: var(--primary); border-left: 3px solid var(--primary); padding-left: 12px; }
+
+/* Navigation Dropdown */
+.dropdown { position: relative; display: inline-block; }
+.dropdown-content { display: none; position: absolute; background-color: var(--card-bg); min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1); z-index: 1000; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; top: 100%; left: 0; margin-top: 8px; }
+.dropdown-content.show { display: block; }
+.dropdown-content a { color: var(--text); padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 500; transition: 0.2s; }
+.dropdown-content a:hover { background-color: var(--bg); color: var(--primary); }
+
+/* Stats Grid */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+.stat-card { background: var(--card-bg); padding: 25px 20px; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.2s; }
+.stat-card:hover { transform: translateY(-3px); border-color: var(--target); }
+.stat-card h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px;}
+.stat-card .value { font-size: 2.2rem; font-weight: bold; color: var(--target); margin: 0;}
+
+/* Add Form Modal */
+.form-modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); width: 90%; max-width: 600px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
+.form-modal-content::-webkit-scrollbar { width: 8px; }
+.form-modal-content::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 4px; }
+.close-modal-btn { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: #64748b; cursor: pointer; transition: 0.2s; }
+.close-modal-btn:hover { color: var(--error); transform: scale(1.1); }
+
+.form-group { margin-bottom: 15px; text-align: left; }
+.form-group label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 0.9rem; font-weight: 600; color: #64748b; }
+.form-group input, .form-group select { width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; }
+.form-group input:focus, .form-group select:focus { border-color: var(--target); }
+
+.form-group select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; cursor: pointer; }
+.form-group select:hover { border-color: var(--target); }
+
+.add-btn { background: var(--target); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;}
+.add-btn:hover { background: var(--target-hover); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); }
+
+/* Charts Area - 2x2 Grid */
+.charts-area { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin-bottom: 40px; }
+.chart-container { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.chart-container h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px;}
+.canvas-wrapper { position: relative; height: 280px; width: 100%; }
+
+/* History Table */
+.history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px; }
+.history-card { background: var(--card-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 850px; text-align: left; }
+th, td { padding: 12px 15px; border-bottom: 1px solid var(--border); }
+th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
+.th-content { display: flex; align-items: center; gap: 6px; }
+
+/* Expandable Row Styling */
+.main-row { cursor: pointer; transition: background-color 0.2s ease; }
+.main-row:hover { background-color: var(--bg); }
+.chevron-icon { transition: transform 0.3s ease; color: #64748b; }
+.details-content { padding: 15px 20px; background: var(--bg); margin: 5px 15px 20px 15px; border-radius: 8px; border-left: 4px solid var(--target); font-size: 0.95rem; color: var(--text); word-break: break-word;}
+
+.badge { padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
+.badge-good { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+.badge-warn { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.badge-bad { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+.type-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; font-weight: 600; border: 1px solid var(--border); background: var(--bg); color: var(--text); white-space: nowrap;}
+.action-btn-group { display: flex; gap: 5px; justify-content: center; }
+.action-btn { background: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+.action-btn.edit { color: var(--primary); }
+.action-btn.edit:hover { background: rgba(37, 99, 235, 0.1); }
+.action-btn.delete { color: var(--error); }
+.action-btn.delete:hover { background: rgba(239, 68, 68, 0.1); }
+
+/* Modals & Toasts */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(5px); animation: fadeInOverlay 0.3s ease; }
+.modal-content { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid var(--border); text-align: center; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.modal-content h3 { margin-top: 0; margin-bottom: 15px; color: var(--error); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.modal-content p { color: var(--text); margin-bottom: 25px; line-height: 1.5; font-size: 1rem; }
+.confirm-btn-group { display: flex; gap: 10px; justify-content: center; }
+.btn-confirm-cancel, .btn-confirm-danger { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; flex: 1; border: none; font-size: 1rem;}
+.btn-confirm-cancel { background: var(--bg); border: 2px solid var(--border); color: var(--text); }
+.btn-confirm-cancel:hover { background: var(--card-bg); border-color: var(--primary); color: var(--primary); }
+.btn-confirm-danger { background: var(--error); color: white; }
+.btn-confirm-danger:hover { background: #dc2626; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); transform: translateY(-2px); }
+
+@keyframes fadeInOverlay { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(5px); } }
+@keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+
+#loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; opacity: 1; transition: opacity 0.4s ease; }
+.spinner { width: 40px; height: 40px; border: 4px solid rgba(37, 99, 235, 0.2); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; margin-bottom: 15px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast { background: var(--card-bg); color: var(--text); padding: 14px 20px; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s forwards; }
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--error); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+@media (max-width: 900px) {
+    .charts-area { grid-template-columns: 1fr; }
+    .header { flex-direction: column; }
+    .header h2 { order: -1; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <h3 style="color: var(--primary); font-size: 1.2rem; font-weight: bold; margin: 0;">
+        Loading Mock Data...
+    </h3>
+</div>
+
+<div id="custom-confirm-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="confirm-title">
+            <svg class="icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Confirm Action
+        </h3>
+        <p id="confirm-message">Are you sure you want to delete this test?</p>
+        <div class="confirm-btn-group">
+            <button id="btn-confirm-cancel" class="btn-confirm-cancel">Cancel</button>
+            <button id="btn-confirm-danger" class="btn-confirm-danger">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+<div id="log-test-modal" class="modal-overlay">
+    <div class="form-modal-content">
+        <button class="close-modal-btn" onclick="closeLogModal()">
+            <svg class="icon-lg" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        
+        <h3 id="form-title" style="margin-top: 0; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+            <svg class="icon-md" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            <span id="form-title-text">Log New Test</span>
+        </h3>
+        
+        <div class="form-group">
+            <label><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Test Type</label>
+            <select id="mock-type" onchange="autoFillTotalMarks()">
+                <option value="Full Mock">Full Mock</option>
+                <option value="Maths Sectional">Maths Sectional</option>
+                <option value="English Sectional">English Sectional</option>
+                <option value="GK Sectional">GK Sectional</option>
+                <option value="Reasoning Sectional">Reasoning Sectional</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name / Platform</label>
+            <input type="text" id="mock-name" placeholder="e.g. Testbook Full Mock 4" required>
+        </div>
+        <div class="form-group">
+            <label><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date Attempted</label>
+            <input type="date" id="mock-date" required>
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Total Marks</label>
+                <input type="text" id="mock-total" value="200" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Marks Scored</label>
+                <input type="text" id="mock-scored" placeholder="e.g. 135.5" required>
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</label>
+                <input type="text" id="mock-percentile" placeholder="e.g. 92.5">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy (%)</label>
+                <input type="text" id="mock-accuracy" placeholder="e.g. 85">
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Total Attempted</label>
+                <input type="text" id="mock-attempted" placeholder="e.g. 85">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Right</label>
+                <input type="text" id="mock-right" placeholder="e.g. 70">
+            </div>
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Wrong</label>
+                <input type="text" id="mock-wrong" placeholder="e.g. 15">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg> Unattempted</label>
+                <input type="text" id="mock-unattempted" placeholder="e.g. 15">
+            </div>
+        </div>
+        <div class="form-group">
+            <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2-2z"></path></svg> Weakest Subject / Notes</label>
+            <textarea id="mock-notes" style="width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 80px;" placeholder="e.g. Need to revise Geo, missed easy Maths"></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="add-btn" style="flex: 2;" onclick="saveMock()" id="save-btn">
+                <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Save Results
+            </button>
+            <button class="add-btn" onclick="cancelEdit()" id="cancel-edit-btn" style="display: none; flex: 1; background: var(--bg); color: var(--text); border: 2px solid var(--border);">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+<div id="toast-container"></div>
+
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Home
+            </button>
+            <div class="dropdown">
+                <button class="back-btn" onclick="toggleDropdown(event)" style="background: transparent; border: 2px solid var(--border); color: var(--text);">
+                    <svg class="icon-md" viewBox="0 0 24 24"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>
+                </button>
+                <div id="gotoDropdown" class="dropdown-content">
+                    <a href="studydashboard.html"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg> Study Dashboard</a>
+                    <a href="syllabusdashboard.html"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Syllabus Dashboard</a>
+                    <a href="doubtsdashboard.html"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Doubts Dashboard</a>
+                </div>
+            </div>
+        </div>
+        <h2>
+            <svg class="icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+            Mock Test Analysis
+        </h2>
+        <div class="header-actions">
+            
+            <div class="custom-select-wrapper" id="filter-wrapper">
+                <div class="custom-select-trigger" onclick="toggleCustomFilter(event)">
+                    <span id="filter-trigger-content">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Full Mocks
+                    </span>
+                    <svg class="icon-sm chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                <div class="custom-select-options" id="filter-options">
+                    <div class="custom-option selected" data-value="Full Mock" onclick="selectFilter('Full Mock', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Full Mocks
+                    </div>
+                    <div class="custom-option" data-value="Maths Sectional" onclick="selectFilter('Maths Sectional', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><polygon points="2 20 12 4 22 20"></polygon></svg> Maths Sectional
+                    </div>
+                    <div class="custom-option" data-value="English Sectional" onclick="selectFilter('English Sectional', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> English Sectional
+                    </div>
+                    <div class="custom-option" data-value="GK Sectional" onclick="selectFilter('GK Sectional', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> GK Sectional
+                    </div>
+                    <div class="custom-option" data-value="Reasoning Sectional" onclick="selectFilter('Reasoning Sectional', this)">
+                        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1.45.62 2.84 1.5 3.5.76.76 1.23 1.52 1.41 2.5"></path></svg> Reasoning Sectional
+                    </div>
+                </div>
+                <input type="hidden" id="view-filter" value="Full Mock">
+            </div>
+
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3 id="stat-label-total">
+                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                Total Tests
+            </h3>
+            <p class="value" id="stat-total">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>
+                <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                Avg Score
+            </h3>
+            <p class="value" id="stat-avg-score">0</p>
+        </div>
+        <div class="stat-card">
+            <h3>
+                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                Avg Percentile
+            </h3>
+            <p class="value" id="stat-avg-percentile">0<span style="font-size:1.2rem;">%</span></p>
+        </div>
+        <div class="stat-card">
+            <h3>
+                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+                Highest Score
+            </h3>
+            <p class="value" id="stat-highest">0</p>
+        </div>
+    </div>
+
+    <div class="charts-area">
+        <div class="chart-container">
+            <h3 id="chart-title-score">
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                Score Progression
+            </h3>
+            <div class="canvas-wrapper">
+                <canvas id="scoreChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3 id="chart-title-percentile">
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                Percentile Trend
+            </h3>
+            <div class="canvas-wrapper">
+                <canvas id="percentileChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3 id="chart-title-accuracy">
+                <svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                Accuracy Trend
+            </h3>
+            <div class="canvas-wrapper">
+                <canvas id="accuracyChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3 id="chart-title-scatter">
+                <svg class="icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="5" r="2"></circle><circle cx="5" cy="19" r="2"></circle><circle cx="19" cy="19" r="2"></circle></svg>
+                Attempts vs. Accuracy
+            </h3>
+            <div class="canvas-wrapper">
+                <canvas id="scatterChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-header">
+        <h3 style="margin: 0; color: var(--text); display: flex; align-items: center; gap: 8px; font-size: 1.3rem;">
+            <svg class="icon-md" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Test History
+        </h3>
+        <button class="add-btn" onclick="openLogModal()">
+            <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Log New Test
+        </button>
+    </div>
+    
+    <div class="history-card">
+        <table>
+            <thead>
+                <tr>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Date</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg> Type</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Test Name</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Score</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</div></th>
+                    <th><div class="th-content"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy</div></th>
+                    <th style="text-align: center;"><div class="th-content" style="justify-content: center;"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Actions</div></th>
+                    <th style="width: 30px;"></th>
+                </tr>
+            </thead>
+            <tbody id="history-body">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// Apply Global Theme
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.setAttribute('data-theme', 'dark');
+} else {
+    document.body.removeAttribute('data-theme');
+}
+
+// Navigation Dropdown & Custom Filter Dropdown Logic
+function toggleDropdown(event) {
+    event.stopPropagation();
+    document.getElementById("gotoDropdown").classList.toggle("show");
+}
+
+function toggleCustomFilter(event) {
+    event.stopPropagation();
+    document.getElementById("filter-wrapper").classList.toggle("open");
+}
+
+function selectFilter(value, element) {
+    document.getElementById("view-filter").value = value;
+    document.getElementById("filter-trigger-content").innerHTML = element.innerHTML;
+    
+    document.querySelectorAll(".custom-option").forEach(opt => opt.classList.remove("selected"));
+    element.classList.add("selected");
+    
+    document.getElementById("filter-wrapper").classList.remove("open");
+    updateDashboard();
+}
+
+window.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown')) {
+        const dropdowns = document.getElementsByClassName("dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) { dropdowns[i].classList.remove('show'); }
+    }
+    if (!e.target.closest('.custom-select-wrapper')) {
+        const filterWrapper = document.getElementById('filter-wrapper');
+        if (filterWrapper) filterWrapper.classList.remove('open');
+    }
+});
+
+// Default Date to Today
+document.getElementById('mock-date').value = new Date().toISOString().split('T')[0];
+
+function autoFillTotalMarks() {
+    const type = document.getElementById('mock-type').value;
+    const totalInput = document.getElementById('mock-total');
+    if (type === "Full Mock") {
+        totalInput.value = "200";
+    } else {
+        totalInput.value = "50"; 
+    }
+}
+
+// MODAL OPEN / CLOSE LOGIC
+function openLogModal() {
+    document.getElementById('log-test-modal').style.display = 'flex';
+}
+
+function closeLogModal() {
+    document.getElementById('log-test-modal').style.display = 'none';
+    if(editingMockId) {
+        cancelEdit(); // Reset form if they close while editing
+    }
+}
+
+// Custom Expandable Row Logic
+function toggleDetails(rowId, mainRowEl) {
+    const detailsRow = document.getElementById(rowId);
+    const chevron = mainRowEl.querySelector('.chevron-icon');
+    
+    if (detailsRow.style.display === 'none') {
+        detailsRow.style.display = 'table-row';
+        chevron.style.transform = 'rotate(180deg)';
+        mainRowEl.style.borderBottom = 'none';
+        mainRowEl.style.backgroundColor = 'var(--bg)';
+    } else {
+        detailsRow.style.display = 'none';
+        chevron.style.transform = 'rotate(0deg)';
+        mainRowEl.style.borderBottom = '';
+        mainRowEl.style.backgroundColor = '';
+    }
+}
+
+// Custom Confirm Modal Logic
+function showCustomConfirm(title, message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-confirm-modal');
+        document.getElementById('confirm-title').innerHTML = `
+            <svg class="icon-lg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            ${title}
+        `;
+        document.getElementById('confirm-message').innerText = message;
+        modal.style.display = 'flex';
+        
+        const btnDanger = document.getElementById('btn-confirm-danger');
+        const btnCancel = document.getElementById('btn-confirm-cancel');
+        
+        const cleanup = () => {
+            modal.style.display = 'none';
+            btnDanger.removeEventListener('click', handleConfirm);
+            btnCancel.removeEventListener('click', handleCancel);
+        };
+
+        const handleConfirm = () => { cleanup(); resolve(true); };
+        const handleCancel = () => { cleanup(); resolve(false); };
+        
+        btnDanger.addEventListener('click', handleConfirm);
+        btnCancel.addEventListener('click', handleCancel);
+    });
+}
+
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyCAw1Eozvog8hUdZW7THJQBlgze79sCkGk",
+    authDomain: "my-site-7fd99.firebaseapp.com",
+    projectId: "my-site-7fd99",
+    storageBucket: "my-site-7fd99.firebasestorage.app",
+    messagingSenderId: "1024490010463",
+    appId: "1:1024490010463:web:130447b333eaa7a5f468ea",
+    measurementId: "G-WS0G17WRE9"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Global Variables
+let mockData = [];
+let scoreChartInstance = null;
+let percentileChartInstance = null;
+let accuracyChartInstance = null;
+let scatterChartInstance = null; // New chart instance
+let editingMockId = null;
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 3000);
+}
+
+function fetchMocks() {
+    db.collection("mockTests").orderBy("date", "asc").onSnapshot(snapshot => {
+        mockData = [];
+        snapshot.forEach(doc => {
+            mockData.push({ id: doc.id, ...doc.data() });
+        });
+        
+        document.getElementById('loading-overlay').style.display = 'none';
+        updateDashboard();
+    }, error => {
+        console.error("Error fetching mocks:", error);
+        showToast("Failed to load data.", "error");
+        document.getElementById('loading-overlay').style.display = 'none';
+    });
+}
+
+function editMock(id) {
+    const mock = mockData.find(m => m.id === id);
+    if (!mock) return;
+
+    editingMockId = id;
+    
+    document.getElementById('mock-type').value = mock.type || 'Full Mock';
+    document.getElementById('mock-name').value = mock.name;
+    document.getElementById('mock-date').value = mock.date;
+    document.getElementById('mock-total').value = mock.total;
+    document.getElementById('mock-scored').value = mock.scored;
+    document.getElementById('mock-percentile').value = mock.percentile || '';
+    document.getElementById('mock-accuracy').value = mock.accuracy || '';
+    
+    document.getElementById('mock-attempted').value = mock.attempted || '';
+    document.getElementById('mock-right').value = mock.right || '';
+    document.getElementById('mock-wrong').value = mock.wrong || '';
+    document.getElementById('mock-unattempted').value = mock.unattempted || '';
+    document.getElementById('mock-notes').value = mock.notes || '';
+
+    document.getElementById('form-title-text').innerText = 'Edit Test Stats';
+    document.getElementById('save-btn').innerHTML = `
+        <svg class="icon-md" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Update Results
+    `;
+    document.getElementById('cancel-edit-btn').style.display = 'flex';
+
+    openLogModal(); // Open the modal automatically
+}
+
+function cancelEdit() {
+    editingMockId = null;
+    
+    document.getElementById('mock-name').value = '';
+    document.getElementById('mock-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('mock-percentile').value = '';
+    document.getElementById('mock-accuracy').value = '';
+    
+    document.getElementById('mock-attempted').value = '';
+    document.getElementById('mock-right').value = '';
+    document.getElementById('mock-wrong').value = '';
+    document.getElementById('mock-unattempted').value = '';
+    document.getElementById('mock-notes').value = '';
+    autoFillTotalMarks(); 
+
+    document.getElementById('form-title-text').innerText = 'Log New Test';
+    document.getElementById('save-btn').innerHTML = `
+        <svg class="icon-md" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Save Results
+    `;
+    document.getElementById('cancel-edit-btn').style.display = 'none';
+    closeLogModal();
+}
+
+function saveMock() {
+    const type = document.getElementById('mock-type').value;
+    const name = document.getElementById('mock-name').value.trim();
+    const date = document.getElementById('mock-date').value;
+    
+    const total = parseFloat(document.getElementById('mock-total').value);
+    const scored = parseFloat(document.getElementById('mock-scored').value);
+    const percentile = parseFloat(document.getElementById('mock-percentile').value) || null;
+    const accuracy = parseFloat(document.getElementById('mock-accuracy').value) || null;
+    const attempted = parseInt(document.getElementById('mock-attempted').value) || null;
+    const right = parseInt(document.getElementById('mock-right').value) || null;
+    const wrong = parseInt(document.getElementById('mock-wrong').value) || null;
+    const unattempted = parseInt(document.getElementById('mock-unattempted').value) || null;
+
+    const notes = document.getElementById('mock-notes').value.trim();
+
+    if (!name || !date || isNaN(total) || isNaN(scored)) {
+        showToast("Please fill in all required fields properly (Name, Date, Scores).", "error");
+        return;
+    }
+
+    const btn = document.getElementById('save-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<svg class="icon-md" style="animation: spin 1s linear infinite;" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Saving...`;
+    btn.disabled = true;
+
+    const dataObj = {
+        type, name, date, total, scored, percentile, accuracy, attempted, right, wrong, unattempted, notes,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (editingMockId) {
+        db.collection("mockTests").doc(editingMockId).update(dataObj).then(() => {
+            showToast("Test updated successfully!");
+            cancelEdit(); 
+        }).catch(err => {
+            console.error(err);
+            showToast("Error updating test.", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    } else {
+        db.collection("mockTests").add(dataObj).then(() => {
+            showToast("Test saved successfully!");
+            cancelEdit();
+        }).catch(err => {
+            console.error(err);
+            showToast("Error saving test.", "error");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+}
+
+async function deleteMock(id) {
+    const confirmed = await showCustomConfirm(
+        "Delete Test", 
+        "Are you sure you want to permanently delete this test record?"
+    );
+    
+    if(confirmed) {
+        db.collection("mockTests").doc(id).delete().then(() => {
+            showToast("Record deleted.");
+        }).catch(err => {
+            showToast("Failed to delete.", "error");
+        });
+    }
+}
+
+function updateDashboard() {
+    const filterType = document.getElementById('view-filter').value;
+    
+    const tableDataList = mockData.filter(mock => (mock.type || 'Full Mock') === filterType);
+    const analysisDataList = tableDataList;
+
+    const titleIcon = `<svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+    document.getElementById('stat-label-total').innerHTML = `${titleIcon} Total ${filterType.split(' ')[0]}`;
+
+    const chartIcon = `<svg class="icon-md" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>`;
+    document.getElementById('chart-title-score').innerHTML = `${chartIcon} ${filterType} Scores`;
+    document.getElementById('chart-title-percentile').innerHTML = `${chartIcon} ${filterType} Percentiles`;
+
+    const tbody = document.getElementById('history-body');
+    tbody.innerHTML = '';
+    
+    if (tableDataList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 20px;">No tests match this filter.</td></tr>';
+    } else {
+        const displayTable = [...tableDataList].reverse();
+        displayTable.forEach(mock => {
+            const mockType = mock.type || 'Full Mock';
+            let typeBadgeColor = mockType === 'Full Mock' ? 'var(--primary)' : 'var(--target)';
+            
+            const badgeClass = mock.percentile >= 90 ? 'badge-good' : (mock.percentile >= 75 ? 'badge-warn' : 'badge-bad');
+            const pctDisplay = mock.percentile ? `<span class="badge ${badgeClass}">${mock.percentile}%ile</span>` : '-';
+            const accDisplay = mock.accuracy ? `${mock.accuracy}%` : '-';
+            const notesContent = mock.notes || 'No notes provided for this test.';
+            
+            const d = new Date(mock.date);
+            const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+
+            tbody.innerHTML += `
+                <tr class="main-row" onclick="toggleDetails('details-${mock.id}', this)">
+                    <td style="font-weight: 500;">${dateStr}</td>
+                    <td><span class="type-badge" style="color: ${typeBadgeColor}; border-color: ${typeBadgeColor}40;">${mockType.replace(' Sectional', '')}</span></td>
+                    <td>${mock.name}</td>
+                    <td style="font-weight: bold; color: var(--text);">${mock.scored} <span style="font-size:0.8rem; color:#64748b; font-weight:normal;">/ ${mock.total}</span></td>
+                    <td>${pctDisplay}</td>
+                    <td>${accDisplay}</td>
+                    <td style="text-align: center;">
+                        <div class="action-btn-group">
+                            <button class="action-btn" style="color: var(--success);" onclick="event.stopPropagation(); window.location.href='doubtsdashboard.html'" title="Log specific questions in Doubts">
+                                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            </button>
+                            <button class="action-btn edit" onclick="event.stopPropagation(); editMock('${mock.id}')" title="Edit Mock Stats">
+                                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button class="action-btn delete" onclick="event.stopPropagation(); deleteMock('${mock.id}')" title="Delete">
+                                <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        <svg class="chevron-icon icon-md" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </td>
+                </tr>
+                <tr id="details-${mock.id}" style="display: none;">
+                    <td colspan="8" style="padding: 0; border-bottom: 1px solid var(--border);">
+                        <div class="details-content">
+                            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                                <span class="badge" style="background: var(--card-bg); border: 1px solid var(--border); color: var(--text);">Attempted: <b style="color: var(--primary);">${mock.attempted || '-'}</b></span>
+                                <span class="badge badge-good">Right: <b>${mock.right || '-'}</b></span>
+                                <span class="badge badge-bad">Wrong: <b>${mock.wrong || '-'}</b></span>
+                                <span class="badge" style="background: var(--bg); border: 1px solid var(--border); color: #64748b;">Unattempted: <b>${mock.unattempted || '-'}</b></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; color: var(--target); font-weight: bold; margin-bottom: 8px;">
+                                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2-2z"></path></svg>
+                                Notes & Weaknesses
+                            </div>
+                            <div>${notesContent}</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    let totalScore = 0;
+    let totalPercentile = 0;
+    let validPercentiles = 0;
+    let highestScore = 0;
+
+    const labels = [];
+    const scorePoints = [];
+    const percentilePoints = [];
+    const accuracyPoints = []; 
+    const scatterData = []; // New Scatter Data Array
+
+    if(analysisDataList.length === 0) {
+        document.getElementById('stat-total').innerText = tableDataList.length; 
+        document.getElementById('stat-avg-score').innerText = '0';
+        document.getElementById('stat-avg-percentile').innerText = '0%';
+        document.getElementById('stat-highest').innerText = '0';
+        renderCharts([], [], [], [], []);
+        return;
+    }
+
+    analysisDataList.forEach(mock => {
+        totalScore += mock.scored;
+        if (mock.scored > highestScore) highestScore = mock.scored;
+        if (mock.percentile) {
+            totalPercentile += mock.percentile;
+            validPercentiles++;
+        }
+
+        const d = new Date(mock.date);
+        labels.push(d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
+        scorePoints.push(mock.scored);
+        if (mock.percentile) percentilePoints.push(mock.percentile);
+        if (mock.accuracy) accuracyPoints.push(mock.accuracy); 
+        
+        // Push Scatter Data (Attempted vs Accuracy)
+        if (mock.attempted && mock.accuracy) {
+            scatterData.push({ x: mock.attempted, y: mock.accuracy });
+        }
+    });
+
+    const avgScore = (totalScore / analysisDataList.length).toFixed(1);
+    const avgPercentile = validPercentiles > 0 ? (totalPercentile / validPercentiles).toFixed(1) : 0;
+
+    document.getElementById('stat-total').innerText = tableDataList.length;
+    document.getElementById('stat-avg-score').innerText = avgScore;
+    document.getElementById('stat-avg-percentile').innerText = `${avgPercentile}%`;
+    document.getElementById('stat-highest').innerText = highestScore;
+
+    renderCharts(labels, scorePoints, percentilePoints, accuracyPoints, scatterData);
+}
+
+function renderCharts(labels, scores, percentiles, accuracies, scatterData) {
+    const textColor = getComputedStyle(document.body).getPropertyValue('--text').trim();
+    const gridColor = document.body.getAttribute('data-theme') === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+    
+    // --- SCORE CHART ---
+    const ctxScore = document.getElementById('scoreChart').getContext('2d');
+    if (scoreChartInstance) scoreChartInstance.destroy();
+    let gradientScore = ctxScore.createLinearGradient(0, 0, 0, 300);
+    gradientScore.addColorStop(0, 'rgba(139, 92, 246, 0.4)'); gradientScore.addColorStop(1, 'rgba(139, 92, 246, 0)');
+    scoreChartInstance = new Chart(ctxScore, {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Marks Scored', data: scores, borderColor: '#8b5cf6', backgroundColor: gradientScore, borderWidth: 3, tension: 0.3, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#8b5cf6', pointRadius: 4, pointHoverRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: textColor }, grid: { color: gridColor } }, x: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+    });
+
+    // --- PERCENTILE CHART ---
+    const ctxPct = document.getElementById('percentileChart').getContext('2d');
+    if (percentileChartInstance) percentileChartInstance.destroy();
+    let gradientPct = ctxPct.createLinearGradient(0, 0, 0, 300);
+    gradientPct.addColorStop(0, 'rgba(34, 197, 94, 0.4)'); gradientPct.addColorStop(1, 'rgba(34, 197, 94, 0)');
+    percentileChartInstance = new Chart(ctxPct, {
+        type: 'line',
+        data: { labels: labels.slice(labels.length - percentiles.length), datasets: [{ label: 'Percentile', data: percentiles, borderColor: '#22c55e', backgroundColor: gradientPct, borderWidth: 3, tension: 0.3, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#22c55e', pointRadius: 4, pointHoverRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { max: 100, min: 0, ticks: { color: textColor, stepSize: 20 }, grid: { color: gridColor } }, x: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+    });
+
+    // --- ACCURACY CHART ---
+    const ctxAcc = document.getElementById('accuracyChart').getContext('2d');
+    if (accuracyChartInstance) accuracyChartInstance.destroy();
+    let gradientAcc = ctxAcc.createLinearGradient(0, 0, 0, 300);
+    gradientAcc.addColorStop(0, 'rgba(245, 158, 11, 0.4)'); gradientAcc.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    accuracyChartInstance = new Chart(ctxAcc, {
+        type: 'line',
+        data: { labels: labels.slice(labels.length - accuracies.length), datasets: [{ label: 'Accuracy (%)', data: accuracies, borderColor: '#f59e0b', backgroundColor: gradientAcc, borderWidth: 3, tension: 0.3, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#f59e0b', pointRadius: 4, pointHoverRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { max: 100, min: 0, ticks: { color: textColor, stepSize: 20 }, grid: { color: gridColor } }, x: { ticks: { color: textColor }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+    });
+
+    // --- SCATTER CHART (ATTEMPTS VS ACCURACY) ---
+    const ctxScatter = document.getElementById('scatterChart').getContext('2d');
+    if (scatterChartInstance) scatterChartInstance.destroy();
+    
+    // Get the pink color from CSS variables for theming
+    const pinkColor = getComputedStyle(document.body).getPropertyValue('--pink').trim() || '#ec4899';
+    
+    scatterChartInstance = new Chart(ctxScatter, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Attempts vs Accuracy',
+                data: scatterData,
+                backgroundColor: pinkColor,
+                borderColor: pinkColor,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: {
+                y: { 
+                    max: 100, min: 0,
+                    title: { display: true, text: 'Accuracy (%)', color: textColor, font: { weight: 'bold' } },
+                    ticks: { color: textColor }, 
+                    grid: { color: gridColor } 
+                },
+                x: { 
+                    title: { display: true, text: 'Total Attempted', color: textColor, font: { weight: 'bold' } },
+                    ticks: { color: textColor }, 
+                    grid: { color: gridColor } 
+                }
+            },
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Attempts: ${context.parsed.x}, Accuracy: ${context.parsed.y}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Initial Fetch
+window.onload = fetchMocks;
+</script>
+</body>
+</html>
