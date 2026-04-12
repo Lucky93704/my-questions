@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Study Portal</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<style>
+:root { --primary: #2563eb; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --border: #334155; }
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+.login-card { background: var(--card); padding: 40px; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+h2 { color: var(--primary); margin-bottom: 30px; }
+.form-group { margin-bottom: 20px; text-align: left; }
+label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #94a3b8; }
+input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: white; outline: none; box-sizing: border-box; }
+input:focus { border-color: var(--primary); }
+.btn { width: 100%; padding: 12px; background: var(--primary); border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.toggle-text { margin-top: 20px; font-size: 0.85rem; color: #94a3b8; cursor: pointer; }
+.toggle-text span { color: var(--primary); font-weight: bold; }
+#error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 15px; min-height: 20px; }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+<h2 id="auth-title">Welcome Back</h2>
+<div class="form-group">
+<label>Email Address</label>
+<input type="email" id="email" placeholder="name@email.com">
+</div>
+<div class="form-group">
+<label>Password</label>
+<input type="password" id="password" placeholder="••••••••">
+</div>
+<button class="btn" id="auth-btn" onclick="handleAuth()">Login</button>
+<p id="error-msg"></p>
+<p class="toggle-text" onclick="toggleAuth()">Don't have an account? <span id="toggle-link">Sign Up</span></p>
+</div>
+
+<script>
+// YOUR FIREBASE CONFIG (Copied from your mock dashboard)
+const firebaseConfig = {
+apiKey: "AIzaSyCAw1Eozvog8hUdZW7THJQBlgze79sCkGk",
+authDomain: "my-site-7fd99.firebaseapp.com",
+projectId: "my-site-7fd99",
+storageBucket: "my-site-7fd99.firebasestorage.app",
+messagingSenderId: "1024490010463",
+appId: "1:1024490010463:web:130447b333eaa7a5f468ea"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+let isLogin = true;
+
+function toggleAuth() {
+isLogin = !isLogin;
+document.getElementById('auth-title').innerText = isLogin ? 'Welcome Back' : 'Create Account';
+document.getElementById('auth-btn').innerText = isLogin ? 'Login' : 'Sign Up';
+document.getElementById('toggle-link').innerText = isLogin ? 'Sign Up' : 'Login';
+}
+
+function handleAuth() {
+const email = document.getElementById('email').value;
+const password = document.getElementById('password').value;
+const errorMsg = document.getElementById('error-msg');
+
+if(!email || !password) {
+errorMsg.innerText = "Please fill all fields.";
+return;
+}
+
+const action = isLogin
+? auth.signInWithEmailAndPassword(email, password)
+: auth.createUserWithEmailAndPassword(email, password);
+
+action.then((userCredential) => {
+// Success! Store login state and go home
+localStorage.setItem('isUnlocked', 'true');
+window.location.href = 'index.html';
+}).catch((error) => {
+errorMsg.innerText = error.message;
+});
+}
+</script>
+</body>
+</html>
