@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -312,6 +311,26 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
                     <input type="number" id="mock-accuracy" placeholder="e.g. 85">
                 </div>
             </div>
+            <div style="display: flex; gap: 15px;">
+                <div class="form-group" style="flex: 1;">
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Total Attempted</label>
+                    <input type="number" id="mock-attempted" placeholder="e.g. 85">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Right</label>
+                    <input type="number" id="mock-right" placeholder="e.g. 70">
+                </div>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <div class="form-group" style="flex: 1;">
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Wrong</label>
+                    <input type="number" id="mock-wrong" placeholder="e.g. 15">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg> Unattempted</label>
+                    <input type="number" id="mock-unattempted" placeholder="e.g. 15">
+                </div>
+            </div>
             <div class="form-group">
                 <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> Weakest Subject / Notes</label>
                 <textarea id="mock-notes" style="width: 100%; padding: 10px 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; font-family: inherit; resize: vertical; min-height: 80px;" placeholder="e.g. Need to revise Geo, missed easy Maths"></textarea>
@@ -535,6 +554,13 @@ function editMock(id) {
     document.getElementById('mock-scored').value = mock.scored;
     document.getElementById('mock-percentile').value = mock.percentile || '';
     document.getElementById('mock-accuracy').value = mock.accuracy || '';
+    
+    // Populate new fields
+    document.getElementById('mock-attempted').value = mock.attempted || '';
+    document.getElementById('mock-right').value = mock.right || '';
+    document.getElementById('mock-wrong').value = mock.wrong || '';
+    document.getElementById('mock-unattempted').value = mock.unattempted || '';
+
     document.getElementById('mock-notes').value = mock.notes || '';
 
     document.getElementById('form-title').innerHTML = `
@@ -557,6 +583,13 @@ function cancelEdit() {
     document.getElementById('mock-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('mock-percentile').value = '';
     document.getElementById('mock-accuracy').value = '';
+    
+    // Clear new fields
+    document.getElementById('mock-attempted').value = '';
+    document.getElementById('mock-right').value = '';
+    document.getElementById('mock-wrong').value = '';
+    document.getElementById('mock-unattempted').value = '';
+
     document.getElementById('mock-notes').value = '';
     autoFillTotalMarks(); 
 
@@ -579,6 +612,13 @@ function saveMock() {
     const scored = parseFloat(document.getElementById('mock-scored').value);
     const percentile = parseFloat(document.getElementById('mock-percentile').value) || null;
     const accuracy = parseFloat(document.getElementById('mock-accuracy').value) || null;
+    
+    // Fetch new fields
+    const attempted = parseInt(document.getElementById('mock-attempted').value) || null;
+    const right = parseInt(document.getElementById('mock-right').value) || null;
+    const wrong = parseInt(document.getElementById('mock-wrong').value) || null;
+    const unattempted = parseInt(document.getElementById('mock-unattempted').value) || null;
+
     const notes = document.getElementById('mock-notes').value.trim();
 
     if (!name || !date || isNaN(total) || isNaN(scored)) {
@@ -592,7 +632,7 @@ function saveMock() {
     btn.disabled = true;
 
     const dataObj = {
-        type, name, date, total, scored, percentile, accuracy, notes,
+        type, name, date, total, scored, percentile, accuracy, attempted, right, wrong, unattempted, notes,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -697,8 +737,14 @@ function updateDashboard() {
                 <tr id="details-${mock.id}" style="display: none;">
                     <td colspan="8" style="padding: 0; border-bottom: 1px solid var(--border);">
                         <div class="details-content">
+                            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                                <span class="badge" style="background: var(--card-bg); border: 1px solid var(--border); color: var(--text);">Attempted: <b style="color: var(--primary);">${mock.attempted || '-'}</b></span>
+                                <span class="badge badge-good">Right: <b>${mock.right || '-'}</b></span>
+                                <span class="badge badge-bad">Wrong: <b>${mock.wrong || '-'}</b></span>
+                                <span class="badge" style="background: var(--bg); border: 1px solid var(--border); color: #64748b;">Unattempted: <b>${mock.unattempted || '-'}</b></span>
+                            </div>
                             <div style="display: flex; align-items: center; gap: 8px; color: var(--target); font-weight: bold; margin-bottom: 8px;">
-                                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2-2z"></path></svg>
                                 Notes & Weaknesses
                             </div>
                             <div>${notesContent}</div>
