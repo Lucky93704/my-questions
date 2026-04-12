@@ -1825,18 +1825,7 @@ async function clearNoteHistory() {
     }
 }
 
-// ==========================================
-// ON PAGE LOAD: CHECK IF SESSION IS VALID
-// ==========================================
-async function checkSessionValidity() {
-    if (localStorage.getItem('isUnlocked') === 'true') {
-        launchPortal();
-    } else {
-        hideLoading();
-    }
-}
 
-checkSessionValidity();
 // ==========================================
 // THEME LOGIC
 // ==========================================
