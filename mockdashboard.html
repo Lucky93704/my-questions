@@ -294,41 +294,41 @@ th { color: #64748b; font-weight: 600; font-size: 0.95rem; }
             <div style="display: flex; gap: 15px;">
                 <div class="form-group" style="flex: 1;">
                     <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Total Marks</label>
-                    <input type="number" id="mock-total" value="200" required>
+                    <input type="text" id="mock-total" value="200" required>
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label><svg class="icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Marks Scored</label>
-                    <input type="number" id="mock-scored" step="0.5" placeholder="e.g. 135.5" required>
+                    <input type="text" id="mock-scored" placeholder="e.g. 135.5" required>
                 </div>
             </div>
             <div style="display: flex; gap: 15px;">
                 <div class="form-group" style="flex: 1;">
                     <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Percentile</label>
-                    <input type="number" id="mock-percentile" step="0.1" placeholder="e.g. 92.5">
+                    <input type="text" id="mock-percentile" placeholder="e.g. 92.5">
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg> Accuracy (%)</label>
-                    <input type="number" id="mock-accuracy" placeholder="e.g. 85">
+                    <input type="text" id="mock-accuracy" placeholder="e.g. 85">
                 </div>
             </div>
             <div style="display: flex; gap: 15px;">
                 <div class="form-group" style="flex: 1;">
                     <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg> Total Attempted</label>
-                    <input type="number" id="mock-attempted" placeholder="e.g. 85">
+                    <input type="text" id="mock-attempted" placeholder="e.g. 85">
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Right</label>
-                    <input type="number" id="mock-right" placeholder="e.g. 70">
+                    <input type="text" id="mock-right" placeholder="e.g. 70">
                 </div>
             </div>
             <div style="display: flex; gap: 15px;">
                 <div class="form-group" style="flex: 1;">
                     <label><svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Wrong</label>
-                    <input type="number" id="mock-wrong" placeholder="e.g. 15">
+                    <input type="text" id="mock-wrong" placeholder="e.g. 15">
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg> Unattempted</label>
-                    <input type="number" id="mock-unattempted" placeholder="e.g. 15">
+                    <input type="text" id="mock-unattempted" placeholder="e.g. 15">
                 </div>
             </div>
             <div class="form-group">
@@ -608,12 +608,12 @@ function saveMock() {
     const type = document.getElementById('mock-type').value;
     const name = document.getElementById('mock-name').value.trim();
     const date = document.getElementById('mock-date').value;
+    
+    // Using standard parse logic exactly like your original request
     const total = parseFloat(document.getElementById('mock-total').value);
     const scored = parseFloat(document.getElementById('mock-scored').value);
     const percentile = parseFloat(document.getElementById('mock-percentile').value) || null;
     const accuracy = parseFloat(document.getElementById('mock-accuracy').value) || null;
-    
-    // Fetch new fields
     const attempted = parseInt(document.getElementById('mock-attempted').value) || null;
     const right = parseInt(document.getElementById('mock-right').value) || null;
     const wrong = parseInt(document.getElementById('mock-wrong').value) || null;
@@ -622,7 +622,7 @@ function saveMock() {
     const notes = document.getElementById('mock-notes').value.trim();
 
     if (!name || !date || isNaN(total) || isNaN(scored)) {
-        showToast("Please fill in all required fields (Name, Date, Scores).", "error");
+        showToast("Please fill in all required fields properly (Name, Date, Scores).", "error");
         return;
     }
 
