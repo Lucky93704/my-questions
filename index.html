@@ -1746,26 +1746,23 @@ function restoreHistory(index) {
     showToast("Note restored successfully.", "success");
 }
 
+// PASTE THIS NEW BLOCK:
 async function clearNoteHistory() {
-    if (deletedNotesHistory.length === 0) {
-        showToast("History is already empty.", "info");
-        return;
-    }
+    if (deletedNotesHistory.length === 0) {
+        showToast("History is already empty.", "info");
+        return;
+    }
 
-    const confirmed = await showCustomConfirm("Are you sure you want to permanently delete your note history? This cannot be undone.", "Clear Version History", true);
-    
-    if (confirmed) {
-        deletedNotesHistory = []; 
-        try {
-            await db.collection('portalData').doc('noteHistory').set({ history: [] });
-        } catch (e) {
-            console.error("Error clearing history in Firebase", e);
-            showToast("Failed to clear cloud history.", "error");
-            return;
-        }
-        showToast("Version history cleared.", "success");
-        showHistoryModal(); 
-    }
+    deletedNotesHistory = []; 
+    try {
+        await db.collection('portalData').doc('noteHistory').set({ history: [] });
+    } catch (e) {
+        console.error("Error clearing history in Firebase", e);
+        showToast("Failed to clear cloud history.", "error");
+        return;
+    }
+    showToast("Version history cleared.", "success");
+    showHistoryModal(); 
 }
 
 // ==========================================
@@ -1861,41 +1858,48 @@ function calcBackspace() {
     }
     updateCalcDisplay();
 }
-// Helper to convert decimals to fractions and standard surds
-function formatExactResult(num) {
+// Helper to convert decimals to fractions and standard surds (Only for Trig!)
+function formatExactResult(num, hasTrig) {
     if (Number.isInteger(num)) return num.toString();
     const sign = Math.sign(num);
     const absNum = Math.abs(num);
     
-    // 1. Intercept Standard SSC Trigonometry Surds
     const rounded = Math.round(absNum * 10000000) / 10000000;
-    if (rounded === 0.8660254) return sign < 0 ? '-√3/2' : '√3/2';
-    if (rounded === 0.7071068) return sign < 0 ? '-1/√2' : '1/√2';
-    if (rounded === 1.7320508) return sign < 0 ? '-√3' : '√3';
-    if (rounded === 0.5773503) return sign < 0 ? '-1/√3' : '1/√3';
 
-    // 2. Convert clean decimals to fractions (e.g., 0.5 -> 1/2)
-    let h1 = 1, h2 = 0, k1 = 0, k2 = 1;
-    let b = absNum;
-    do {
-        let a = Math.floor(b);
-        let aux = h1; h1 = a * h1 + h2; h2 = aux;
-        aux = k1; k1 = a * k1 + k2; k2 = aux;
-        b = 1 / (b - a);
-    } while (Math.abs(absNum - h1 / k1) > absNum * 1.0E-6);
+    // Only apply Fraction and Surd formatting if a Trig function was used
+    if (hasTrig) {
+        // 1. Intercept Standard SSC Trigonometry Surds
+        if (rounded === 0.8660254) return sign < 0 ? '-√3/2' : '√3/2';
+        if (rounded === 0.7071068) return sign < 0 ? '-1/√2' : '1/√2';
+        if (rounded === 1.7320508) return sign < 0 ? '-√3' : '√3';
+        if (rounded === 0.5773503) return sign < 0 ? '-1/√3' : '1/√3';
 
-    // If it is a clean fraction (denominator 100 or less), display it
-    if (k1 <= 100 && k1 > 1) {
-        return (sign < 0 ? '-' : '') + h1 + '/' + k1;
+        // 2. Convert clean decimals to fractions (e.g., 0.5 -> 1/2)
+        let h1 = 1, h2 = 0, k1 = 0, k2 = 1;
+        let b = absNum;
+        do {
+            let a = Math.floor(b);
+            let aux = h1; h1 = a * h1 + h2; h2 = aux;
+            aux = k1; k1 = a * k1 + k2; k2 = aux;
+            b = 1 / (b - a);
+        } while (Math.abs(absNum - h1 / k1) > absNum * 1.0E-6);
+
+        // If it is a clean fraction (denominator 100 or less), display it
+        if (k1 <= 100 && k1 > 1) {
+            return (sign < 0 ? '-' : '') + h1 + '/' + k1;
+        }
     }
 
-    // 3. Fallback: Return standard rounded decimal
-    return (sign < 0 ? '-' : '') + (Math.round(absNum * 10000) / 10000);
+    // 3. Fallback: Return standard decimal (rounded slightly to fix JS float bugs like 0.1+0.2)
+    return (sign < 0 ? '-' : '') + (Math.round(absNum * 1000000) / 1000000);
 }
 function calculateResult() {
     if (!calcExpression) return;
     try {
         let expr = calcExpression;
+        
+        // NEW: Check if the expression contains trig functions
+        const hasTrig = /(sin|cos|tan)/.test(expr);
 
         // 1. Auto-close any missing parentheses
         let openParen = (expr.match(/\(/g) || []).length;
@@ -1938,8 +1942,8 @@ function calculateResult() {
         
         if (result === "Error" || isNaN(result)) throw new Error("Invalid Math");
 
-// Format to Exact Fraction or Surd!
-        let exactResult = formatExactResult(result);
+        // Format to Exact Fraction/Surd ONLY if hasTrig is true
+        let exactResult = formatExactResult(result, hasTrig);
         
         // Add to history
         const histString = `${expr} = ${exactResult}`;
