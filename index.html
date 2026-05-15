@@ -1795,7 +1795,7 @@ async function clearNotepad() {
         updateNoteStats();
         clearTimeout(noteSaveTimeout);
         saveNotepadToFirebase();
-        showToast("Notes cleared.", "success");
+        showToast("Notes cleared", "success");
     }
 }
 
@@ -1849,7 +1849,7 @@ async function clearNoteHistory() {
         showToast("Failed to clear cloud history.", "error");
         return;
     }
-    showToast("History cleared.", "success");
+    showToast("History cleared", "success");
     showHistoryModal(); 
 }
 
