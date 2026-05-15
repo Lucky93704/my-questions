@@ -7,9 +7,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 <style>
-:root { --primary: #2563eb; --secondary: #1e40af; --bg: #f8fafc; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0; --error: #ef4444; --success: #22c55e; --target: #8b5cf6;}
-[data-theme="dark"] { --primary: #60a5fa; --secondary: #93c5fd; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --border: #334155; --error: #f87171; --success: #4ade80; --target: #a78bfa;}
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; max-width: 1000px; margin: auto; transition: background-color 0.3s, color 0.3s; overflow-x: hidden; }
+:root { --primary: #60a5fa; --secondary: #93c5fd; --bg: #0f172a; --card-bg: #1e293b; --text: #f8fafc; --border: #334155; --error: #f87171; --success: #4ade80; --target: #a78bfa;}
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; max-width: 1000px; margin: auto; overflow-x: hidden; }
 a { text-decoration: none; }
 
 /* Cool Loading Overlay (Matching other dashboards) */
@@ -21,7 +20,6 @@ a { text-decoration: none; }
 .icon-text { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 svg { flex-shrink: 0; }
 .rotate { transform: rotate(360deg); }
-#theme-icon { transition: transform 0.5s ease-in-out; }
 
 /* Profile Dropdown Styles */
 .profile-container { position: absolute; top: 20px; left: 20px; z-index: 1000; }
@@ -32,10 +30,9 @@ svg { flex-shrink: 0; }
 .profile-menu { position: absolute; top: 100%; left: 0; margin-top: 10px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; padding: 12px; min-width: 190px; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .profile-menu.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
-#logout-btn, #linked-devices-btn, #theme-btn { width: 100%; justify-content: flex-start; padding: 10px 15px; border-radius: 8px; box-shadow: none; background: transparent; border: 1px solid transparent; color: var(--text); font-size: 0.95rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+#logout-btn, #linked-devices-btn { width: 100%; justify-content: flex-start; padding: 10px 15px; border-radius: 8px; box-shadow: none; background: transparent; border: 1px solid transparent; color: var(--text); font-size: 0.95rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
 #logout-btn:hover { transform: translateX(3px); background: var(--error); color: white; }
 #linked-devices-btn:hover { transform: translateX(3px); background: var(--primary); color: white; }
-#theme-btn:hover { transform: translateX(3px); background: var(--primary); color: white; }
 
 .icon-unlocked { display: block; }
 .icon-locked { display: none; }
@@ -81,8 +78,7 @@ header p { color: #64748b; font-size: 1.1rem; }
 .cal-day.completed-day:not(.today) { background: rgba(34, 197, 94, 0.15); color: var(--success); font-weight: bold; }
 .cal-day.completed-day::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: var(--success); border-radius: 50%; }
 .cal-day.incomplete-day::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: var(--error); border-radius: 50%; }
-.cal-day.holiday-day:not(.today) { background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px dashed #f59e0b; }
-[data-theme="dark"] .cal-day.holiday-day:not(.today) { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.cal-day.holiday-day:not(.today) { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px dashed #f59e0b; }
 .cal-day.completed-day.streak-next:not(.today) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
 .cal-day.completed-day.streak-next:not(.today)::before { content: ''; position: absolute; top: 0; bottom: 0; right: -6px; width: 6px; background: rgba(34, 197, 94, 0.15); z-index: -1; }
 .cal-day.completed-day.streak-prev:not(.today) { border-top-left-radius: 0; border-bottom-left-radius: 0; }
@@ -126,8 +122,7 @@ header p { color: #64748b; font-size: 1.1rem; }
 .tooltip-title { font-weight: bold; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
 .tooltip-title.success { color: var(--success); }
 .tooltip-title.error { color: var(--error); }
-.tooltip-title.holiday { color: #d97706; }
-[data-theme="dark"] .tooltip-title.holiday { color: #fbbf24; }
+.tooltip-title.holiday { color: #fbbf24; }
 .tooltip-row { display: flex; align-items: flex-start; gap: 6px; margin-top: 4px; color: #64748b; }
 .tooltip-row span { font-weight: 500; color: var(--text); }
 .tooltip-hint { display: block; margin-top: 8px; font-size: 0.75rem; color: #94a3b8; font-style: italic; text-align: center; border-top: 1px solid var(--border); padding-top: 6px;}
@@ -249,10 +244,6 @@ Loading Study Portal
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
     </button>
     <div class="profile-menu" id="profile-menu">
-        <button id="theme-btn" title="Toggle Dark/Light Mode">
-            <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
-            Theme Toggle
-        </button>
         <button id="logout-btn" title="Lock Portal (Ctrl+L / Cmd+L)">
             <svg class="icon-unlocked" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
             <svg class="icon-locked" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -314,9 +305,8 @@ Loading Study Portal
                 <span id="glance-streak"></span>
             </div>
 <div style="font-size: 0.85rem; color: #64748b;" id="glance-streak-subtext">Active Study Days</div>
-        </div>
+        </div>
 
-        <!-- NEW PIE CHART CARD -->
         <div class="glance-card" id="distribution-card">
             <div class="glance-title">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
@@ -330,7 +320,7 @@ Loading Study Portal
             </div>
         </div>
 
-    </div>
+    </div>
 
     <div id="quick-add-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
         <div class="modal-content" style="max-width: 400px; text-align: left; padding: 25px;">
@@ -1125,8 +1115,8 @@ async function loadGlanceData() {
                 }, 300); 
             }, 4000);
         } else {
-            subtextEl.innerHTML = `Personal Best: <strong>${maxStreak} Days</strong>`;
-        }
+            subtextEl.innerHTML = `Personal Best: <strong>${maxStreak} Days</strong>`;
+        }
 
         // --- NEW: PIE CHART LOGIC ---
         const subjectCounts = {};
@@ -1201,7 +1191,7 @@ async function loadGlanceData() {
         }
         // --- END PIE CHART LOGIC ---
 
-        hideLoading();
+        hideLoading();
     } catch (e) { 
         console.error("Failed to load glance data:", e); 
         hideLoading();
@@ -1836,21 +1826,21 @@ function restoreHistory(index) {
 
 // PASTE THIS NEW BLOCK:
 async function clearNoteHistory() {
-    if (deletedNotesHistory.length === 0) {
-        showToast("History is already empty.", "info");
-        return;
-    }
+    if (deletedNotesHistory.length === 0) {
+        showToast("History is already empty.", "info");
+        return;
+    }
 
-    deletedNotesHistory = []; 
-    try {
-        await db.collection('portalData').doc('noteHistory').set({ history: [] });
-    } catch (e) {
-        console.error("Error clearing history in Firebase", e);
-        showToast("Failed to clear cloud history.", "error");
-        return;
-    }
-    showToast("History cleared", "success");
-    showHistoryModal(); 
+    deletedNotesHistory = []; 
+    try {
+        await db.collection('portalData').doc('noteHistory').set({ history: [] });
+    } catch (e) {
+        console.error("Error clearing history in Firebase", e);
+        showToast("Failed to clear cloud history.", "error");
+        return;
+    }
+    showToast("History cleared", "success");
+    showHistoryModal(); 
 }
 
 // ==========================================
@@ -1865,32 +1855,6 @@ async function checkSessionValidity() {
 }
 
 checkSessionValidity();
-// ==========================================
-// THEME LOGIC
-// ==========================================
-const themeBtn = document.getElementById('theme-btn');
-const themeIcon = document.getElementById('theme-icon');
-const sunPath = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z";
-const moonPath = "M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z";
-
-if (localStorage.getItem('theme') === 'dark') { document.body.setAttribute('data-theme', 'dark'); themeIcon.innerHTML = `<path d="${moonPath}" />`; } else { themeIcon.innerHTML = `<path d="${sunPath}" />`; }
-
-if (themeBtn) {
-    themeBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); 
-        themeIcon.classList.add('rotate');
-        setTimeout(() => {
-            if (document.body.getAttribute('data-theme') === 'dark') {
-                document.body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light');
-                themeIcon.innerHTML = `<path d="${sunPath}" />`; showToast('Light mode activated', 'info');
-            } else {
-                document.body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark');
-                themeIcon.innerHTML = `<path d="${moonPath}" />`; showToast('Dark mode activated', 'info');
-            }
-        }, 250);
-        setTimeout(() => { themeIcon.classList.remove('rotate'); }, 500);
-    });
-}
 
 // ==========================================
 // PROFILE DROPDOWN LOGIC
