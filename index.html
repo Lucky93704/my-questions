@@ -1346,7 +1346,9 @@ async function loadGlanceData() {
             legendEl.innerHTML = legendHtml;
         }
         // --- END PIE CHART LOGIC ---
-
+checkPetDailyHealth();
+        updatePetUI();
+        
         hideLoading();
     } catch (e) { 
         console.error("Failed to load glance data:", e); 
@@ -2498,11 +2500,6 @@ function earnWaterDrop() {
     showPetMessage("Earned a Water Drop! 💧");
 }
 
-// Initialize Pet after Glace Data loads
-setTimeout(() => {
-    checkPetDailyHealth();
-    updatePetUI();
-}, 1500); // Wait 1.5s to ensure streak data is loaded from Firebase
 </script>
 </body>
 </html>
