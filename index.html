@@ -44,39 +44,6 @@ header { text-align: center; margin-bottom: 40px; }
 header h1 { color: var(--primary); font-size: 2.5rem; margin: 0; }
 header p { color: #64748b; font-size: 1.1rem; }
 
-/* Study Pet Widget Styles */
-.pet-widget { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.2s; }
-.pet-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.pet-title { color: var(--primary); font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.pet-water-btn { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #3b82f6; cursor: pointer; padding: 6px 12px; border-radius: 8px; font-weight: 600; transition: 0.2s; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
-.pet-water-btn:hover { background: #3b82f6; color: white; border-color: #3b82f6; transform: translateY(-2px); }
-.pet-water-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-.pet-display-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); border-radius: 12px; border: 1px inset var(--border); padding: 20px; margin-bottom: 15px; position: relative; overflow: hidden; }
-.pet-emoji { font-size: 5rem; line-height: 1; animation: petBreathe 3s ease-in-out infinite; filter: drop-shadow(0 10px 15px rgba(34, 197, 94, 0.2)); transition: all 0.5s ease; user-select: none; }
-.pet-emoji.sick { filter: grayscale(100%) opacity(0.7); animation: petDroop 4s ease-in-out infinite; }
-
-@keyframes petBreathe {
-    0%, 100% { transform: scale(1) translateY(0); }
-    50% { transform: scale(1.05) translateY(-5px); }
-}
-@keyframes petDroop {
-    0%, 100% { transform: scale(1) translateY(5px) rotate(5deg); }
-    50% { transform: scale(0.98) translateY(8px) rotate(8deg); }
-}
-
-.pet-message { position: absolute; top: 10px; background: var(--card-bg); border: 1px solid var(--border); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; color: #94a3b8; box-shadow: 0 4px 6px rgba(0,0,0,0.1); opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(10px); }
-.pet-message.show { opacity: 1; transform: translateY(0); }
-
-.pet-stats-container { display: flex; flex-direction: column; gap: 10px; }
-.pet-stat-row { display: flex; flex-direction: column; gap: 4px; }
-.pet-stat-labels { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: #64748b; }
-.pet-bar-bg { width: 100%; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
-.pet-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-.fill-xp { background: linear-gradient(90deg, #a855f7, #c084fc); }
-.fill-health { background: linear-gradient(90deg, #22c55e, #4ade80); }
-.fill-health.low { background: linear-gradient(90deg, #ef4444, #f87171); }
-
 /* At a Glance Widget */
 .glance-widget { display: flex; justify-content: center; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; }
 .glance-card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); min-width: 200px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; max-width: 300px; transition: transform 0.3s; animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); }
@@ -87,6 +54,14 @@ header p { color: #64748b; font-size: 1.1rem; }
 
 /* DASHBOARD ROW & CALENDAR/NOTEPAD STYLES */
 .dashboard-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 40px; align-items: stretch; }
+
+/* Forces exactly 2 columns side-by-side */
+.duo-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin-bottom: 40px; align-items: stretch; }
+
+/* On very small phone screens, stack them so they don't break */
+@media (max-width: 750px) {
+    .duo-row { grid-template-columns: 1fr; }
+}
 
 .calendar-widget { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.15s; margin: 0; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: relative; }
@@ -284,6 +259,39 @@ header p { color: #64748b; font-size: 1.1rem; }
 .cd-btn.cancel:hover { background: var(--card-bg); border-color: var(--error); color: var(--error); }
 .cd-btn.save { background: var(--primary); color: white; }
 .cd-btn.save:hover { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+
+/* Study Pet Widget Styles */
+.pet-widget { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.4s; }
+.pet-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.pet-title { color: var(--primary); font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.pet-water-btn { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #3b82f6; cursor: pointer; padding: 6px 12px; border-radius: 8px; font-weight: 600; transition: 0.2s; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+.pet-water-btn:hover { background: #3b82f6; color: white; border-color: #3b82f6; transform: translateY(-2px); }
+.pet-water-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.pet-display-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); border-radius: 12px; border: 1px inset var(--border); padding: 20px; margin-bottom: 15px; position: relative; overflow: hidden; }
+.pet-emoji { font-size: 5rem; line-height: 1; animation: petBreathe 3s ease-in-out infinite; filter: drop-shadow(0 10px 15px rgba(34, 197, 94, 0.2)); transition: all 0.5s ease; user-select: none; }
+.pet-emoji.sick { filter: grayscale(100%) opacity(0.7); animation: petDroop 4s ease-in-out infinite; }
+
+@keyframes petBreathe {
+    0%, 100% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.05) translateY(-5px); }
+}
+@keyframes petDroop {
+    0%, 100% { transform: scale(1) translateY(5px) rotate(5deg); }
+    50% { transform: scale(0.98) translateY(8px) rotate(8deg); }
+}
+
+.pet-message { position: absolute; top: 10px; background: var(--card-bg); border: 1px solid var(--border); padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; color: #94a3b8; box-shadow: 0 4px 6px rgba(0,0,0,0.1); opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(10px); }
+.pet-message.show { opacity: 1; transform: translateY(0); }
+
+.pet-stats-container { display: flex; flex-direction: column; gap: 10px; }
+.pet-stat-row { display: flex; flex-direction: column; gap: 4px; }
+.pet-stat-labels { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: #64748b; }
+.pet-bar-bg { width: 100%; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+.pet-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.fill-xp { background: linear-gradient(90deg, #a855f7, #c084fc); }
+.fill-health { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.fill-health.low { background: linear-gradient(90deg, #ef4444, #f87171); }
 </style>
 </head>
 <body>
@@ -342,45 +350,6 @@ Loading Study Portal
         <p id="daily-quote" style="color: var(--secondary); font-style: italic; font-weight: 500; margin-top: 8px;">"Loading motivation..."</p>
     </header>
 
-    <div class="pet-widget" style="max-width: 500px; margin: 0 auto 40px auto;">
-        <div class="pet-header-flex">
-            <div class="pet-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4-4 4-10 0-14-4 4-4 10 0 14z"></path><path d="M12 8c2-2 2-6 0-8-2 2-2 6 0 8z"></path></svg>
-                Study Plant
-            </div>
-            <button class="pet-water-btn" id="pet-water-btn" onclick="waterPet()">
-                💧 Water (<span id="water-count">0</span>)
-            </button>
-        </div>
-
-        <div class="pet-display-area">
-            <div class="pet-message" id="pet-message">Thriving!</div>
-            <div class="pet-emoji" id="pet-emoji">🌱</div>
-        </div>
-
-        <div class="pet-stats-container">
-            <div class="pet-stat-row">
-                <div class="pet-stat-labels">
-                    <span id="pet-level-text" style="color: var(--target);">Lvl 1: Sprout</span>
-                    <span id="pet-days-text">Day 0 / 15</span>
-                </div>
-                <div class="pet-bar-bg">
-                    <div class="pet-bar-fill fill-xp" id="pet-xp-bar" style="width: 0%;"></div>
-                </div>
-            </div>
-            
-            <div class="pet-stat-row">
-                <div class="pet-stat-labels">
-                    <span>Health</span>
-                    <span id="pet-health-text">100%</span>
-                </div>
-                <div class="pet-bar-bg">
-                    <div class="pet-bar-fill fill-health" id="pet-health-bar" style="width: 100%;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="glance-widget">
         <div class="glance-card" style="cursor: pointer;" onclick="window.location.href='studydashboard.html'" title="Click to view today's targets">
             <div class="glance-title">
@@ -416,7 +385,6 @@ Loading Study Portal
                 </div>
             </div>
         </div>
-
     </div>
 
     <div id="quick-add-modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
@@ -627,7 +595,8 @@ Loading Study Portal
                 </div>
             </div>
         </div>
-
+    </div> <div class="duo-row">
+        
         <div class="countdown-widget">
             <div class="countdown-header-flex">
                 <div class="countdown-title">
@@ -642,14 +611,12 @@ Loading Study Portal
             <div class="countdown-content">
                 <div id="countdown-display-view">
                     <h4 class="exam-name-display" id="exam-name-display">Target Exam</h4>
-                    
                     <div class="countdown-grid">
                         <div class="cd-box"><div class="cd-number" id="cd-days">00</div><div class="cd-label">Days</div></div>
                         <div class="cd-box"><div class="cd-number" id="cd-hours">00</div><div class="cd-label">Hrs</div></div>
                         <div class="cd-box"><div class="cd-number" id="cd-mins">00</div><div class="cd-label">Mins</div></div>
                         <div class="cd-box"><div class="cd-number" id="cd-secs" style="color: #64748b;">00</div><div class="cd-label">Secs</div></div>
                     </div>
-                    
                     <div class="countdown-target-date" id="exam-date-display">Date not set</div>
                 </div>
 
@@ -664,12 +631,52 @@ Loading Study Portal
             </div>
         </div>
 
-        <div id="home-screen" style="display: block; width: 100%; margin-top: 20px;">
-            <button onclick="document.getElementById('dashboard-modal').style.display='flex'" class="subject-card" style="width: 100% !important; flex: 1;">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                Open Dashboards
-            </button>
+        <div class="pet-widget">
+            <div class="pet-header-flex">
+                <div class="pet-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4-4 4-10 0-14-4 4-4 10 0 14z"></path><path d="M12 8c2-2 2-6 0-8-2 2-2 6 0 8z"></path></svg>
+                    Study Plant
+                </div>
+                <button class="pet-water-btn" id="pet-water-btn" onclick="waterPet()">
+                    💧 Water (<span id="water-count">0</span>)
+                </button>
+            </div>
+
+            <div class="pet-display-area">
+                <div class="pet-message" id="pet-message">Thriving!</div>
+                <div class="pet-emoji" id="pet-emoji">🌱</div>
+            </div>
+
+            <div class="pet-stats-container">
+                <div class="pet-stat-row">
+                    <div class="pet-stat-labels">
+                        <span id="pet-level-text" style="color: var(--target);">Lvl 1: Sprout</span>
+                        <span id="pet-days-text">Day 0 / 15</span>
+                    </div>
+                    <div class="pet-bar-bg">
+                        <div class="pet-bar-fill fill-xp" id="pet-xp-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+                
+                <div class="pet-stat-row">
+                    <div class="pet-stat-labels">
+                        <span>Health</span>
+                        <span id="pet-health-text">100%</span>
+                    </div>
+                    <div class="pet-bar-bg">
+                        <div class="pet-bar-fill fill-health" id="pet-health-bar" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
+        
+    </div>
+
+    <div id="home-screen" style="display: block; width: 100%; margin-top: 20px;">
+        <button onclick="document.getElementById('dashboard-modal').style.display='flex'" class="subject-card" style="width: 100% !important; flex: 1;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Open Dashboards
+        </button>
     </div>
 </div>
 
