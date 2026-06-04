@@ -226,6 +226,33 @@ header p { color: #64748b; font-size: 1.1rem; }
 .life-day.has-reminder { background: rgba(168, 85, 247, 0.15); color: #a855f7; font-weight: bold; border: 1px solid rgba(168, 85, 247, 0.4); box-shadow: 0 4px 10px rgba(168, 85, 247, 0.2); z-index: 5;}
 .life-day.has-reminder:hover { background: rgba(168, 85, 247, 0.25); transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); }
 .life-day.has-reminder::after { content: ''; position: absolute; bottom: 3px; width: 4px; height: 4px; background: #a855f7; border-radius: 50%; }
+
+/* Exam Countdown Widget Styles */
+.countdown-widget { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; animation: slideUp 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); animation-delay: 0.3s; }
+.countdown-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.countdown-title { color: var(--primary); font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.countdown-edit-btn { background: transparent; border: 1px solid transparent; color: #64748b; cursor: pointer; padding: 6px; border-radius: 8px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+.countdown-edit-btn:hover { background: var(--bg); color: var(--primary); border-color: var(--border); transform: translateY(-2px); }
+
+.countdown-content { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+.exam-name-display { text-align: center; color: var(--text); font-size: 1.3rem; margin: 0 0 15px 0; font-weight: 600; letter-spacing: 0.5px; }
+
+.countdown-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+.cd-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+.cd-box:hover { border-color: var(--primary); transform: translateY(-2px); }
+.cd-number { font-size: 2rem; font-family: monospace; font-weight: bold; color: var(--primary); line-height: 1; margin-bottom: 4px; }
+.cd-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+
+.countdown-target-date { text-align: center; font-size: 0.85rem; color: #94a3b8; font-weight: 500; }
+
+/* Edit Mode Styles */
+.cd-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 0.95rem; outline: none; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; }
+.cd-input:focus { border-color: var(--primary); }
+.cd-btn { padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: 0.2s; flex: 1; border: none; }
+.cd-btn.cancel { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+.cd-btn.cancel:hover { background: var(--card-bg); border-color: var(--error); color: var(--error); }
+.cd-btn.save { background: var(--primary); color: white; }
+.cd-btn.save:hover { background: var(--secondary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
 </style>
 </head>
 <body>
@@ -526,6 +553,42 @@ Loading Study Portal
                                 <button class="calc-btn eq" onclick="calculateResult()">=</button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="countdown-widget">
+            <div class="countdown-header-flex">
+                <div class="countdown-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path></svg>
+                    Exam Countdown
+                </div>
+                <button class="countdown-edit-btn" onclick="toggleCountdownEdit()" title="Set Exam Date">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+            </div>
+
+            <div class="countdown-content">
+                <div id="countdown-display-view">
+                    <h4 class="exam-name-display" id="exam-name-display">Target Exam</h4>
+                    
+                    <div class="countdown-grid">
+                        <div class="cd-box"><div class="cd-number" id="cd-days">00</div><div class="cd-label">Days</div></div>
+                        <div class="cd-box"><div class="cd-number" id="cd-hours">00</div><div class="cd-label">Hrs</div></div>
+                        <div class="cd-box"><div class="cd-number" id="cd-mins">00</div><div class="cd-label">Mins</div></div>
+                        <div class="cd-box"><div class="cd-number" id="cd-secs" style="color: #64748b;">00</div><div class="cd-label">Secs</div></div>
+                    </div>
+                    
+                    <div class="countdown-target-date" id="exam-date-display">Date not set</div>
+                </div>
+
+                <div id="countdown-edit-view" style="display: none;">
+                    <input type="text" id="cd-name-input" class="cd-input" placeholder="Exam Name (e.g., JEE Mains, UPSC)" autocomplete="off">
+                    <input type="datetime-local" id="cd-date-input" class="cd-input">
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <button class="cd-btn cancel" onclick="toggleCountdownEdit()">Cancel</button>
+                        <button class="cd-btn save" onclick="saveCountdown()">Save</button>
                     </div>
                 </div>
             </div>
@@ -1840,7 +1903,6 @@ function restoreHistory(index) {
     showToast("Note restored successfully.", "success");
 }
 
-// PASTE THIS NEW BLOCK:
 async function clearNoteHistory() {
     if (deletedNotesHistory.length === 0) {
         showToast("History is already empty.", "info");
@@ -2133,6 +2195,118 @@ function showToast(message, type = 'success') {
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
+
+// ==========================================
+// EXAM COUNTDOWN LOGIC
+// ==========================================
+let countdownInterval;
+let targetExamDate = null;
+
+function initCountdown() {
+    // Load from local storage
+    const savedData = JSON.parse(localStorage.getItem('examCountdownData'));
+    
+    if (savedData && savedData.date) {
+        document.getElementById('exam-name-display').innerText = savedData.name || 'Target Exam';
+        
+        const dateObj = new Date(savedData.date);
+        const options = { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        document.getElementById('exam-date-display').innerText = `Target: ${dateObj.toLocaleDateString('en-IN', options)}`;
+        
+        targetExamDate = dateObj.getTime();
+        startCountdownEngine();
+    } else {
+        document.getElementById('exam-name-display').innerText = "No Exam Set";
+        document.getElementById('exam-date-display').innerText = "Click the edit icon to set a target.";
+    }
+}
+
+function startCountdownEngine() {
+    if (countdownInterval) clearInterval(countdownInterval);
+    
+    countdownInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = targetExamDate - now;
+
+        if (distance < 0) {
+            clearInterval(countdownInterval);
+            document.getElementById('cd-days').innerText = "00";
+            document.getElementById('cd-hours').innerText = "00";
+            document.getElementById('cd-mins').innerText = "00";
+            document.getElementById('cd-secs').innerText = "00";
+            document.getElementById('exam-date-display').innerText = "🎉 It's Exam Time! Best of luck!";
+            document.getElementById('exam-date-display').style.color = "var(--success)";
+            return;
+        }
+
+        // Time calculations
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        // Update DOM with leading zeros
+        document.getElementById('cd-days').innerText = days.toString().padStart(2, '0');
+        document.getElementById('cd-hours').innerText = hours.toString().padStart(2, '0');
+        document.getElementById('cd-mins').innerText = minutes.toString().padStart(2, '0');
+        document.getElementById('cd-secs').innerText = seconds.toString().padStart(2, '0');
+        
+        // Reset color if it was previously marked as success
+        document.getElementById('exam-date-display').style.color = "#94a3b8";
+        
+    }, 1000);
+}
+
+function toggleCountdownEdit() {
+    const displayView = document.getElementById('countdown-display-view');
+    const editView = document.getElementById('countdown-edit-view');
+    
+    if (displayView.style.display !== 'none') {
+        // Open Edit Mode
+        displayView.style.display = 'none';
+        editView.style.display = 'block';
+        
+        // Pre-fill inputs if data exists
+        const savedData = JSON.parse(localStorage.getItem('examCountdownData'));
+        if (savedData) {
+            document.getElementById('cd-name-input').value = savedData.name || '';
+            if (savedData.date) {
+                // Ensure correct format for datetime-local (YYYY-MM-DDThh:mm)
+                const d = new Date(savedData.date);
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                document.getElementById('cd-date-input').value = d.toISOString().slice(0, 16);
+            }
+        }
+    } else {
+        // Close Edit Mode
+        displayView.style.display = 'block';
+        editView.style.display = 'none';
+    }
+}
+
+function saveCountdown() {
+    const name = document.getElementById('cd-name-input').value.trim();
+    const dateVal = document.getElementById('cd-date-input').value;
+    
+    if (!dateVal) {
+        showToast("Please select a valid date & time.", "error");
+        return;
+    }
+    
+    const dataToSave = {
+        name: name || "Target Exam",
+        date: new Date(dateVal).getTime() // Save as timestamp
+    };
+    
+    localStorage.setItem('examCountdownData', JSON.stringify(dataToSave));
+    showToast("Countdown saved!", "success");
+    
+    toggleCountdownEdit(); // switch back to display view
+    initCountdown();       // restart the engine with new data
+}
+
+// Initialize on page load
+initCountdown();
 </script>
 </body>
 </html>
