@@ -575,11 +575,17 @@ function fetchTargets() {
     const selectedDate = document.getElementById('target-date').value;
     updateDateHeader(selectedDate);
     
-    const todayStr = getLocalISOString(new Date());
-    const isPastDate = selectedDate < todayStr;
+    // --- UPDATED LOGIC: Calculate "Yesterday" as the lock boundary ---
+    const limitDateObj = new Date();
+    limitDateObj.setDate(limitDateObj.getDate() - 1); // Subtract 1 day
+    const limitStr = getLocalISOString(limitDateObj);
 
-    document.getElementById('holiday-btn').style.display = isPastDate ? 'none' : 'flex';
-    document.getElementById('carry-over-btn').style.display = isPastDate ? 'none' : 'flex';
+    // If the selected date is older than yesterday, it becomes Read-Only
+    const isReadOnly = selectedDate < limitStr;
+    // -----------------------------------------------------------------
+
+    document.getElementById('holiday-btn').style.display = isReadOnly ? 'none' : 'flex';
+    document.getElementById('carry-over-btn').style.display = isReadOnly ? 'none' : 'flex';
     
     editingTargetId = null;
     document.getElementById('add-task-btn').innerText = "Add Target";
@@ -617,13 +623,13 @@ function fetchTargets() {
             if (isHolidayDay) {
                 document.getElementById('add-task-container').style.display = 'none';
                 document.getElementById('filters-container').style.display = 'none';
-                renderHoliday(holidayId, holidayData, listContainer, isPastDate);
+                renderHoliday(holidayId, holidayData, listContainer, isReadOnly);
                 updateProgressHoliday();
                 hideLoading(); 
                 return;
             }
 
-            document.getElementById('add-task-container').style.display = isPastDate ? 'none' : 'flex';
+            document.getElementById('add-task-container').style.display = isReadOnly ? 'none' : 'flex';
             document.getElementById('filters-container').style.display = 'flex';
 
             if (total === 0) {
@@ -636,7 +642,8 @@ function fetchTargets() {
             snapshot.forEach((doc) => {
                 const data = doc.data();
                 if (!data.isHoliday && data.subject !== "Holiday" && !(data.task && data.task.startsWith("Holiday:"))) {
-                    renderTask(doc.id, data, listContainer, isPastDate);
+                    // Pass isReadOnly instead of isPastDate
+                    renderTask(doc.id, data, listContainer, isReadOnly); 
                 }
             });
 
@@ -649,7 +656,8 @@ function fetchTargets() {
             hideLoading(); 
         });
 
-    fetchReflection(selectedDate, isPastDate);
+    // Pass isReadOnly instead of isPastDate
+    fetchReflection(selectedDate, isReadOnly); 
 }
 
 function renderTask(id, data, container, isPastDate) {
